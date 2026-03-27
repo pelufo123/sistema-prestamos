@@ -400,5 +400,5 @@ def historial(id):
 # RUN APP
 # ------------------------------
 if __name__ == "__main__":
-    # Permite acceso desde cualquier IP (Render)
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    port = int(os.environ.get("PORT", 5000))  # toma el puerto de Render o 5000 si estás en local
+    app.run(host="0.0.0.0", port=port, debug=True)
