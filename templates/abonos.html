@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+
+<!-- 🔥 RESPONSIVE -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Abonos</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>💰 Gestión de Abonos</h2>
+
+<a href="/" class="volver">⬅ Ir al inicio</a>
+
+{% if mensaje %}
+<div class="alert alert-warning">{{mensaje}}</div>
+{% endif %}
+
+<div class="card">
+<h3>🔍 Buscar por fecha</h3>
+<form method="POST">
+<input type="date" name="fecha_filtro">
+<button>Buscar</button>
+</form>
+</div>
+
+<div class="card">
+<h3>📅 Abonos de Hoy</h3>
+
+{% for a in abonos_hoy %}
+<div class="item">
+💰 {{a.monto}} | {{a.tipo}} <br>
+👤 {{a.cliente}} | Préstamo #{{a.prestamo}} <br>
+📅 {{a.fecha}}
+</div>
+{% endfor %}
+
+</div>
+
+<div class="card">
+<h3>📊 Historial de Abonos</h3>
+
+{% for a in historial %}
+<div class="item">
+💰 {{a.monto}} | {{a.tipo}} <br>
+👤 {{a.cliente}} | Préstamo #{{a.prestamo}} <br>
+📅 {{a.fecha}}
+</div>
+{% endfor %}
+
+</div>
+
+<div class="card">
+<form method="POST">
+
+<select name="cliente">
+<option value="">Seleccione cliente</option>
+{% for c in clientes %}
+<option value="{{c[0]}}">{{c[1]}}</option>
+{% endfor %}
+</select>
+
+<button>Buscar préstamos</button>
+
+</form>
+</div>
+
+{% if prestamos %}
+<div class="card">
+<form method="POST">
+
+<select name="prestamo">
+{% for p in prestamos %}
+<option value="{{p.id}}">
+Préstamo #{{p.id}} → Saldo: {{p.saldo}} → {{p.estado}}
+</option>
+{% endfor %}
+</select>
+
+<input type="number" name="monto">
+
+<select name="tipo">
+<option>Efectivo</option>
+<option>Transferencia</option>
+</select>
+
+<button>Guardar Abono</button>
+
+</form>
+</div>
+{% endif %}
+
+</div>
+
+</body>
+</html>

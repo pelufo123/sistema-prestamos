@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+
+<!-- 🔥 RESPONSIVE -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Panel</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>💰 SISTEMA CONTABLE</h2>
+
+<!-- 🔥 GRID RESPONSIVE -->
+<div class="grid">
+    <div class="card">Total<br><h1>{{total}}</h1></div>
+    <div class="card">Por vencer<br><h1>{{prox}}</h1></div>
+    <div class="card">Vencidos<br><h1>{{vencidos}}</h1></div>
+</div>
+
+<!-- 🔥 ALERTAS -->
+{% if alertas %}
+<div class="card">
+<h3>🚨 Alertas</h3>
+
+{% for a in alertas %}
+<div class="alert alert-warning" style="font-weight:bold;">
+{{a}}
+</div>
+{% endfor %}
+
+</div>
+{% endif %}
+
+<hr>
+
+<a href="/clientes" class="btn">👤 Clientes</a>
+<a href="/prestamos" class="btn">💵 Préstamos</a>
+<a href="/abonos" class="btn">💳 Abonos</a>
+
+</div>
+
+</body>
+</html>

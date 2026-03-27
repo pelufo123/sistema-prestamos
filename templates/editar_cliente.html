@@ -1,0 +1,29 @@
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link rel="stylesheet" href="/static/style.css">
+<h2>Clientes</h2>
+
+<a href="/"><button>⬅ Volver</button></a>
+
+<form method="POST">
+<input name="nombre" placeholder="Nombre" required>
+<input name="telefono" placeholder="Teléfono" required>
+<input name="direccion" placeholder="Dirección" required>
+<button>Guardar</button>
+</form>
+
+<table>
+<tr><th>ID</th><th>Nombre</th><th>Teléfono</th><th>Acciones</th></tr>
+
+{% for c in clientes %}
+<tr>
+<td>{{c[0]}}</td>
+<td>{{c[1]}}</td>
+<td>{{c[2]}}</td>
+<td>
+<a href="/editar_cliente/{{c[0]}}">Editar</a>
+<a href="/eliminar_cliente/{{c[0]}}" onclick="return confirm('¿Eliminar a {{c[1]}}?')">Eliminar</a>
+<a href="/historial/{{c[0]}}">Historial</a>
+</td>
+</tr>
+{% endfor %}
+</table>

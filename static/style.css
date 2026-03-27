@@ -1,0 +1,288 @@
+body{
+    font-family: 'Segoe UI', sans-serif;
+    background: #0f172a;
+    color: #fff;
+    margin:0;
+}
+
+.container{
+    width:90%;
+    max-width:900px;
+    margin:auto;
+    padding:20px;
+}
+
+h2{
+    text-align:center;
+    margin-bottom:20px;
+}
+
+.card{
+    background:#1e293b;
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:15px;
+    box-shadow:0 0 10px rgba(0,0,0,0.3);
+}
+
+input, select{
+    width:100%;
+    padding:10px;
+    margin:5px 0;
+    border-radius:8px;
+    border:none;
+    outline:none;
+}
+
+button{
+    background:#3b82f6;
+    color:white;
+    border:none;
+    padding:10px;
+    border-radius:8px;
+    cursor:pointer;
+    width:100%;
+}
+
+button:hover{
+    background:#2563eb;
+}
+
+.btn{
+    display:inline-block;
+    padding:6px 10px;
+    margin:3px;
+    border-radius:6px;
+    text-decoration:none;
+    color:white;
+}
+
+.btn-edit{ background:#22c55e; }
+.btn-del{ background:#ef4444; }
+.btn-his{ background:#f59e0b; }
+
+.alert{
+    padding:10px;
+    border-radius:8px;
+    margin:10px 0;
+}
+
+.alert-warning{
+    background:#f59e0b;
+    color:black;
+}
+
+.badge{
+    padding:5px 10px;
+    border-radius:6px;
+    font-size:12px;
+}
+
+.activo{background:#22c55e;}
+.vencido{background:#ef4444;}
+.pagado{background:#3b82f6;}
+
+.volver{
+    display:block;
+    text-align:center;
+    margin-top:20px;
+    color:#94a3b8;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns: repeat(3,1fr);
+    gap:10px;
+    margin-bottom:10px;
+}
+
+.item{
+    background:#0f172a;
+    padding:10px;
+    border-radius:8px;
+    margin-bottom:8px;
+    border-left:4px solid #3b82f6;
+}
+
+h3{
+    color:#60a5fa;
+}
+
+h4{
+    color:#cbd5f5;
+}
+
+hr{
+    border:1px solid #334155;
+}
+
+.item{
+    background:#020617;
+    padding:12px;
+    border-radius:10px;
+    margin-top:10px;
+    border-left:5px solid #3b82f6;
+    transition:0.3s;
+}
+
+.item:hover{
+    transform:scale(1.02);
+    background:#020617;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns: repeat(3,1fr);
+    gap:10px;
+    margin:10px 0;
+}
+
+label{
+    font-size:14px;
+    color:#94a3b8;
+}
+
+h3{
+    color:#60a5fa;
+}
+
+h4{
+    color:#cbd5f5;
+}
+
+hr{
+    border:1px solid #334155;
+    margin:10px 0;
+}
+
+body{
+    font-family: 'Segoe UI', sans-serif;
+    background: #0f172a;
+    color: #fff;
+    margin:0;
+}
+
+.container{
+    width:90%;
+    max-width:900px;
+    margin:auto;
+    padding:20px;
+}
+
+h2{
+    text-align:center;
+    margin-bottom:20px;
+}
+
+.card{
+    background:#1e293b;
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:15px;
+    box-shadow:0 0 10px rgba(0,0,0,0.3);
+}
+
+input, select{
+    width:100%;
+    padding:10px;
+    margin:5px 0;
+    border-radius:8px;
+    border:none;
+    outline:none;
+}
+
+button{
+    background:#3b82f6;
+    color:white;
+    border:none;
+    padding:10px;
+    border-radius:8px;
+    cursor:pointer;
+    width:100%;
+}
+
+button:hover{
+    background:#2563eb;
+}
+
+.btn{
+    display:inline-block;
+    padding:6px 10px;
+    margin:3px;
+    border-radius:6px;
+    text-decoration:none;
+    color:white;
+}
+
+.btn-edit{ background:#22c55e; }
+.btn-del{ background:#ef4444; }
+.btn-his{ background:#f59e0b; }
+
+.alert{
+    padding:10px;
+    border-radius:8px;
+    margin:10px 0;
+}
+
+.alert-warning{
+    background:#f59e0b;
+    color:black;
+}
+
+.badge{
+    padding:5px 10px;
+    border-radius:6px;
+    font-size:12px;
+}
+
+.activo{background:#22c55e;}
+.vencido{background:#ef4444;}
+.pagado{background:#3b82f6;}
+
+.volver{
+    display:block;
+    text-align:center;
+    margin-top:20px;
+    color:#94a3b8;
+}
+
+/* 🔥 GRID PARA PANEL */
+.grid{
+    display:grid;
+    grid-template-columns: repeat(3,1fr);
+    gap:10px;
+}
+
+/* 🔥 RESPONSIVE CELULAR */
+@media (max-width: 768px){
+
+    .container{
+        width:95%;
+        padding:10px;
+    }
+
+    h2{
+        font-size:20px;
+    }
+
+    .card{
+        padding:12px;
+    }
+
+    input, select, button{
+        font-size:16px;
+        padding:12px;
+    }
+
+    .btn{
+        display:block;
+        width:100%;
+        text-align:center;
+        margin:5px 0;
+    }
+
+    .grid{
+        grid-template-columns:1fr;
+    }
+
+}

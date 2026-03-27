@@ -1,0 +1,40 @@
+<link rel="stylesheet" href="/static/style.css">
+
+<div class="container">
+
+<h2>👥 Clientes</h2>
+
+<div class="card">
+<form method="POST">
+<input name="nombre" placeholder="Nombre" required>
+<input name="telefono" placeholder="Teléfono">
+<input name="direccion" placeholder="Dirección">
+<button>Guardar Cliente</button>
+</form>
+</div>
+
+{% for c in clientes %}
+<div class="card">
+
+<b>{{c[1]}}</b><br>
+📞 {{c[2]}} <br>
+📍 {{c[3]}}
+
+<br><br>
+
+<a class="btn btn-edit" href="/editar_cliente/{{c[0]}}">Editar</a>
+
+<a class="btn btn-del"
+href="/eliminar_cliente/{{c[0]}}"
+onclick="return confirm('¿Seguro eliminar a {{c[1]}}?')">
+Eliminar
+</a>
+
+<a class="btn btn-his" href="/historial/{{c[0]}}">Historial</a>
+
+</div>
+{% endfor %}
+
+<a class="volver" href="/">⬅ Volver</a>
+
+</div>

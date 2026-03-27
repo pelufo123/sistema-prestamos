@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Historial</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="container">
+<h2>📊 Historial del Cliente</h2>
+
+{% for p in data %}
+<div class="card">
+
+<h3>Préstamo #{{p.prestamo_id}}</h3>
+
+<div class="grid">
+<div>💰 Total prestamo: {{p.total}}</div>
+<div>💵 Abono: {{p.abonado}}</div>
+<div>⚖ Saldo pendiente: {{p.saldo}}</div>
+</div>
+
+<hr>
+
+<h4>📌 Abonos</h4>
+
+{% for a in p.abonos %}
+<div class="item">
+
+<div><b>Préstamo:</b> #{{p.prestamo_id}}</div>
+<div><b>Abono:</b> {{a.monto}}</div>
+<div><b>Tipo:</b> {{a.tipo}}</div>
+<div><b>Fecha:</b> {{a.fecha}}</div>
+
+<a href="/eliminar_abono/{{a.id}}" 
+class="btn btn-del"
+onclick="return confirm('¿Eliminar este abono?')">
+🗑 Eliminar
+</a>
+
+</div>
+{% endfor %}
+
+</div>
+{% endfor %}
+
+<a href="/clientes" class="volver">⬅ Volver</a>
+
+</div>
+
+</body>
+</html>

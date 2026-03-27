@@ -1,0 +1,12 @@
+<link rel="stylesheet" href="/static/style.css">
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Panel</h2>
+
+<div class="cards">
+    <div>Total préstamos: {{ total }}</div>
+    <div>Por vencer: {{ prox }}</div>
+    <div>Vencidos: {{ vencidos }}</div>
+</div>
+{% endblock %}
