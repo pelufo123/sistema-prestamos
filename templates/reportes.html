@@ -2,28 +2,35 @@
 <html>
 <head>
     <title>Reportes</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
 <h2>📊 Reportes</h2>
 
 <form method="POST">
-    <label>Fecha:</label>
+    <label>Seleccionar fecha:</label>
     <input type="date" name="fecha">
     <button type="submit">Ver</button>
 </form>
 
 <hr>
 
-<h3>📅 Resultado del día</h3>
-<p>💵 Interés: {{ interes_dia }}</p>
-<p>💰 Capital: {{ capital_dia }}</p>
+<div class="card">
+    <h3>📅 Resultado del día</h3>
+    <p>💵 Interés ganado: {{ interes_dia }}</p>
+    <p>💰 Capital recuperado: {{ capital_dia }}</p>
+</div>
 
-<hr>
+<div class="card">
+    <h3>📊 Totales generales</h3>
+    <p>💵 Total interés: {{ interes_total }}</p>
+    <p>💰 Total capital recuperado: {{ capital_total }}</p>
+</div>
 
-<h3>📊 Totales</h3>
-<p>💵 Interés total: {{ interes_total }}</p>
-<p>💰 Capital total: {{ capital_total }}</p>
+<br>
+
+<a href="/">⬅ Volver al panel</a>
 
 </body>
 </html>

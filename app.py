@@ -1,4 +1,5 @@
 import os
+import sqlite3
 from flask import Flask, render_template, request, redirect
 from datetime import datetime, timedelta
 
@@ -14,9 +15,10 @@ def conectar():
         import psycopg2
         return psycopg2.connect(db_url)
 
-    # 🔥 fallback local (SQLite)
-    import sqlite3
+    # 🔥 fallback local (no rompe tu PC)
     return sqlite3.connect("sistema.db")
+
+# ------------------------------
 # INICIALIZAR BASE DE DATOS
 # ------------------------------
 def init_db():
@@ -70,7 +72,11 @@ def calcular(pid):
     conn = conectar()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT total, vencimiento FROM prestamos WHERE id=%s", (pid,))
+    if os.getenv("DATABASE_URL"):
+        cursor.execute("SELECT total, vencimiento FROM prestamos WHERE id=%s", (pid,))
+    else:
+        cursor.execute("SELECT total, vencimiento FROM prestamos WHERE id=?", (pid,))
+
     data = cursor.fetchone()
 
     if not data:
@@ -78,22 +84,20 @@ def calcular(pid):
 
     total, venc = data
 
-    cursor.execute("SELECT SUM(monto) FROM abonos WHERE prestamo_id=%s AND tipo='capital'", (pid,))
+    if os.getenv("DATABASE_URL"):
+        cursor.execute("SELECT SUM(monto) FROM abonos WHERE prestamo_id=%s AND tipo='capital'", (pid,))
+    else:
+        cursor.execute("SELECT SUM(monto) FROM abonos WHERE prestamo_id=? AND tipo='capital'", (pid,))
+
     abonado = cursor.fetchone()[0] or 0
-
     saldo = total - abonado
-
-    excedente = 0
-    if saldo < 0:
-        excedente = abs(saldo)
-        saldo = 0
 
     hoy = datetime.now().date()
     venc = datetime.strptime(venc, "%Y-%m-%d").date()
     atraso = (hoy - venc).days if hoy > venc else 0
 
     conn.close()
-    return total, abonado, saldo, atraso, excedente
+    return total, abonado, saldo, atraso, 0
 
 # ------------------------------
 # PANEL PRINCIPAL
@@ -104,9 +108,7 @@ def panel():
     cursor = conn.cursor()
 
     hoy = datetime.now().date()
-    total = 0
-    prox = 0
-    vencidos = 0
+    total = prox = vencidos = 0
     alertas = []
 
     capital_total = 0
@@ -120,19 +122,14 @@ def panel():
         JOIN clientes c ON p.cliente_id = c.id
     """)
 
-    prestamos = cursor.fetchall()
+    for pid, venc_str, cliente, capital_p in cursor.fetchall():
+        total_, abonado, saldo, atraso, _ = calcular(pid)
 
-    for p in prestamos:
-        pid, vencimiento_str, cliente, capital_prestado = p
-
-        total_, abonado, saldo, atraso, extra = calcular(pid)
-
-        capital_total += capital_prestado
+        capital_total += capital_p
 
         if saldo > 0:
             total += 1
-            vencimiento = datetime.strptime(vencimiento_str, "%Y-%m-%d").date()
-            dias = (vencimiento - hoy).days
+            dias = (datetime.strptime(venc_str, "%Y-%m-%d").date() - hoy).days
 
             if dias < 0:
                 vencidos += 1
@@ -140,9 +137,9 @@ def panel():
                 prox += 1
 
             if dias == 2:
-                alertas.append(f"⚠ {cliente} tiene un préstamo que vence en 2 días")
+                alertas.append(f"⚠ {cliente} vence en 2 días")
             elif dias == 1:
-                alertas.append(f"⚠ {cliente} tiene un préstamo que vence MAÑANA")
+                alertas.append(f"⚠ {cliente} vence MAÑANA")
             elif dias == 0:
                 alertas.append(f"🚨 {cliente} vence HOY")
 
@@ -158,13 +155,83 @@ def panel():
     conn.close()
 
     return render_template("panel.html",
-                           total=total,
-                           prox=prox,
-                           vencidos=vencidos,
-                           alertas=alertas,
-                           capital_total=formato(capital_total),
-                           interes_hoy=formato(interes_hoy),
-                           capital_hoy=formato(capital_hoy))
+        total=total,
+        prox=prox,
+        vencidos=vencidos,
+        alertas=alertas,
+        capital_total=formato(capital_total),
+        interes_hoy=formato(interes_hoy),
+        capital_hoy=formato(capital_hoy)
+    )
+
+# ------------------------------
+# CLIENTES
+# ------------------------------
+@app.route("/clientes", methods=["GET","POST"])
+def clientes():
+    conn = conectar()
+    cursor = conn.cursor()
+
+    if request.method == "POST":
+        data = (request.form["nombre"], request.form["telefono"], request.form["direccion"])
+
+        if os.getenv("DATABASE_URL"):
+            cursor.execute("INSERT INTO clientes(nombre,telefono,direccion) VALUES (%s,%s,%s)", data)
+        else:
+            cursor.execute("INSERT INTO clientes(nombre,telefono,direccion) VALUES (?,?,?)", data)
+
+        conn.commit()
+
+    cursor.execute("SELECT * FROM clientes")
+    lista = cursor.fetchall()
+
+    conn.close()
+    return render_template("clientes.html", clientes=lista)
+
+# ------------------------------
+# PRESTAMOS
+# ------------------------------
+@app.route("/prestamos", methods=["GET","POST"])
+def prestamos():
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM clientes")
+    clientes = cursor.fetchall()
+
+    if request.method == "POST":
+        capital = float(request.form["capital"])
+        interes = float(request.form["interes"])
+        dias = int(request.form["dias"])
+        total = capital + (capital * interes / 100)
+
+        fecha = datetime.now()
+        venc = fecha + timedelta(days=dias)
+
+        data = (
+            request.form["cliente"],
+            capital,
+            interes,
+            dias,
+            fecha.strftime("%Y-%m-%d"),
+            venc.strftime("%Y-%m-%d"),
+            total
+        )
+
+        if os.getenv("DATABASE_URL"):
+            cursor.execute("""INSERT INTO prestamos(cliente_id, capital, interes, dias, fecha, vencimiento, total)
+                              VALUES (%s,%s,%s,%s,%s,%s,%s)""", data)
+        else:
+            cursor.execute("""INSERT INTO prestamos(cliente_id, capital, interes, dias, fecha, vencimiento, total)
+                              VALUES (?,?,?,?,?,?,?)""", data)
+
+        conn.commit()
+
+    cursor.execute("SELECT * FROM prestamos")
+    lista = cursor.fetchall()
+
+    conn.close()
+    return render_template("prestamos.html", clientes=clientes, prestamos=lista)
 
 # ------------------------------
 # ABONOS
@@ -177,64 +244,60 @@ def abonos():
     mensaje = ""
 
     if request.method == "POST":
-        prestamo_id = request.form.get("prestamo")
-        monto = request.form.get("monto")
+        pid = request.form.get("prestamo")
+        monto = float(request.form.get("monto"))
         tipo = request.form.get("tipo")
 
-        if prestamo_id and monto and tipo:
-            monto = float(monto)
+        total, abonado, saldo, _, _ = calcular(pid)
 
-            total, abonado, saldo, atraso, extra = calcular(prestamo_id)
-
-            if tipo == "capital":
-                if saldo <= 0:
-                    mensaje = "❌ Este préstamo ya está pagado"
-                elif monto > saldo:
-                    mensaje = f"❌ No puede abonar más del saldo ({formato(saldo)})"
+        if tipo == "capital":
+            if saldo <= 0:
+                mensaje = "❌ Ya está pagado"
+            elif monto > saldo:
+                mensaje = "❌ Excede saldo"
+            else:
+                if os.getenv("DATABASE_URL"):
+                    cursor.execute("INSERT INTO abonos VALUES (DEFAULT,%s,%s,%s,%s)",
+                                   (pid, monto, datetime.now(), tipo))
                 else:
-                    cursor.execute(
-                        "INSERT INTO abonos(prestamo_id, monto, fecha, tipo) VALUES (%s,%s,%s,%s)",
-                        (prestamo_id, monto, datetime.now().strftime("%Y-%m-%d %H:%M"), tipo)
-                    )
-                    conn.commit()
-
-            elif tipo == "interes":
-                cursor.execute(
-                    "INSERT INTO abonos(prestamo_id, monto, fecha, tipo) VALUES (%s,%s,%s,%s)",
-                    (prestamo_id, monto, datetime.now().strftime("%Y-%m-%d %H:%M"), tipo)
-                )
+                    cursor.execute("INSERT INTO abonos VALUES (NULL,?,?,?,?)",
+                                   (pid, monto, datetime.now(), tipo))
                 conn.commit()
+
+        else:
+            if os.getenv("DATABASE_URL"):
+                cursor.execute("INSERT INTO abonos VALUES (DEFAULT,%s,%s,%s,%s)",
+                               (pid, monto, datetime.now(), tipo))
+            else:
+                cursor.execute("INSERT INTO abonos VALUES (NULL,?,?,?,?)",
+                               (pid, monto, datetime.now(), tipo))
+            conn.commit()
 
     conn.close()
     return render_template("abonos.html", mensaje=mensaje)
 
 # ------------------------------
-# REPORTES (NUEVO)
+# REPORTES
 # ------------------------------
-@app.route("/reportes", methods=["GET", "POST"])
+@app.route("/reportes", methods=["GET","POST"])
 def reportes():
     conn = conectar()
     cursor = conn.cursor()
 
     fecha = request.form.get("fecha")
 
-    interes_dia = 0
-    capital_dia = 0
-    interes_total = 0
-    capital_total = 0
+    interes_dia = capital_dia = 0
+    interes_total = capital_total = 0
 
-    # Totales generales
-    cursor.execute("SELECT monto, tipo FROM abonos")
-    for monto, tipo in cursor.fetchall():
+    cursor.execute("SELECT monto, tipo, fecha FROM abonos")
+
+    for monto, tipo, f in cursor.fetchall():
         if tipo == "interes":
             interes_total += monto
         elif tipo == "capital":
             capital_total += monto
 
-    # Filtro por fecha
-    if fecha:
-        cursor.execute("SELECT monto, tipo, fecha FROM abonos WHERE fecha LIKE %s", (f"{fecha}%",))
-        for monto, tipo, f in cursor.fetchall():
+        if fecha and str(f).startswith(fecha):
             if tipo == "interes":
                 interes_dia += monto
             elif tipo == "capital":
@@ -243,14 +306,15 @@ def reportes():
     conn.close()
 
     return render_template("reportes.html",
-                           fecha=fecha,
-                           interes_dia=formato(interes_dia),
-                           capital_dia=formato(capital_dia),
-                           interes_total=formato(interes_total),
-                           capital_total=formato(capital_total))
+        fecha=fecha,
+        interes_dia=formato(interes_dia),
+        capital_dia=formato(capital_dia),
+        interes_total=formato(interes_total),
+        capital_total=formato(capital_total)
+    )
 
 # ------------------------------
-# RUN APP
+# RUN
 # ------------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
