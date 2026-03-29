@@ -1,6 +1,7 @@
 import os
 import sqlite3
-from flask import Flask, render_template, request, redirect
+import csv
+from flask import Flask, render_template, request, redirect, Response
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
@@ -145,7 +146,7 @@ def panel():
     cursor.execute("SELECT monto, tipo, fecha FROM abonos")
 
     for monto, tipo, fecha in cursor.fetchall():
-        if hoy_str in fecha:
+        if hoy_str in str(fecha):
             if tipo == "interes":
                 interes_hoy += monto
             elif tipo == "capital":
@@ -164,7 +165,7 @@ def panel():
     )
 
 # ------------------------------
-# CLIENTES (🔥 ARREGLADO)
+# CLIENTES
 # ------------------------------
 @app.route("/clientes", methods=["GET","POST"])
 def clientes():
@@ -184,7 +185,6 @@ def clientes():
     cursor.execute("SELECT * FROM clientes")
     lista = cursor.fetchall()
 
-    # 🔥 AÑADIDO (RESUMEN)
     resumen = []
 
     for c in lista:
@@ -205,12 +205,7 @@ def clientes():
 
     conn.close()
 
-    return render_template(
-        "clientes.html",
-        clientes=lista,
-        resumen=resumen,
-        formato=formato
-    )
+    return render_template("clientes.html", clientes=lista, resumen=resumen, formato=formato)
 
 # ------------------------------
 # PRESTAMOS
@@ -337,8 +332,83 @@ def reportes():
     )
 
 # ------------------------------
+# HISTORIAL
+# ------------------------------
+@app.route("/historial/<int:id>")
+def historial(id):
+    conn = conectar()
+    cursor = conn.cursor()
+
+    if os.getenv("DATABASE_URL"):
+        cursor.execute("SELECT id, fecha, total FROM prestamos WHERE cliente_id=%s", (id,))
+    else:
+        cursor.execute("SELECT id, fecha, total FROM prestamos WHERE cliente_id=?", (id,))
+
+    prestamos = cursor.fetchall()
+    data = []
+
+    for p in prestamos:
+        total, abonado, saldo, atraso, extra = calcular(p[0])
+
+        if os.getenv("DATABASE_URL"):
+            cursor.execute("SELECT monto, tipo, fecha FROM abonos WHERE prestamo_id=%s", (p[0],))
+        else:
+            cursor.execute("SELECT monto, tipo, fecha FROM abonos WHERE prestamo_id=?", (p[0],))
+
+        abonos = cursor.fetchall()
+
+        lista_abonos = []
+        for a in abonos:
+            lista_abonos.append({
+                "monto": formato(a[0]),
+                "tipo": a[1],
+                "fecha": a[2]
+            })
+
+        data.append({
+            "prestamo_id": p[0],
+            "fecha": p[1],
+            "total": formato(total),
+            "abonado": formato(abonado),
+            "saldo": formato(saldo),
+            "estado": "PAGADO" if saldo <= 0 else "VENCIDO" if atraso > 0 else "ACTIVO",
+            "abonos": lista_abonos
+        })
+
+    conn.close()
+    return render_template("historial.html", data=data)
+
+# ------------------------------
+# BACKUP CSV 🔥
+# ------------------------------
+@app.route("/backup_csv")
+def backup_csv():
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT c.nombre, p.capital, p.total, a.monto, a.tipo, a.fecha
+        FROM abonos a
+        JOIN prestamos p ON a.prestamo_id = p.id
+        JOIN clientes c ON p.cliente_id = c.id
+        ORDER BY a.fecha DESC
+    """)
+
+    rows = cursor.fetchall()
+
+    def generate():
+        yield "Cliente,Capital,Total,Abono,Tipo,Fecha\n"
+        for r in rows:
+            yield ",".join([str(x) for x in r]) + "\n"
+
+    return Response(generate(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=backup.csv"}
+    )
+
+# ------------------------------
 # RUN
 # ------------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(host="0.0.0.0", port=port)

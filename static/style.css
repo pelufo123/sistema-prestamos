@@ -5,6 +5,7 @@ body{
     margin:0;
 }
 
+/* CONTENEDOR */
 .container{
     width:90%;
     max-width:900px;
@@ -17,6 +18,7 @@ h2{
     margin-bottom:20px;
 }
 
+/* TARJETAS */
 .card{
     background:#1e293b;
     padding:15px;
@@ -25,6 +27,7 @@ h2{
     box-shadow:0 0 10px rgba(0,0,0,0.3);
 }
 
+/* INPUTS */
 input, select{
     width:100%;
     padding:10px;
@@ -34,6 +37,7 @@ input, select{
     outline:none;
 }
 
+/* BOTONES */
 button{
     background:#3b82f6;
     color:white;
@@ -42,12 +46,14 @@ button{
     border-radius:8px;
     cursor:pointer;
     width:100%;
+    transition:0.2s;
 }
 
 button:hover{
     background:#2563eb;
 }
 
+/* BOTONES LINKS */
 .btn{
     display:inline-block;
     padding:6px 10px;
@@ -55,12 +61,14 @@ button:hover{
     border-radius:6px;
     text-decoration:none;
     color:white;
+    font-size:14px;
 }
 
 .btn-edit{ background:#22c55e; }
 .btn-del{ background:#ef4444; }
 .btn-his{ background:#f59e0b; }
 
+/* ALERTAS */
 .alert{
     padding:10px;
     border-radius:8px;
@@ -72,6 +80,7 @@ button:hover{
     color:black;
 }
 
+/* BADGES */
 .badge{
     padding:5px 10px;
     border-radius:6px;
@@ -82,40 +91,14 @@ button:hover{
 .vencido{background:#ef4444;}
 .pagado{background:#3b82f6;}
 
-.volver{
-    display:block;
-    text-align:center;
-    margin-top:20px;
-    color:#94a3b8;
-}
-
+/* GRID */
 .grid{
     display:grid;
     grid-template-columns: repeat(3,1fr);
     gap:10px;
-    margin-bottom:10px;
 }
 
-.item{
-    background:#0f172a;
-    padding:10px;
-    border-radius:8px;
-    margin-bottom:8px;
-    border-left:4px solid #3b82f6;
-}
-
-h3{
-    color:#60a5fa;
-}
-
-h4{
-    color:#cbd5f5;
-}
-
-hr{
-    border:1px solid #334155;
-}
-
+/* ITEMS */
 .item{
     background:#020617;
     padding:12px;
@@ -127,134 +110,58 @@ hr{
 
 .item:hover{
     transform:scale(1.02);
-    background:#020617;
 }
 
-.grid{
-    display:grid;
-    grid-template-columns: repeat(3,1fr);
-    gap:10px;
-    margin:10px 0;
-}
-
-label{
-    font-size:14px;
-    color:#94a3b8;
-}
-
-h3{
-    color:#60a5fa;
-}
-
-h4{
-    color:#cbd5f5;
-}
+/* TITULOS */
+h3{ color:#60a5fa; }
+h4{ color:#cbd5f5; }
 
 hr{
     border:1px solid #334155;
     margin:10px 0;
 }
 
-body{
-    font-family: 'Segoe UI', sans-serif;
-    background: #0f172a;
-    color: #fff;
-    margin:0;
-}
-
-.container{
-    width:90%;
-    max-width:900px;
-    margin:auto;
-    padding:20px;
-}
-
-h2{
-    text-align:center;
-    margin-bottom:20px;
-}
-
-.card{
-    background:#1e293b;
-    padding:15px;
-    border-radius:10px;
-    margin-bottom:15px;
-    box-shadow:0 0 10px rgba(0,0,0,0.3);
-}
-
-input, select{
+/* TABLAS 🔥 */
+table{
     width:100%;
+    border-collapse:collapse;
+    margin-top:10px;
+}
+
+th, td{
     padding:10px;
-    margin:5px 0;
-    border-radius:8px;
-    border:none;
-    outline:none;
+    text-align:left;
 }
 
-button{
-    background:#3b82f6;
-    color:white;
-    border:none;
-    padding:10px;
-    border-radius:8px;
-    cursor:pointer;
-    width:100%;
+th{
+    background:#020617;
 }
 
-button:hover{
-    background:#2563eb;
+tr:nth-child(even){
+    background:#111827;
 }
 
-.btn{
-    display:inline-block;
-    padding:6px 10px;
-    margin:3px;
-    border-radius:6px;
+/* LINKS 🔥 (QUITA AZUL) */
+a{
     text-decoration:none;
+    color:#cbd5f5;
+}
+
+a:visited{
+    color:#cbd5f5;
+}
+
+a:hover{
     color:white;
 }
 
-.btn-edit{ background:#22c55e; }
-.btn-del{ background:#ef4444; }
-.btn-his{ background:#f59e0b; }
+/* ESTADOS HISTORIAL */
+.verde{ color:#22c55e; font-weight:bold; }
+.rojo{ color:#ef4444; font-weight:bold; }
+.azul{ color:#3b82f6; font-weight:bold; }
 
-.alert{
-    padding:10px;
-    border-radius:8px;
-    margin:10px 0;
-}
-
-.alert-warning{
-    background:#f59e0b;
-    color:black;
-}
-
-.badge{
-    padding:5px 10px;
-    border-radius:6px;
-    font-size:12px;
-}
-
-.activo{background:#22c55e;}
-.vencido{background:#ef4444;}
-.pagado{background:#3b82f6;}
-
-.volver{
-    display:block;
-    text-align:center;
-    margin-top:20px;
-    color:#94a3b8;
-}
-
-/* 🔥 GRID PARA PANEL */
-.grid{
-    display:grid;
-    grid-template-columns: repeat(3,1fr);
-    gap:10px;
-}
-
-/* 🔥 RESPONSIVE CELULAR */
-@media (max-width: 768px){
+/* RESPONSIVE */
+@media (max-width:768px){
 
     .container{
         width:95%;
@@ -265,59 +172,13 @@ button:hover{
         font-size:20px;
     }
 
-    .card{
-        padding:12px;
-    }
-
-    input, select, button{
-        font-size:16px;
-        padding:12px;
+    .grid{
+        grid-template-columns:1fr;
     }
 
     .btn{
         display:block;
         width:100%;
         text-align:center;
-        margin:5px 0;
     }
-
-    .grid{
-        grid-template-columns:1fr;
-    }
-
-    .card {
-    background: white;
-    padding: 15px;
-    margin: 10px 0;
-    border-radius: 10px;
-    box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
-}
-a {
-    text-decoration: none;
-    color: inherit;
-}
-
-a:visited {
-    color: inherit;
-}
-
-a:hover {
-    color: #333;
-}
-button {
-    border: none;
-    outline: none;
-    cursor: pointer;
-}
-.nav-btn {
-    background: #2d89ef;
-    color: white;
-    padding: 10px 15px;
-    border-radius: 8px;
-    margin: 5px;
-}
-
-.nav-btn:hover {
-    background: #1b5fbd;
-}
 }

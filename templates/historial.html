@@ -1,54 +1,62 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Historial</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Historial</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
-
 <body>
 
-<div class="container">
-<h2>📊 Historial del Cliente</h2>
+<h2>📄 Historial del Cliente</h2>
 
 {% for p in data %}
 <div class="card">
 
-<h3>Préstamo #{{p.prestamo_id}}</h3>
+    <h3>Préstamo #{{ p.prestamo_id }}</h3>
 
-<div class="grid">
-<div>💰 Total prestamo: {{p.total}}</div>
-<div>💵 Abono: {{p.abonado}}</div>
-<div>⚖ Saldo pendiente: {{p.saldo}}</div>
-</div>
+    <p><strong>Fecha:</strong> {{ p.fecha }}</p>
+    <p><strong>Total:</strong> {{ p.total }}</p>
+    <p><strong>Abonado:</strong> {{ p.abonado }}</p>
+    <p><strong>Saldo:</strong> {{ p.saldo }}</p>
 
-<hr>
+    <p>
+        <strong>Estado:</strong> 
+        <span class="
+            {% if p.estado == 'PAGADO' %}verde
+            {% elif p.estado == 'VENCIDO' %}rojo
+            {% else %}azul
+            {% endif %}
+        ">
+            {{ p.estado }}
+        </span>
+    </p>
 
-<h4>📌 Abonos</h4>
+    <h4>Abonos:</h4>
 
-{% for a in p.abonos %}
-<div class="item">
+    {% if p.abonos %}
+    <table>
+        <tr>
+            <th>Monto</th>
+            <th>Tipo</th>
+            <th>Fecha</th>
+        </tr>
 
-<div><b>Préstamo:</b> #{{p.prestamo_id}}</div>
-<div><b>Abono:</b> {{a.monto}}</div>
-<div><b>Tipo:</b> {{a.tipo}}</div>
-<div><b>Fecha:</b> {{a.fecha}}</div>
-
-<a href="/eliminar_abono/{{a.id}}" 
-class="btn btn-del"
-onclick="return confirm('¿Eliminar este abono?')">
-🗑 Eliminar
-</a>
+        {% for a in p.abonos %}
+        <tr>
+            <td>{{ a.monto }}</td>
+            <td>{{ a.tipo }}</td>
+            <td>{{ a.fecha }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+        <p>No hay abonos</p>
+    {% endif %}
 
 </div>
 {% endfor %}
 
-</div>
-{% endfor %}
-
-<a href="/clientes" class="volver">⬅ Volver</a>
-
-</div>
+<br>
+<a href="/clientes">⬅ Volver</a>
 
 </body>
 </html>
