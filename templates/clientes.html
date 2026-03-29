@@ -34,12 +34,22 @@
         <td>{{ c[1] }}</td>
         <td>{{ c[2] }}</td>
         <td>{{ c[3] }}</td>
-        <td>{{ formato(resumen[loop.index0]) }}</td>
+
+        <!-- 🔥 SALDO SEGURO -->
+        <td>
+            {% if resumen and resumen|length > loop.index0 %}
+                {{ formato(resumen[loop.index0]) }}
+            {% else %}
+                0
+            {% endif %}
+        </td>
+
         <td>
             <a href="/historial/{{ c[0] }}">📄 Historial</a>
         </td>
     </tr>
     {% endfor %}
+
 </table>
 </div>
 

@@ -15,7 +15,6 @@ def conectar():
         import psycopg2
         return psycopg2.connect(db_url)
 
-    # 🔥 fallback local (no rompe tu PC)
     return sqlite3.connect("sistema.db")
 
 # ------------------------------
@@ -165,7 +164,7 @@ def panel():
     )
 
 # ------------------------------
-# CLIENTES
+# CLIENTES (🔥 ARREGLADO)
 # ------------------------------
 @app.route("/clientes", methods=["GET","POST"])
 def clientes():
@@ -185,8 +184,33 @@ def clientes():
     cursor.execute("SELECT * FROM clientes")
     lista = cursor.fetchall()
 
+    # 🔥 AÑADIDO (RESUMEN)
+    resumen = []
+
+    for c in lista:
+        if os.getenv("DATABASE_URL"):
+            cursor.execute("SELECT id FROM prestamos WHERE cliente_id=%s", (c[0],))
+        else:
+            cursor.execute("SELECT id FROM prestamos WHERE cliente_id=?", (c[0],))
+
+        prestamos_c = cursor.fetchall()
+
+        saldo_total = 0
+
+        for p in prestamos_c:
+            total, abonado, saldo, atraso, extra = calcular(p[0])
+            saldo_total += saldo
+
+        resumen.append(saldo_total)
+
     conn.close()
-    return render_template("clientes.html", clientes=lista)
+
+    return render_template(
+        "clientes.html",
+        clientes=lista,
+        resumen=resumen,
+        formato=formato
+    )
 
 # ------------------------------
 # PRESTAMOS
@@ -263,7 +287,6 @@ def abonos():
                     cursor.execute("INSERT INTO abonos VALUES (NULL,?,?,?,?)",
                                    (pid, monto, datetime.now(), tipo))
                 conn.commit()
-
         else:
             if os.getenv("DATABASE_URL"):
                 cursor.execute("INSERT INTO abonos VALUES (DEFAULT,%s,%s,%s,%s)",
