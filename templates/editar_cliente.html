@@ -1,29 +1,24 @@
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-<link rel="stylesheet" href="/static/style.css">
-<h2>Clientes</h2>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Editar Cliente</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
 
-<a href="/"><button>⬅ Volver</button></a>
+<h2>✏️ Editar Cliente</h2>
 
-<form method="POST">
-<input name="nombre" placeholder="Nombre" required>
-<input name="telefono" placeholder="Teléfono" required>
-<input name="direccion" placeholder="Dirección" required>
-<button>Guardar</button>
-</form>
+<div class="card">
+    <form method="POST">
+        Nombre: <input type="text" name="nombre" value="{{ cliente[1] }}" required><br><br>
+        Teléfono: <input type="text" name="telefono" value="{{ cliente[2] }}"><br><br>
+        Dirección: <input type="text" name="direccion" value="{{ cliente[3] }}"><br><br>
+        <button type="submit">Guardar Cambios</button>
+    </form>
+</div>
 
-<table>
-<tr><th>ID</th><th>Nombre</th><th>Teléfono</th><th>Acciones</th></tr>
+<br>
+<a href="/clientes">⬅ Volver a Clientes</a>
 
-{% for c in clientes %}
-<tr>
-<td>{{c[0]}}</td>
-<td>{{c[1]}}</td>
-<td>{{c[2]}}</td>
-<td>
-<a href="/editar_cliente/{{c[0]}}">Editar</a>
-<a href="/eliminar_cliente/{{c[0]}}" onclick="return confirm('¿Eliminar a {{c[1]}}?')">Eliminar</a>
-<a href="/historial/{{c[0]}}">Historial</a>
-</td>
-</tr>
-{% endfor %}
-</table>
+</body>
+</html>

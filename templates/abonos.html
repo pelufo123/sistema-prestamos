@@ -1,103 +1,43 @@
 <!DOCTYPE html>
 <html>
-    
 <head>
-<meta charset="UTF-8">
-
-<!-- 🔥 RESPONSIVE -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Abonos</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Abonos</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
-
 <body>
 
-<div class="container">
+<h2>💰 Agregar Abono</h2>
 
-<h2>💰 Gestión de Abonos</h2>
-
-<a href="/" class="volver">⬅ Ir al inicio</a>
-
-{% if mensaje %}
-<div class="alert alert-warning">{{mensaje}}</div>
-{% endif %}
-
-<div class="card">
-<h3>🔍 Buscar por fecha</h3>
 <form method="POST">
-<input type="date" name="fecha_filtro">
-<button>Buscar</button>
-</form>
-</div>
+  Cliente:
+  <select name="cliente" onchange="this.form.submit()">
+    <option value="">--Seleccione--</option>
+    {% for c in clientes %}
+      <option value="{{ c[0] }}" {% if c[0]==request.form.get('cliente')|int %}selected{% endif %}>{{ c[1] }}</option>
+    {% endfor %}
+  </select><br><br>
 
-<div class="card">
-<h3>📅 Abonos de Hoy</h3>
+  Prestamo:
+  <select name="prestamo">
+    {% for p in prestamos %}
+      <option value="{{ p[0] }}">Prestamo {{ p[0] }} - Fecha {{ p[1] }}</option>
+    {% endfor %}
+  </select><br><br>
 
-{% for a in abonos_hoy %}
-<div class="item">
-💰 {{a.monto}} | {{a.tipo}} <br>
-👤 {{a.cliente}} | Préstamo #{{a.prestamo}} <br>
-📅 {{a.fecha}}
-</div>
-{% endfor %}
-
-</div>
-
-<div class="card">
-<h3>📊 Historial de Abonos</h3>
-
-{% for a in historial %}
-<div class="item">
-💰 {{a.monto}} | {{a.tipo}} <br>
-👤 {{a.cliente}} | Préstamo #{{a.prestamo}} <br>
-📅 {{a.fecha}}
-</div>
-{% endfor %}
-
-</div>
-
-<div class="card">
-<form method="POST">
-
-<select name="cliente">
-<option value="">Seleccione cliente</option>
-{% for c in clientes %}
-<option value="{{c[0]}}">{{c[1]}}</option>
-{% endfor %}
-</select>
-
-<button>Buscar préstamos</button>
-
-</form>
-</div>
-
-{% if prestamos %}
-<div class="card">
-<form method="POST">
-
-<select name="prestamo">
-{% for p in prestamos %}
-<option value="{{p.id}}">
-Préstamo #{{p.id}} → Saldo: {{p.saldo}} → {{p.estado}}
-</option>
-{% endfor %}
-</select>
-
-<input type="number" name="monto">
-
-<select name="tipo" required>
+  Monto: <input type="number" step="0.01" name="monto" required><br><br>
+  Tipo:
+  <select name="tipo">
     <option value="capital">Capital</option>
     <option value="interes">Interés</option>
-</select>
+  </select><br><br>
 
-<button>Guardar Abono</button>
-
+  <button type="submit">Agregar Abono</button>
 </form>
-</div>
-{% endif %}
 
-</div>
+<p>{{ mensaje }}</p>
+
+<br>
+<a href="/">⬅ Volver al panel</a>
 
 </body>
 </html>

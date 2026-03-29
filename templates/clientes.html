@@ -8,7 +8,7 @@
 
 <h2>👥 Clientes</h2>
 
-<!-- FORMULARIO -->
+<!-- FORMULARIO AGREGAR CLIENTE -->
 <div class="card">
     <form method="POST">
         <input type="text" name="nombre" placeholder="Nombre" required>
@@ -18,7 +18,7 @@
     </form>
 </div>
 
-<!-- TABLA -->
+<!-- TABLA CLIENTES -->
 <div class="card">
 <table>
     <tr>
@@ -34,8 +34,6 @@
         <td>{{ c[1] }}</td>
         <td>{{ c[2] }}</td>
         <td>{{ c[3] }}</td>
-
-        <!-- 🔥 SALDO SEGURO -->
         <td>
             {% if resumen and resumen|length > loop.index0 %}
                 {{ formato(resumen[loop.index0]) }}
@@ -43,9 +41,10 @@
                 0
             {% endif %}
         </td>
-
         <td>
-            <a href="/historial/{{ c[0] }}">📄 Historial</a>
+            <a class="btn btn-his" href="/historial/{{ c[0] }}">Historial</a>
+            <a class="btn btn-edit" href="/editar_cliente/{{ c[0] }}">Editar</a>
+            <a class="btn btn-del" href="/eliminar_cliente/{{ c[0] }}">Eliminar</a>
         </td>
     </tr>
     {% endfor %}
@@ -54,7 +53,6 @@
 </div>
 
 <br>
-
 <a href="/">⬅ Volver al panel</a>
 
 </body>

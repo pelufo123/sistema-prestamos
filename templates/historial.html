@@ -1,62 +1,39 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Historial</title>
+    <title>Historial de Préstamos</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
-<h2>📄 Historial del Cliente</h2>
+<h2>📄 Historial de Préstamos</h2>
 
-{% for p in data %}
+{% for d in data %}
 <div class="card">
+    <p><strong>Préstamo ID:</strong> {{ d.prestamo }} | <strong>Fecha:</strong> {{ d.fecha }}</p>
+    <p><strong>Abonado:</strong> {{ d.abonado }} | <strong>Saldo Pendiente:</strong> {{ d.saldo }}</p>
 
-    <h3>Préstamo #{{ p.prestamo_id }}</h3>
-
-    <p><strong>Fecha:</strong> {{ p.fecha }}</p>
-    <p><strong>Total:</strong> {{ p.total }}</p>
-    <p><strong>Abonado:</strong> {{ p.abonado }}</p>
-    <p><strong>Saldo:</strong> {{ p.saldo }}</p>
-
-    <p>
-        <strong>Estado:</strong> 
-        <span class="
-            {% if p.estado == 'PAGADO' %}verde
-            {% elif p.estado == 'VENCIDO' %}rojo
-            {% else %}azul
-            {% endif %}
-        ">
-            {{ p.estado }}
-        </span>
-    </p>
-
-    <h4>Abonos:</h4>
-
-    {% if p.abonos %}
+    {% if d.abonos %}
     <table>
         <tr>
-            <th>Monto</th>
-            <th>Tipo</th>
             <th>Fecha</th>
+            <th>Tipo</th>
+            <th>Monto</th>
         </tr>
-
-        {% for a in p.abonos %}
+        {% for a in d.abonos %}
         <tr>
-            <td>{{ a.monto }}</td>
-            <td>{{ a.tipo }}</td>
-            <td>{{ a.fecha }}</td>
+            <td>{{ a[2] }}</td>
+            <td>{{ a[1] }}</td>
+            <td>{{ "{:,.0f}".format(a[0]).replace(',', '.') }}</td>
         </tr>
         {% endfor %}
     </table>
-    {% else %}
-        <p>No hay abonos</p>
     {% endif %}
-
 </div>
+<br>
 {% endfor %}
 
-<br>
-<a href="/clientes">⬅ Volver</a>
+<a href="/clientes">⬅ Volver a Clientes</a>
 
 </body>
 </html>
