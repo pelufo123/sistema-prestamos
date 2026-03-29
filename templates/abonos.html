@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+    
 <head>
 <meta charset="UTF-8">
 
@@ -85,9 +86,9 @@ Préstamo #{{p.id}} → Saldo: {{p.saldo}} → {{p.estado}}
 
 <input type="number" name="monto">
 
-<select name="tipo">
-<option>Efectivo</option>
-<option>Transferencia</option>
+<select name="tipo" required>
+    <option value="capital">Capital</option>
+    <option value="interes">Interés</option>
 </select>
 
 <button>Guardar Abono</button>
