@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reportes</title>
+</head>
+<body>
+
+<h2>📊 Reportes</h2>
+
+<form method="POST">
+    <label>Fecha:</label>
+    <input type="date" name="fecha">
+    <button type="submit">Ver</button>
+</form>
+
+<hr>
+
+<h3>📅 Resultado del día</h3>
+<p>💵 Interés: {{ interes_dia }}</p>
+<p>💰 Capital: {{ capital_dia }}</p>
+
+<hr>
+
+<h3>📊 Totales</h3>
+<p>💵 Interés total: {{ interes_total }}</p>
+<p>💰 Capital total: {{ capital_total }}</p>
+
+</body>
+</html>

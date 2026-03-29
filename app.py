@@ -77,7 +77,6 @@ def calcular(pid):
 
     total, venc = data
 
-    # 🔥 SOLO RESTA CAPITAL (IMPORTANTE)
     cursor.execute("SELECT SUM(monto) FROM abonos WHERE prestamo_id=%s AND tipo='capital'", (pid,))
     abonado = cursor.fetchone()[0] or 0
 
@@ -109,7 +108,6 @@ def panel():
     vencidos = 0
     alertas = []
 
-    # 🔥 NUEVAS VARIABLES
     capital_total = 0
     interes_hoy = 0
     capital_hoy = 0
@@ -128,7 +126,6 @@ def panel():
 
         total_, abonado, saldo, atraso, extra = calcular(pid)
 
-        # 🔥 SUMAR CAPITAL TOTAL
         capital_total += capital_prestado
 
         if saldo > 0:
@@ -148,7 +145,6 @@ def panel():
             elif dias == 0:
                 alertas.append(f"🚨 {cliente} vence HOY")
 
-    # 🔥 ABONOS DEL DÍA
     cursor.execute("SELECT monto, tipo, fecha FROM abonos")
 
     for monto, tipo, fecha in cursor.fetchall():
@@ -170,7 +166,7 @@ def panel():
                            capital_hoy=formato(capital_hoy))
 
 # ------------------------------
-# ABONOS (ACTUALIZADO)
+# ABONOS
 # ------------------------------
 @app.route("/abonos", methods=["GET","POST"])
 def abonos():
@@ -210,6 +206,47 @@ def abonos():
 
     conn.close()
     return render_template("abonos.html", mensaje=mensaje)
+
+# ------------------------------
+# REPORTES (NUEVO)
+# ------------------------------
+@app.route("/reportes", methods=["GET", "POST"])
+def reportes():
+    conn = conectar()
+    cursor = conn.cursor()
+
+    fecha = request.form.get("fecha")
+
+    interes_dia = 0
+    capital_dia = 0
+    interes_total = 0
+    capital_total = 0
+
+    # Totales generales
+    cursor.execute("SELECT monto, tipo FROM abonos")
+    for monto, tipo in cursor.fetchall():
+        if tipo == "interes":
+            interes_total += monto
+        elif tipo == "capital":
+            capital_total += monto
+
+    # Filtro por fecha
+    if fecha:
+        cursor.execute("SELECT monto, tipo, fecha FROM abonos WHERE fecha LIKE %s", (f"{fecha}%",))
+        for monto, tipo, f in cursor.fetchall():
+            if tipo == "interes":
+                interes_dia += monto
+            elif tipo == "capital":
+                capital_dia += monto
+
+    conn.close()
+
+    return render_template("reportes.html",
+                           fecha=fecha,
+                           interes_dia=formato(interes_dia),
+                           capital_dia=formato(capital_dia),
+                           interes_total=formato(interes_total),
+                           capital_total=formato(capital_total))
 
 # ------------------------------
 # RUN APP
