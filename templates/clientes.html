@@ -1,40 +1,51 @@
-<link rel="stylesheet" href="/static/style.css">
-
-<div class="container">
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clientes</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
 
 <h2>👥 Clientes</h2>
 
+<!-- FORMULARIO -->
 <div class="card">
-<form method="POST">
-<input name="nombre" placeholder="Nombre" required>
-<input name="telefono" placeholder="Teléfono">
-<input name="direccion" placeholder="Dirección">
-<button>Guardar Cliente</button>
-</form>
+    <form method="POST">
+        <input type="text" name="nombre" placeholder="Nombre" required>
+        <input type="text" name="telefono" placeholder="Teléfono">
+        <input type="text" name="direccion" placeholder="Dirección">
+        <button type="submit">Agregar</button>
+    </form>
 </div>
 
-{% for c in clientes %}
+<!-- TABLA -->
 <div class="card">
+<table>
+    <tr>
+        <th>Nombre</th>
+        <th>Teléfono</th>
+        <th>Dirección</th>
+        <th>Saldo</th>
+        <th>Acciones</th>
+    </tr>
 
-<b>{{c[1]}}</b><br>
-📞 {{c[2]}} <br>
-📍 {{c[3]}}
-
-<br><br>
-
-<a class="btn btn-edit" href="/editar_cliente/{{c[0]}}">Editar</a>
-
-<a class="btn btn-del"
-href="/eliminar_cliente/{{c[0]}}"
-onclick="return confirm('¿Seguro eliminar a {{c[1]}}?')">
-Eliminar
-</a>
-
-<a class="btn btn-his" href="/historial/{{c[0]}}">Historial</a>
-
+    {% for c in clientes %}
+    <tr>
+        <td>{{ c[1] }}</td>
+        <td>{{ c[2] }}</td>
+        <td>{{ c[3] }}</td>
+        <td>{{ formato(resumen[loop.index0]) }}</td>
+        <td>
+            <a href="/historial/{{ c[0] }}">📄 Historial</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
 </div>
-{% endfor %}
 
-<a class="volver" href="/">⬅ Volver</a>
+<br>
 
-</div>
+<a href="/">⬅ Volver al panel</a>
+
+</body>
+</html>
