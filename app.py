@@ -9,13 +9,14 @@ app = Flask(__name__)
 # ------------------------------
 def conectar():
     db_url = os.getenv("DATABASE_URL")
-    if not db_url:
-        raise Exception("❌ DATABASE_URL no configurada")
-    
-    import psycopg2
-    return psycopg2.connect(db_url)
 
-# ------------------------------
+    if db_url:
+        import psycopg2
+        return psycopg2.connect(db_url)
+
+    # 🔥 fallback local (SQLite)
+    import sqlite3
+    return sqlite3.connect("sistema.db")
 # INICIALIZAR BASE DE DATOS
 # ------------------------------
 def init_db():
