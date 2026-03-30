@@ -1,14 +1,45 @@
-<h1>Clientes</h1>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clientes</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
 
+<div class="container">
+
+<h2>👥 Clientes</h2>
+
+<div class="card">
 <form method="POST">
     <input name="nombre" placeholder="Nombre">
     <input name="telefono" placeholder="Teléfono">
     <input name="direccion" placeholder="Dirección">
     <button>Guardar</button>
 </form>
+</div>
 
-<hr>
+<div class="card">
+<table>
+    <tr>
+        <th>Nombre</th>
+        <th>Teléfono</th>
+        <th>Dirección</th>
+    </tr>
 
-{% for c in clientes %}
-<p>{{ c[1] }} - {{ c[2] }} - {{ c[3] }}</p>
-{% endfor %}
+    {% for c in clientes %}
+    <tr>
+        <td>{{ c[1] }}</td>
+        <td>{{ c[2] }}</td>
+        <td>{{ c[3] }}</td>
+    </tr>
+    {% endfor %}
+</table>
+</div>
+
+<a class="btn" href="/">⬅ Volver</a>
+
+</div>
+
+</body>
+</html>

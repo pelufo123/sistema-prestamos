@@ -1,12 +1,44 @@
-<h1>💰 Dashboard</h1>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
 
-<p>Activos: {{ total_activos }}</p>
-<p>Por vencer: {{ por_vencer }}</p>
-<p>Vencidos: {{ vencidos }}</p>
-<p>Total prestado: {{ capital_total }}</p>
+<div class="container">
 
-<hr>
+<h2>💰 Dashboard de Préstamos</h2>
 
-<a href="/clientes">Clientes</a><br>
-<a href="/prestamos">Préstamos</a><br>
-<a href="/abonos">Abonos</a>
+<div class="grid">
+    <div class="card">
+        <h3>Activos</h3>
+        <p>{{ total_activos }}</p>
+    </div>
+
+    <div class="card">
+        <h3>Por vencer</h3>
+        <p>{{ por_vencer }}</p>
+    </div>
+
+    <div class="card">
+        <h3>Vencidos</h3>
+        <p>{{ vencidos }}</p>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Total prestado</h3>
+    <p>{{ capital_total }}</p>
+</div>
+
+<div class="card">
+    <a class="btn" href="/clientes">👥 Clientes</a>
+    <a class="btn" href="/prestamos">💸 Préstamos</a>
+    <a class="btn" href="/abonos">💵 Abonos</a>
+</div>
+
+</div>
+
+</body>
+</html>

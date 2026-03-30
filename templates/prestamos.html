@@ -1,5 +1,16 @@
-<h1>Préstamos</h1>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Préstamos</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
 
+<div class="container">
+
+<h2>💸 Préstamos</h2>
+
+<div class="card">
 <form method="POST">
     <select name="cliente">
         {% for c in clientes %}
@@ -13,9 +24,27 @@
 
     <button>Guardar</button>
 </form>
+</div>
 
-<hr>
+<div class="card">
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Total</th>
+    </tr>
 
-{% for p in prestamos %}
-<p>ID {{ p[0] }} - Total: {{ p[7] }}</p>
-{% endfor %}
+    {% for p in prestamos %}
+    <tr>
+        <td>{{ p[0] }}</td>
+        <td>{{ p[7] }}</td>
+    </tr>
+    {% endfor %}
+</table>
+</div>
+
+<a class="btn" href="/">⬅ Volver</a>
+
+</div>
+
+</body>
+</html>

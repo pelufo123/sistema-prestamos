@@ -1,6 +1,18 @@
-<h1>Abonos</h1>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Abonos</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
 
+<div class="container">
+
+<h2>💵 Abonos</h2>
+
+<div class="card">
 <form method="POST">
+
     <select name="cliente">
         {% for c in clientes %}
         <option value="{{ c[0] }}">{{ c[1] }}</option>
@@ -17,5 +29,17 @@
 
     <button>Guardar</button>
 </form>
+</div>
 
-<p>{{ mensaje }}</p>
+{% if mensaje %}
+<div class="alert alert-warning">
+    {{ mensaje }}
+</div>
+{% endif %}
+
+<a class="btn" href="/">⬅ Volver</a>
+
+</div>
+
+</body>
+</html>
