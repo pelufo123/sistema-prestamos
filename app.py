@@ -6,21 +6,19 @@ from datetime import datetime, timedelta
 app = Flask(__name__)
 
 # ------------------------------
-# CONEXIÓN
+# CONEXIÓN A BASE DE DATOS
 # ------------------------------
 def conectar():
-    db_url = os.getenv("DATABASE_URL")  # Render debe tener esta variable
-    if db_url:
-        try:
-            return psycopg2.connect(db_url, sslmode="require")
-        except Exception as e:
-            print("Error conectando a PostgreSQL:", e)
-            return None
-    print("No se encontró DATABASE_URL")
-    return None
+    # Usa variable de entorno DATABASE_URL si existe, sino la URL de Render
+    db_url = os.getenv("DATABASE_URL") or "postgresql://bd_prestamos_user:SxQ2cWHQaOFz65smYOuViKoJ2u85EjBQ@dpg-d73c825m5p6s73e6mnjg-a.virginia-postgres.render.com/bd_prestamos"
+    try:
+        return psycopg2.connect(db_url, sslmode="require")
+    except Exception as e:
+        print("Error conectando a PostgreSQL:", e)
+        return None
 
 # ------------------------------
-# INIT DB
+# INICIALIZAR BASE DE DATOS
 # ------------------------------
 def init_db():
     conn = conectar()
@@ -79,12 +77,10 @@ def calcular(pid):
     if not data:
         conn.close()
         return 0,0,0,0
-
     total, venc = data
     cursor.execute("SELECT SUM(monto) FROM abonos WHERE prestamo_id=%s AND tipo='capital'", (pid,))
     abonado = cursor.fetchone()[0] or 0
     saldo = total - abonado
-
     hoy = datetime.now().date()
     if isinstance(venc, str):
         venc = datetime.strptime(venc, "%Y-%m-%d").date()
@@ -93,14 +89,14 @@ def calcular(pid):
     return total, abonado, saldo, atraso
 
 # ------------------------------
-# PANEL
+# PANEL PRINCIPAL
 # ------------------------------
 @app.route("/")
 def panel():
     conn = conectar()
     cursor = conn.cursor()
-
     hoy = datetime.now().date()
+
     total_activos = por_vencer = vencidos = 0
     capital_prestado = 0
     interes_hoy = 0
@@ -108,12 +104,10 @@ def panel():
 
     cursor.execute("SELECT id, capital, vencimiento FROM prestamos")
     prestamos = cursor.fetchall()
-
     for p in prestamos:
         pid, capital, venc = p
         total_, abonado, saldo, atraso = calcular(pid)
         capital_prestado += capital
-
         if saldo > 0:
             total_activos += 1
             dias = (venc - hoy) if isinstance(venc, datetime) else (datetime.strptime(str(venc), "%Y-%m-%d").date() - hoy)
@@ -123,7 +117,6 @@ def panel():
             elif dias <= 3:
                 por_vencer += 1
 
-    # Interés y capital recogido hoy
     cursor.execute("SELECT monto, tipo, fecha FROM abonos")
     for m, t, f in cursor.fetchall():
         fecha_abono = f.date() if isinstance(f, datetime) else datetime.strptime(str(f), "%Y-%m-%d %H:%M:%S").date()
@@ -143,7 +136,7 @@ def panel():
                            capital_hoy=formato(capital_hoy))
 
 # ------------------------------
-# CLIENTES CRUD
+# CRUD CLIENTES
 # ------------------------------
 @app.route("/clientes", methods=["GET","POST"])
 def clientes():
