@@ -1,9 +1,7 @@
 import os
 import psycopg2
-from flask import Flask, render_template, request, redirect, jsonify, send_file
+from flask import Flask, render_template, request, redirect
 from datetime import datetime, timedelta
-import io
-import csv
 
 app = Flask(__name__)
 
@@ -11,12 +9,15 @@ app = Flask(__name__)
 # CONEXIÓN
 # ------------------------------
 def conectar():
-    db_url = "postgresql://bd_prestamos_user:SxQ2cWHQaOFz65smYOuViKoJ2u85EjBQ@dpg-d73c825m5p6s73e6mnjg-a.virginia-postgres.render.com/bd_prestamos"
-    try:
-        return psycopg2.connect(db_url, sslmode="require")
-    except Exception as e:
-        print("Error conectando a PostgreSQL:", e)
-        return None
+    db_url = os.getenv("DATABASE_URL")  # Render debe tener esta variable
+    if db_url:
+        try:
+            return psycopg2.connect(db_url, sslmode="require")
+        except Exception as e:
+            print("Error conectando a PostgreSQL:", e)
+            return None
+    print("No se encontró DATABASE_URL")
+    return None
 
 # ------------------------------
 # INIT DB
@@ -26,7 +27,6 @@ def init_db():
     if not conn:
         print("No se pudo conectar a la base de datos.")
         return
-
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS clientes(
@@ -63,7 +63,7 @@ def init_db():
 init_db()
 
 # ------------------------------
-# FORMATO ENTEROS
+# FORMATO
 # ------------------------------
 def formato(x):
     return "{:,.0f}".format(x).replace(",", ".")
@@ -86,112 +86,95 @@ def calcular(pid):
     saldo = total - abonado
 
     hoy = datetime.now().date()
-    if isinstance(venc, datetime):
-        venc_date = venc.date()
-    else:
-        venc_date = venc
-    atraso = (hoy - venc_date).days if hoy > venc_date else 0
+    if isinstance(venc, str):
+        venc = datetime.strptime(venc, "%Y-%m-%d").date()
+    atraso = (hoy - venc).days if hoy > venc else 0
     conn.close()
     return total, abonado, saldo, atraso
 
 # ------------------------------
-# DASHBOARD
+# PANEL
 # ------------------------------
 @app.route("/")
 def panel():
-    return render_template("panel.html")
-
-# ------------------------------
-# API para actualizar dashboard
-# ------------------------------
-@app.route("/api/dashboard")
-def api_dashboard():
     conn = conectar()
     cursor = conn.cursor()
+
     hoy = datetime.now().date()
+    total_activos = por_vencer = vencidos = 0
+    capital_prestado = 0
+    interes_hoy = 0
+    capital_hoy = 0
 
-    total_activos = prox_vencer = vencidos = 0
-    capital_prestado = capital_recogido_hoy = interes_recogido_hoy = 0
+    cursor.execute("SELECT id, capital, vencimiento FROM prestamos")
+    prestamos = cursor.fetchall()
 
-    cursor.execute("SELECT id, capital, interes, vencimiento FROM prestamos")
-    prestamos_info = []
-
-    for pid, capital, interes, venc in cursor.fetchall():
+    for p in prestamos:
+        pid, capital, venc = p
         total_, abonado, saldo, atraso = calcular(pid)
         capital_prestado += capital
+
         if saldo > 0:
             total_activos += 1
-            venc_date = venc if isinstance(venc, datetime) else datetime.fromisoformat(str(venc)).date()
-            dias = (venc_date - hoy).days
+            dias = (venc - hoy) if isinstance(venc, datetime) else (datetime.strptime(str(venc), "%Y-%m-%d").date() - hoy)
+            dias = dias.days
             if dias < 0:
                 vencidos += 1
             elif dias <= 3:
-                prox_vencer += 1
+                por_vencer += 1
 
-        # Abonos
-        cursor.execute("SELECT monto, tipo, fecha FROM abonos WHERE prestamo_id=%s", (pid,))
-        abonos = cursor.fetchall()
-        abonado_capital = abonado_interes = 0
-        for m, t, f in abonos:
-            f_date = f.date() if isinstance(f, datetime) else f
-            if t == "capital":
-                abonado_capital += m
+    # Interés y capital recogido hoy
+    cursor.execute("SELECT monto, tipo, fecha FROM abonos")
+    for m, t, f in cursor.fetchall():
+        fecha_abono = f.date() if isinstance(f, datetime) else datetime.strptime(str(f), "%Y-%m-%d %H:%M:%S").date()
+        if hoy == fecha_abono:
+            if t == "interes":
+                interes_hoy += m
             else:
-                abonado_interes += m
-            if f_date == hoy:
-                if t == "capital":
-                    capital_recogido_hoy += m
-                else:
-                    interes_recogido_hoy += m
-
-        prestamos_info.append({
-            "id": pid,
-            "capital": int(capital),
-            "saldo": int(saldo),
-            "abonado_capital": int(abonado_capital),
-            "abonado_interes": int(abonado_interes),
-            "vencimiento": venc_date.strftime("%Y-%m-%d"),
-            "abonos": [{"monto": int(m), "tipo": t, "fecha": f.strftime("%Y-%m-%d %H:%M")} for m,t,f in abonos]
-        })
+                capital_hoy += m
 
     conn.close()
-    return jsonify({
-        "total_activos": total_activos,
-        "prox_vencer": prox_vencer,
-        "vencidos": vencidos,
-        "capital_prestado": int(capital_prestado),
-        "capital_recogido_hoy": int(capital_recogido_hoy),
-        "interes_recogido_hoy": int(interes_recogido_hoy),
-        "prestamos_info": prestamos_info
-    })
+    return render_template("panel.html",
+                           total_activos=total_activos,
+                           por_vencer=por_vencer,
+                           vencidos=vencidos,
+                           capital_prestado=formato(capital_prestado),
+                           interes_hoy=formato(interes_hoy),
+                           capital_hoy=formato(capital_hoy))
 
 # ------------------------------
-# Resto de CRUD clientes, prestamos, abonos y reportes
+# CLIENTES CRUD
 # ------------------------------
 @app.route("/clientes", methods=["GET","POST"])
 def clientes():
     conn = conectar()
     cursor = conn.cursor()
-    if request.method=="POST":
+    if request.method == "POST":
         cursor.execute("INSERT INTO clientes(nombre,telefono,direccion) VALUES (%s,%s,%s)",
-                       (request.form["nombre"],request.form["telefono"],request.form["direccion"]))
+                       (request.form["nombre"], request.form["telefono"], request.form["direccion"]))
         conn.commit()
     cursor.execute("SELECT * FROM clientes")
     clientes = cursor.fetchall()
+    resumen = []
+    for c in clientes:
+        cursor.execute("SELECT id FROM prestamos WHERE cliente_id=%s", (c[0],))
+        prestamos = cursor.fetchall()
+        saldo_total = sum(calcular(p[0])[2] for p in prestamos)
+        resumen.append(saldo_total)
     conn.close()
-    return render_template("clientes.html", clientes=clientes)
+    return render_template("clientes.html", clientes=clientes, resumen=resumen, formato=formato)
 
 @app.route("/editar_cliente/<int:id>", methods=["GET","POST"])
 def editar_cliente(id):
     conn = conectar()
     cursor = conn.cursor()
-    if request.method=="POST":
-        cursor.execute("UPDATE clientes SET nombre=%s,telefono=%s,direccion=%s WHERE id=%s",
-                       (request.form["nombre"],request.form["telefono"],request.form["direccion"],id))
+    if request.method == "POST":
+        cursor.execute("UPDATE clientes SET nombre=%s, telefono=%s, direccion=%s WHERE id=%s",
+                       (request.form["nombre"], request.form["telefono"], request.form["direccion"], id))
         conn.commit()
         conn.close()
         return redirect("/clientes")
-    cursor.execute("SELECT * FROM clientes WHERE id=%s",(id,))
+    cursor.execute("SELECT * FROM clientes WHERE id=%s", (id,))
     cliente = cursor.fetchone()
     conn.close()
     return render_template("editar_cliente.html", cliente=cliente)
@@ -200,29 +183,99 @@ def editar_cliente(id):
 def eliminar_cliente(id):
     conn = conectar()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM clientes WHERE id=%s",(id,))
+    cursor.execute("DELETE FROM clientes WHERE id=%s", (id,))
     conn.commit()
     conn.close()
     return redirect("/clientes")
 
-@app.route("/reportes")
-def reportes():
+# ------------------------------
+# PRESTAMOS
+# ------------------------------
+@app.route("/prestamos", methods=["GET","POST"])
+def prestamos():
     conn = conectar()
     cursor = conn.cursor()
-    cursor.execute("""
-        SELECT c.nombre, p.capital, p.interes, p.fecha, p.vencimiento, p.total
-        FROM prestamos p
-        JOIN clientes c ON c.id = p.cliente_id
-    """)
-    data = cursor.fetchall()
+    cursor.execute("SELECT * FROM clientes")
+    clientes = cursor.fetchall()
+    if request.method == "POST":
+        capital = float(request.form["capital"])
+        interes = float(request.form["interes"])
+        dias = int(request.form["dias"])
+        total = capital + (capital * interes / 100)
+        fecha = datetime.now()
+        venc = fecha + timedelta(days=dias)
+        cursor.execute("""
+            INSERT INTO prestamos(cliente_id,capital,interes,dias,fecha,vencimiento,total)
+            VALUES (%s,%s,%s,%s,%s,%s,%s)
+        """, (request.form["cliente"], capital, interes, dias, fecha.date(), venc.date(), total))
+        conn.commit()
+    cursor.execute("SELECT * FROM prestamos")
+    prestamos = cursor.fetchall()
     conn.close()
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["Cliente","Capital","Interes","Fecha","Vencimiento","Total"])
-    writer.writerows(data)
-    output.seek(0)
-    return send_file(io.BytesIO(output.getvalue().encode()), mimetype="text/csv", download_name="reporte.csv", as_attachment=True)
+    return render_template("prestamos.html", clientes=clientes, prestamos=prestamos)
 
-if __name__=="__main__":
-    port = int(os.environ.get("PORT",5000))
+# ------------------------------
+# ABONOS
+# ------------------------------
+@app.route("/abonos", methods=["GET","POST"])
+def abonos():
+    conn = conectar()
+    cursor = conn.cursor()
+    mensaje = ""
+    cursor.execute("SELECT * FROM clientes")
+    clientes = cursor.fetchall()
+    prestamos = []
+    cliente_id = request.form.get("cliente")
+    if cliente_id:
+        cursor.execute("SELECT id, fecha FROM prestamos WHERE cliente_id=%s", (cliente_id,))
+        data = cursor.fetchall()
+        for p in data:
+            _,_,saldo,_ = calcular(p[0])
+            if saldo > 0:
+                prestamos.append(p)
+    if request.method == "POST" and request.form.get("prestamo"):
+        pid = request.form.get("prestamo")
+        monto = float(request.form.get("monto"))
+        tipo = request.form.get("tipo")
+        _,_,saldo,_ = calcular(pid)
+        if tipo == "capital" and monto > saldo:
+            mensaje = "❌ Excede saldo"
+        else:
+            cursor.execute("INSERT INTO abonos(prestamo_id,monto,fecha,tipo) VALUES (%s,%s,%s,%s)",
+                           (pid, monto, datetime.now(), tipo))
+            conn.commit()
+            mensaje = "✅ Abono guardado"
+    conn.close()
+    return render_template("abonos.html",
+                           clientes=clientes,
+                           prestamos=prestamos,
+                           mensaje=mensaje)
+
+# ------------------------------
+# HISTORIAL
+# ------------------------------
+@app.route("/historial/<int:id>")
+def historial(id):
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, fecha FROM prestamos WHERE cliente_id=%s", (id,))
+    prestamos = cursor.fetchall()
+    data = []
+    for p in prestamos:
+        _, abonado, saldo, _ = calcular(p[0])
+        cursor.execute("SELECT monto,tipo,fecha FROM abonos WHERE prestamo_id=%s", (p[0],))
+        abonos = cursor.fetchall()
+        data.append({
+            "prestamo": p[0],
+            "fecha": p[1],
+            "saldo": formato(saldo),
+            "abonado": formato(abonado),
+            "abonos": abonos
+        })
+    conn.close()
+    return render_template("historial.html", data=data)
+
+# ------------------------------
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
