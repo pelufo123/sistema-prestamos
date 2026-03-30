@@ -1,24 +1,21 @@
-<link rel="stylesheet" href="/static/style.css">
-<a href="/">
-<button>⬅ Volver al panel</button>
-</a>
-
-{% extends "base.html" %}
-
-{% block content %}
-<h2>Préstamos</h2>
+<h1>Préstamos</h1>
 
 <form method="POST">
-<select name="cliente">
-{% for c in clientes %}
-<option value="{{c[0]}}">{{c[1]}}</option>
-{% endfor %}
-</select>
+    <select name="cliente">
+        {% for c in clientes %}
+        <option value="{{ c[0] }}">{{ c[1] }}</option>
+        {% endfor %}
+    </select>
 
-<input name="capital" placeholder="Dinero prestado">
-<input name="interes" placeholder="Interés">
-<input name="dias" placeholder="Días">
+    <input name="capital" placeholder="Capital">
+    <input name="interes" placeholder="Interés">
+    <input name="dias" placeholder="Días">
 
-<button>Guardar</button>
+    <button>Guardar</button>
 </form>
-{% endblock %}
+
+<hr>
+
+{% for p in prestamos %}
+<p>ID {{ p[0] }} - Total: {{ p[7] }}</p>
+{% endfor %}

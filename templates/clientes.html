@@ -1,59 +1,14 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Clientes</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
+<h1>Clientes</h1>
 
-<h2>👥 Clientes</h2>
+<form method="POST">
+    <input name="nombre" placeholder="Nombre">
+    <input name="telefono" placeholder="Teléfono">
+    <input name="direccion" placeholder="Dirección">
+    <button>Guardar</button>
+</form>
 
-<!-- FORMULARIO AGREGAR CLIENTE -->
-<div class="card">
-    <form method="POST">
-        <input type="text" name="nombre" placeholder="Nombre" required>
-        <input type="text" name="telefono" placeholder="Teléfono">
-        <input type="text" name="direccion" placeholder="Dirección">
-        <button type="submit">Agregar</button>
-    </form>
-</div>
+<hr>
 
-<!-- TABLA CLIENTES -->
-<div class="card">
-<table>
-    <tr>
-        <th>Nombre</th>
-        <th>Teléfono</th>
-        <th>Dirección</th>
-        <th>Saldo</th>
-        <th>Acciones</th>
-    </tr>
-
-    {% for c in clientes %}
-    <tr>
-        <td>{{ c[1] }}</td>
-        <td>{{ c[2] }}</td>
-        <td>{{ c[3] }}</td>
-        <td>
-            {% if resumen and resumen|length > loop.index0 %}
-                {{ formato(resumen[loop.index0]) }}
-            {% else %}
-                0
-            {% endif %}
-        </td>
-        <td>
-            <a class="btn btn-his" href="/historial/{{ c[0] }}">Historial</a>
-            <a class="btn btn-edit" href="/editar_cliente/{{ c[0] }}">Editar</a>
-            <a class="btn btn-del" href="/eliminar_cliente/{{ c[0] }}">Eliminar</a>
-        </td>
-    </tr>
-    {% endfor %}
-
-</table>
-</div>
-
-<br>
-<a href="/">⬅ Volver al panel</a>
-
-</body>
-</html>
+{% for c in clientes %}
+<p>{{ c[1] }} - {{ c[2] }} - {{ c[3] }}</p>
+{% endfor %}

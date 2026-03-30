@@ -1,107 +1,12 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Panel de Préstamos</title>
-    <link rel="stylesheet" href="/static/style.css">
-    <style>
-        body { font-family: Arial, sans-serif; margin:20px; }
-        .dashboard-cards { display:flex; flex-wrap: wrap; gap: 15px; }
-        .card { flex:1; min-width:150px; padding:20px; border-radius:8px; color:white; }
-        .card h3 { margin:0; font-size:1.2em; }
-        .card p { font-size:1.8em; margin-top:5px; font-weight:bold; }
-        .card-warning { background:#f39c12; }
-        .card-danger { background:#e74c3c; }
-        .card-success { background:#27ae60; }
-        .card-info { background:#2980b9; }
-        .card-primary { background:#8e44ad; }
-        table { width:100%; border-collapse: collapse; margin-top:20px; }
-        th, td { border:1px solid #ccc; padding:8px; text-align:center; }
-        th { background:#f4f4f4; }
-        .btn { padding:5px 10px; border-radius:5px; text-decoration:none; color:white; }
-        .btn-report { background:#16a085; }
-    </style>
-</head>
-<body>
-    <h1>💰 Dashboard de Préstamos</h1>
-    <div class="dashboard-cards" id="cards">
-        <!-- Cards se llenan con JS -->
-    </div>
-    <br>
-    <a class="btn btn-report" href="/reportes">📄 Descargar Reporte CSV</a>
+<h1>💰 Dashboard</h1>
 
-    <h2>📄 Abonos y Historial</h2>
-    <table id="tabla">
-        <tr>
-            <th>Préstamo</th>
-            <th>Saldo</th>
-            <th>Abonado Capital</th>
-            <th>Abonado Interés</th>
-            <th>Vencimiento</th>
-            <th>Abonos</th>
-        </tr>
-    </table>
+<p>Activos: {{ total_activos }}</p>
+<p>Por vencer: {{ por_vencer }}</p>
+<p>Vencidos: {{ vencidos }}</p>
+<p>Total prestado: {{ capital_total }}</p>
 
-<script>
-function actualizarDashboard(){
-    fetch("/api/dashboard").then(res=>res.json()).then(data=>{
-        // Dashboard cards
-        let cards = document.getElementById("cards");
-        cards.innerHTML = `
-            <div class="card card-success">
-                <h3>Préstamos Activos</h3>
-                <p>${data.total_activos}</p>
-            </div>
-            <div class="card card-warning">
-                <h3>Próximos a Vencer</h3>
-                <p>${data.prox_vencer}</p>
-            </div>
-            <div class="card card-danger">
-                <h3>Vencidos</h3>
-                <p>${data.vencidos}</p>
-            </div>
-            <div class="card card-success">
-                <h3>💰 Capital Prestado</h3>
-                <p>${data.capital_prestado}</p>
-            </div>
-            <div class="card card-info">
-                <h3>💵 Capital Recaudado Hoy</h3>
-                <p>${data.capital_recogido_hoy}</p>
-            </div>
-            <div class="card card-primary">
-                <h3>💵 Interés Recaudado Hoy</h3>
-                <p>${data.interes_recogido_hoy}</p>
-            </div>
-        `;
+<hr>
 
-        // Tabla de prestamos
-        let tabla = document.getElementById("tabla");
-        tabla.innerHTML = `
-        <tr>
-            <th>Préstamo</th>
-            <th>Saldo</th>
-            <th>Abonado Capital</th>
-            <th>Abonado Interés</th>
-            <th>Vencimiento</th>
-            <th>Abonos</th>
-        </tr>`;
-        data.prestamos_info.forEach(p=>{
-            let abonosHTML = p.abonos.map(a=>`${a.fecha} - ${a.tipo}: ${a.monto}`).join("<br>");
-            tabla.innerHTML += `
-            <tr>
-                <td>${p.id}</td>
-                <td>${p.saldo}</td>
-                <td>${p.abonado_capital}</td>
-                <td>${p.abonado_interes}</td>
-                <td>${p.vencimiento}</td>
-                <td>${abonosHTML}</td>
-            </tr>`;
-        });
-    });
-}
-
-// Actualizar cada 5 segundos
-setInterval(actualizarDashboard, 5000);
-window.onload = actualizarDashboard;
-</script>
-</body>
-</html>
+<a href="/clientes">Clientes</a><br>
+<a href="/prestamos">Préstamos</a><br>
+<a href="/abonos">Abonos</a>

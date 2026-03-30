@@ -1,43 +1,21 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Abonos</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-
-<h2>💰 Agregar Abono</h2>
+<h1>Abonos</h1>
 
 <form method="POST">
-  Cliente:
-  <select name="cliente" onchange="this.form.submit()">
-    <option value="">--Seleccione--</option>
-    {% for c in clientes %}
-      <option value="{{ c[0] }}" {% if c[0]==request.form.get('cliente')|int %}selected{% endif %}>{{ c[1] }}</option>
-    {% endfor %}
-  </select><br><br>
+    <select name="cliente">
+        {% for c in clientes %}
+        <option value="{{ c[0] }}">{{ c[1] }}</option>
+        {% endfor %}
+    </select>
 
-  Prestamo:
-  <select name="prestamo">
-    {% for p in prestamos %}
-      <option value="{{ p[0] }}">Prestamo {{ p[0] }} - Fecha {{ p[1] }}</option>
-    {% endfor %}
-  </select><br><br>
+    <input name="prestamo" placeholder="ID préstamo">
+    <input name="monto" placeholder="Monto">
 
-  Monto: <input type="number" step="0.01" name="monto" required><br><br>
-  Tipo:
-  <select name="tipo">
-    <option value="capital">Capital</option>
-    <option value="interes">Interés</option>
-  </select><br><br>
+    <select name="tipo">
+        <option value="capital">Capital</option>
+        <option value="interes">Interés</option>
+    </select>
 
-  <button type="submit">Agregar Abono</button>
+    <button>Guardar</button>
 </form>
 
 <p>{{ mensaje }}</p>
-
-<br>
-<a href="/">⬅ Volver al panel</a>
-
-</body>
-</html>
