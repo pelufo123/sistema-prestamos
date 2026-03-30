@@ -9,7 +9,6 @@ app = Flask(__name__)
 # CONEXIÓN
 # ------------------------------
 def conectar():
-    # URL directa de Render, SSL obligatorio
     db_url = "postgresql://bd_prestamos_user:SxQ2cWHQaOFz65smYOuViKoJ2u85EjBQ@dpg-d73c825m5p6s73e6mnjg-a.virginia-postgres.render.com/bd_prestamos"
     try:
         return psycopg2.connect(db_url, sslmode="require")
@@ -86,7 +85,7 @@ def calcular(pid):
 
     hoy = datetime.now().date()
     if isinstance(venc, str):
-        venc = datetime.strptime(venc, "%Y-%m-%d").date()
+        venc = datetime.fromisoformat(venc).date()
     atraso = (hoy - venc).days if hoy > venc else 0
     conn.close()
     return total, abonado, saldo, atraso
@@ -111,7 +110,7 @@ def panel():
         capital_total += p[2]
         if saldo > 0:
             total += 1
-            dias = (p[1] - hoy) if isinstance(p[1], datetime) else (datetime.strptime(str(p[1]), "%Y-%m-%d").date() - hoy)
+            dias = (p[1] - hoy) if isinstance(p[1], datetime) else (datetime.fromisoformat(str(p[1])).date() - hoy)
             dias = dias.days
             if dias < 0:
                 vencidos += 1
@@ -120,7 +119,11 @@ def panel():
 
     cursor.execute("SELECT monto, tipo, fecha FROM abonos")
     for m, t, f in cursor.fetchall():
-        fecha_abono = f.date() if isinstance(f, datetime) else datetime.strptime(str(f), "%Y-%m-%d").date()
+        # Corrección: f puede ser datetime o string con hora
+        if isinstance(f, datetime):
+            fecha_abono = f.date()
+        else:
+            fecha_abono = datetime.fromisoformat(str(f)).date()
         if hoy == fecha_abono:
             if t == "interes":
                 interes_hoy += m
@@ -170,14 +173,12 @@ def clientes():
 def editar_cliente(id):
     conn = conectar()
     cursor = conn.cursor()
-
     if request.method == "POST":
         cursor.execute("UPDATE clientes SET nombre=%s, telefono=%s, direccion=%s WHERE id=%s",
                        (request.form["nombre"], request.form["telefono"], request.form["direccion"], id))
         conn.commit()
         conn.close()
         return redirect("/clientes")
-
     cursor.execute("SELECT * FROM clientes WHERE id=%s", (id,))
     cliente = cursor.fetchone()
     conn.close()
@@ -199,7 +200,6 @@ def eliminar_cliente(id):
 def prestamos():
     conn = conectar()
     cursor = conn.cursor()
-
     cursor.execute("SELECT * FROM clientes")
     clientes = cursor.fetchall()
 
@@ -208,7 +208,6 @@ def prestamos():
         interes = float(request.form["interes"])
         dias = int(request.form["dias"])
         total = capital + (capital * interes / 100)
-
         fecha = datetime.now()
         venc = fecha + timedelta(days=dias)
 
