@@ -85,59 +85,72 @@ def calcular(pid):
 
     hoy = datetime.now().date()
     if isinstance(venc, str):
-        venc = datetime.fromisoformat(venc).date()
+        venc = datetime.strptime(venc, "%Y-%m-%d").date()
     atraso = (hoy - venc).days if hoy > venc else 0
     conn.close()
     return total, abonado, saldo, atraso
 
 # ------------------------------
-# PANEL
+# PANEL / DASHBOARD
 # ------------------------------
 @app.route("/")
 def panel():
     conn = conectar()
     cursor = conn.cursor()
 
-    total = prox = vencidos = 0
-    capital_total = 0
-    interes_hoy = 0
-    capital_hoy = 0
     hoy = datetime.now().date()
 
-    cursor.execute("SELECT id, vencimiento, capital FROM prestamos")
-    for p in cursor.fetchall():
-        total_, abonado, saldo, atraso = calcular(p[0])
-        capital_total += p[2]
+    # Totales
+    cursor.execute("SELECT id, capital, interes, vencimiento FROM prestamos")
+    total_activos = 0
+    vencidos = 0
+    prox_vencer = 0
+    capital_prestado = 0
+    capital_recogido = 0
+    interes_recogido = 0
+
+    prestamos_info = []
+
+    for pid, capital, interes, venc in cursor.fetchall():
+        total_, abonado, saldo, atraso = calcular(pid)
+        capital_prestado += capital
         if saldo > 0:
-            total += 1
-            dias = (p[1] - hoy) if isinstance(p[1], datetime) else (datetime.fromisoformat(str(p[1])).date() - hoy)
+            total_activos += 1
+            dias = (venc - hoy) if isinstance(venc, datetime) else (datetime.fromisoformat(str(venc)).date() - hoy)
             dias = dias.days
             if dias < 0:
                 vencidos += 1
             elif dias <= 3:
-                prox += 1
+                prox_vencer += 1
+        # Abonos
+        cursor.execute("SELECT monto, tipo, fecha FROM abonos WHERE prestamo_id=%s", (pid,))
+        abonos = cursor.fetchall()
+        cap = sum([m for m,t,f in abonos if t=="capital"])
+        int_ = sum([m for m,t,f in abonos if t=="interes"])
+        capital_recogido += cap
+        interes_recogido += int_
 
-    cursor.execute("SELECT monto, tipo, fecha FROM abonos")
-    for m, t, f in cursor.fetchall():
-        # Corrección: f puede ser datetime o string con hora
-        if isinstance(f, datetime):
-            fecha_abono = f.date()
-        else:
-            fecha_abono = datetime.fromisoformat(str(f)).date()
-        if hoy == fecha_abono:
-            if t == "interes":
-                interes_hoy += m
-            else:
-                capital_hoy += m
+        prestamos_info.append({
+            "id": pid,
+            "capital": capital,
+            "saldo": saldo,
+            "abonado_capital": cap,
+            "abonado_interes": int_,
+            "vencimiento": venc,
+            "abonos": [{"monto": m, "tipo": t, "fecha": f} for m,t,f in abonos]
+        })
 
     conn.close()
     return render_template("panel.html",
-        total=total,
-        prox=prox,
+        total_activos=total_activos,
         vencidos=vencidos,
-        capital_total=formato(capital_total),
-        interes_hoy=formato(interes_hoy),
-        capital_hoy=formato(capital_hoy)
+        prox_vencer=prox_vencer,
+        capital_prestado=capital_prestado,
+        capital_recogido=capital_recogido,
+        interes_recogido=interes_recogido,
+        prestamos_info=prestamos_info,
+        formato=formato,
+        hoy=hoy
     )
 
 # ------------------------------
@@ -147,7 +160,6 @@ def panel():
 def clientes():
     conn = conectar()
     cursor = conn.cursor()
-
     if request.method == "POST":
         cursor.execute("INSERT INTO clientes(nombre,telefono,direccion) VALUES (%s,%s,%s)",
                        (request.form["nombre"], request.form["telefono"], request.form["direccion"]))
@@ -179,6 +191,7 @@ def editar_cliente(id):
         conn.commit()
         conn.close()
         return redirect("/clientes")
+
     cursor.execute("SELECT * FROM clientes WHERE id=%s", (id,))
     cliente = cursor.fetchone()
     conn.close()
@@ -210,7 +223,6 @@ def prestamos():
         total = capital + (capital * interes / 100)
         fecha = datetime.now()
         venc = fecha + timedelta(days=dias)
-
         cursor.execute("""
             INSERT INTO prestamos(cliente_id,capital,interes,dias,fecha,vencimiento,total)
             VALUES (%s,%s,%s,%s,%s,%s,%s)
