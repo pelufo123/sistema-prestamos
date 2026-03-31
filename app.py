@@ -75,23 +75,28 @@ def formato(x):
 def calcular(pid, conn):
     cur = conn.cursor()
 
-    cur.execute("SELECT total FROM prestamos WHERE id=%s", (pid,))
+    cur.execute("SELECT capital, interes FROM prestamos WHERE id=%s", (pid,))
     data = cur.fetchone()
 
     if not data:
-        return 0,0,0,0
+        return 0,0,0,0,0
 
-    total = data[0]
+    capital, interes = data
+    interes_total = capital * interes / 100
 
+    # Abonos
     cur.execute("SELECT SUM(monto) FROM abonos WHERE prestamo_id=%s AND tipo='capital'", (pid,))
-    abonado_cap = cur.fetchone()[0] or 0
+    abonado_capital = cur.fetchone()[0] or 0
 
     cur.execute("SELECT SUM(monto) FROM abonos WHERE prestamo_id=%s AND tipo='interes'", (pid,))
-    abonado_int = cur.fetchone()[0] or 0
+    abonado_interes = cur.fetchone()[0] or 0
 
-    saldo = total - abonado_cap
+    # 🔥 Cálculo correcto
+    capital_restante = capital - abonado_capital
+    interes_restante = interes_total - abonado_interes
+    saldo_total = capital_restante + interes_restante
 
-    return total, abonado_cap, abonado_int, saldo
+    return capital_restante, interes_restante, saldo_total, abonado_capital, abonado_interes
 
 # ------------------------------
 @app.route("/", methods=["GET","POST"])
@@ -108,11 +113,9 @@ def panel():
     else:
         fecha = datetime.now().date()
 
-    # CAPITAL TOTAL
     cur.execute("SELECT SUM(capital) FROM prestamos")
     capital_total = cur.fetchone()[0] or 0
 
-    # ABONOS DEL DÍA
     cur.execute("SELECT monto, tipo, fecha FROM abonos")
 
     capital_dia = 0
@@ -130,13 +133,12 @@ def panel():
 
     por_vencer = []
     vencidos = []
-    activos = 0
 
     hoy = datetime.now().date()
 
     for pid, venc in cur.fetchall():
 
-        total, cap, inte, saldo = calcular(pid, conn)
+        cap_rest, int_rest, saldo, _, _ = calcular(pid, conn)
 
         if saldo <= 0:
             continue
@@ -147,8 +149,6 @@ def panel():
             vencidos.append((pid, abs(dias), saldo))
         elif dias <= 3:
             por_vencer.append((pid, dias, saldo))
-        else:
-            activos += 1
 
     conn.close()
 
@@ -158,8 +158,7 @@ def panel():
         interes_dia=formato(interes_dia),
         fecha=fecha,
         por_vencer=por_vencer,
-        vencidos=vencidos,
-        activos=activos
+        vencidos=vencidos
     )
 
 # ------------------------------
@@ -284,10 +283,13 @@ def abonos():
         monto = float(request.form.get("monto"))
         tipo = request.form.get("tipo")
 
-        total, cap, inte, saldo = calcular(pid, conn)
+        cap_rest, int_rest, saldo, _, _ = calcular(pid, conn)
 
-        if tipo == "capital" and monto > saldo:
-            mensaje = "❌ Excede saldo"
+        # 🔥 VALIDACIONES CORRECTAS
+        if tipo == "capital" and monto > cap_rest:
+            mensaje = "❌ Excede capital pendiente"
+        elif tipo == "interes" and monto > int_rest:
+            mensaje = "❌ Excede interés pendiente"
         else:
             cur.execute(
                 "INSERT INTO abonos(prestamo_id,monto,fecha,tipo) VALUES (%s,%s,%s,%s)",
