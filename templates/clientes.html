@@ -1,9 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="container">
+
+<h2>{% if editar %}Editar Cliente{% else %}Nuevo Cliente{% endif %}</h2>
+
+<div class="card">
+<form method="POST">
+
+{% if editar %}
+<input type="hidden" name="id" value="{{ editar[0] }}">
+{% endif %}
+
+<input name="nombre" placeholder="Nombre" value="{{ editar[1] if editar else '' }}">
+<input name="telefono" placeholder="Teléfono" value="{{ editar[2] if editar else '' }}">
+<input name="direccion" placeholder="Dirección" value="{{ editar[3] if editar else '' }}">
+
+<button>
+{% if editar %}Actualizar{% else %}Guardar{% endif %}
+</button>
+
+</form>
+</div>
+
+<h2>Clientes</h2>
+
 <div class="card">
 <table>
 <tr>
 <th>Nombre</th>
 <th>Teléfono</th>
-<th>Total</th>
+<th>Total Prestado</th>
 <th>Acciones</th>
 </tr>
 
@@ -13,10 +44,18 @@
 <td>{{ c[2] }}</td>
 <td>{{ formato(resumen[loop.index0]) }}</td>
 <td>
-    <a class="btn btn-edit" href="/editar_cliente/{{ c[0] }}">Editar</a>
+    <a class="btn btn-edit" href="/clientes?editar={{ c[0] }}">Editar</a>
     <a class="btn btn-del" href="/eliminar_cliente/{{ c[0] }}">Eliminar</a>
 </td>
 </tr>
 {% endfor %}
+
 </table>
 </div>
+
+<a class="btn" href="/">Volver</a>
+
+</div>
+
+</body>
+</html>
