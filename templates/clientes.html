@@ -20,9 +20,7 @@
 <input name="telefono" placeholder="Teléfono" value="{{ editar[2] if editar else '' }}">
 <input name="direccion" placeholder="Dirección" value="{{ editar[3] if editar else '' }}">
 
-<button>
-{% if editar %}Actualizar{% else %}Guardar{% endif %}
-</button>
+<button>{% if editar %}Actualizar{% else %}Guardar{% endif %}</button>
 
 </form>
 </div>
@@ -34,7 +32,7 @@
 <tr>
 <th>Nombre</th>
 <th>Teléfono</th>
-<th>Total Prestado</th>
+<th>Total</th>
 <th>Acciones</th>
 </tr>
 
@@ -44,16 +42,15 @@
 <td>{{ c[2] }}</td>
 <td>{{ formato(resumen[loop.index0]) }}</td>
 <td>
-    <a class="btn btn-edit" href="/clientes?editar={{ c[0] }}">Editar</a>
-    <a class="btn btn-del" href="/eliminar_cliente/{{ c[0] }}">Eliminar</a>
+<a class="btn btn-edit" href="/clientes?editar={{ c[0] }}">Editar</a>
+<a class="btn btn-del" href="/eliminar_cliente/{{ c[0] }}">Eliminar</a>
+<a class="btn btn-his" href="/historial/{{ c[0] }}">Historial</a>
 </td>
 </tr>
 {% endfor %}
 
 </table>
 </div>
-
-<a class="btn" href="/">Volver</a>
 
 </div>
 
