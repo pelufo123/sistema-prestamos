@@ -84,14 +84,14 @@ def calcular(pid, conn):
     total = data[0]
 
     cur.execute("SELECT SUM(monto) FROM abonos WHERE prestamo_id=%s AND tipo='capital'", (pid,))
-    cap = cur.fetchone()[0] or 0
+    abonado_cap = cur.fetchone()[0] or 0
 
     cur.execute("SELECT SUM(monto) FROM abonos WHERE prestamo_id=%s AND tipo='interes'", (pid,))
-    inte = cur.fetchone()[0] or 0
+    abonado_int = cur.fetchone()[0] or 0
 
-    saldo = total - cap
+    saldo = total - abonado_cap
 
-    return total, cap, inte, saldo
+    return total, abonado_cap, abonado_int, saldo
 
 # ------------------------------
 @app.route("/", methods=["GET","POST"])
@@ -108,9 +108,11 @@ def panel():
     else:
         fecha = datetime.now().date()
 
+    # CAPITAL TOTAL
     cur.execute("SELECT SUM(capital) FROM prestamos")
     capital_total = cur.fetchone()[0] or 0
 
+    # ABONOS DEL DÍA
     cur.execute("SELECT monto, tipo, fecha FROM abonos")
 
     capital_dia = 0
@@ -123,53 +125,55 @@ def panel():
             else:
                 interes_dia += m
 
+    # ALERTAS
+    cur.execute("SELECT id, vencimiento FROM prestamos")
+
+    por_vencer = []
+    vencidos = []
+    activos = 0
+
+    hoy = datetime.now().date()
+
+    for pid, venc in cur.fetchall():
+
+        total, cap, inte, saldo = calcular(pid, conn)
+
+        if saldo <= 0:
+            continue
+
+        dias = (venc - hoy).days
+
+        if dias < 0:
+            vencidos.append((pid, abs(dias), saldo))
+        elif dias <= 3:
+            por_vencer.append((pid, dias, saldo))
+        else:
+            activos += 1
+
     conn.close()
 
     return render_template("panel.html",
         capital_total=formato(capital_total),
         capital_dia=formato(capital_dia),
         interes_dia=formato(interes_dia),
-        fecha=fecha
+        fecha=fecha,
+        por_vencer=por_vencer,
+        vencidos=vencidos,
+        activos=activos
     )
 
-# ------------------------------
-# CLIENTES + EDITAR EN MISMA VISTA
 # ------------------------------
 @app.route("/clientes", methods=["GET","POST"])
 def clientes():
     conn = conectar()
     cur = conn.cursor()
 
-    editar = None
-
     if request.method == "POST":
-        if request.form.get("id"):
-            cur.execute("""
-                UPDATE clientes
-                SET nombre=%s, telefono=%s, direccion=%s
-                WHERE id=%s
-            """, (
-                request.form["nombre"],
-                request.form["telefono"],
-                request.form["direccion"],
-                request.form["id"]
-            ))
-        else:
-            cur.execute("""
-                INSERT INTO clientes(nombre,telefono,direccion)
-                VALUES (%s,%s,%s)
-            """, (
-                request.form["nombre"],
-                request.form["telefono"],
-                request.form["direccion"]
-            ))
-
+        cur.execute(
+            "INSERT INTO clientes(nombre,telefono,direccion) VALUES (%s,%s,%s)",
+            (request.form["nombre"], request.form["telefono"], request.form["direccion"])
+        )
         conn.commit()
-
-    editar_id = request.args.get("editar")
-    if editar_id:
-        cur.execute("SELECT * FROM clientes WHERE id=%s", (editar_id,))
-        editar = cur.fetchone()
 
     cur.execute("SELECT * FROM clientes")
     clientes = cur.fetchall()
@@ -181,13 +185,27 @@ def clientes():
         resumen.append(total)
 
     conn.close()
+    return render_template("clientes.html", clientes=clientes, resumen=resumen, formato=formato)
 
-    return render_template("clientes.html",
-        clientes=clientes,
-        resumen=resumen,
-        formato=formato,
-        editar=editar
-    )
+# ------------------------------
+@app.route("/editar_cliente/<int:id>", methods=["GET","POST"])
+def editar_cliente(id):
+    conn = conectar()
+    cur = conn.cursor()
+
+    if request.method == "POST":
+        cur.execute("""
+            UPDATE clientes SET nombre=%s, telefono=%s, direccion=%s WHERE id=%s
+        """, (request.form["nombre"], request.form["telefono"], request.form["direccion"], id))
+        conn.commit()
+        conn.close()
+        return redirect("/clientes")
+
+    cur.execute("SELECT * FROM clientes WHERE id=%s", (id,))
+    cliente = cur.fetchone()
+
+    conn.close()
+    return render_template("editar_cliente.html", cliente=cliente)
 
 # ------------------------------
 @app.route("/eliminar_cliente/<int:id>")
@@ -286,53 +304,6 @@ def abonos():
         mensaje=mensaje,
         cliente_id=cliente_id
     )
-
-# ------------------------------
-# 🔥 HISTORIAL
-# ------------------------------
-@app.route("/historial/<int:id>")
-def historial(id):
-    conn = conectar()
-    cur = conn.cursor()
-
-    cur.execute("SELECT * FROM clientes WHERE id=%s", (id,))
-    cliente = cur.fetchone()
-
-    cur.execute("""
-        SELECT id, fecha, total
-        FROM prestamos
-        WHERE cliente_id=%s
-    """, (id,))
-    prestamos = cur.fetchall()
-
-    data = []
-
-    for p in prestamos:
-        pid, fecha, total = p
-
-        total, cap, inte, saldo = calcular(pid, conn)
-
-        cur.execute("""
-            SELECT monto, tipo, fecha
-            FROM abonos
-            WHERE prestamo_id=%s
-            ORDER BY fecha DESC
-        """, (pid,))
-        abonos = cur.fetchall()
-
-        data.append({
-            "prestamo": pid,
-            "fecha": fecha,
-            "total": formato(total),
-            "capital": formato(cap),
-            "interes": formato(inte),
-            "saldo": formato(saldo),
-            "abonos": abonos
-        })
-
-    conn.close()
-
-    return render_template("historial.html", cliente=cliente, data=data)
 
 # ------------------------------
 if __name__ == "__main__":

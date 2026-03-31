@@ -1,43 +1,55 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>Panel</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
 <div class="container">
 
-<h2>💰 Dashboard</h2>
+    <h2>💰 Dashboard</h2>
 
-<div class="card">
-<form method="POST">
-    <input type="date" name="fecha" value="{{ fecha }}">
-    <button>Filtrar</button>
-</form>
-</div>
+    <div>
+        <a href="/clientes" class="btn">Clientes</a>
+        <a href="/prestamos" class="btn">Préstamos</a>
+        <a href="/abonos" class="btn">Abonos</a>
+    </div>
 
-<div class="grid">
-    <div class="card">
-        <h3>Capital prestado</h3>
-        <p>{{ capital_total }}</p>
+    <div class="grid">
+        <div class="card">
+            <h3>Capital total</h3>
+            <h2>{{ capital_total }}</h2>
+        </div>
+
+        <div class="card">
+            <h3>Capital del día</h3>
+            <h2>{{ capital_dia }}</h2>
+        </div>
+
+        <div class="card">
+            <h3>Interés del día</h3>
+            <h2>{{ interes_dia }}</h2>
+        </div>
     </div>
 
     <div class="card">
-        <h3>Capital recogido</h3>
-        <p>{{ capital_dia }}</p>
+        <h3>⚠️ Por vencer</h3>
+        {% for p in por_vencer %}
+            <div class="item">
+                Préstamo #{{p[0]}} vence en {{p[1]}} días - ${{p[2]}}
+            </div>
+        {% endfor %}
     </div>
 
     <div class="card">
-        <h3>Interés recogido</h3>
-        <p>{{ interes_dia }}</p>
+        <h3>🚨 Vencidos</h3>
+        {% for p in vencidos %}
+            <div class="item rojo">
+                Préstamo #{{p[0]}} vencido hace {{p[1]}} días - ${{p[2]}}
+            </div>
+        {% endfor %}
     </div>
-</div>
-
-<div class="card">
-    <a class="btn" href="/clientes">Clientes</a>
-    <a class="btn" href="/prestamos">Préstamos</a>
-    <a class="btn" href="/abonos">Abonos</a>
-</div>
 
 </div>
 
