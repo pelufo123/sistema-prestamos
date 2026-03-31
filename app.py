@@ -10,14 +10,17 @@ def conectar():
     db_url = os.getenv("DATABASE_URL")
 
     if not db_url:
+        print("❌ No hay DATABASE_URL")
         return None
 
+    # 🔥 CORRECCIÓN IMPORTANTE
     if db_url.startswith("postgres://"):
         db_url = db_url.replace("postgres://", "postgresql://", 1)
 
     try:
         return psycopg2.connect(db_url, sslmode="require")
-    except:
+    except Exception as e:
+        print("❌ Error conexión:", e)
         return None
 
 # ------------------------------
@@ -74,7 +77,12 @@ def calcular(pid, conn):
     cur = conn.cursor()
 
     cur.execute("SELECT total FROM prestamos WHERE id=%s", (pid,))
-    total = cur.fetchone()[0]
+    data = cur.fetchone()
+
+    if not data:
+        return 0, 0, 0, 0
+
+    total = data[0]
 
     cur.execute("SELECT SUM(monto) FROM abonos WHERE prestamo_id=%s AND tipo='capital'", (pid,))
     abonado_capital = cur.fetchone()[0] or 0
@@ -126,8 +134,6 @@ def panel():
     )
 
 # ------------------------------
-# CLIENTES CRUD
-# ------------------------------
 @app.route("/clientes", methods=["GET","POST"])
 def clientes():
     conn = conectar()
@@ -153,7 +159,7 @@ def clientes():
 
     return render_template("clientes.html", clientes=clientes, resumen=resumen, formato=formato)
 
-# EDITAR
+# ------------------------------
 @app.route("/editar_cliente/<int:id>", methods=["GET","POST"])
 def editar_cliente(id):
     conn = conectar()
@@ -173,7 +179,7 @@ def editar_cliente(id):
     conn.close()
     return render_template("editar_cliente.html", cliente=cliente)
 
-# ELIMINAR
+# ------------------------------
 @app.route("/eliminar_cliente/<int:id>")
 def eliminar_cliente(id):
     conn = conectar()
@@ -185,8 +191,6 @@ def eliminar_cliente(id):
     conn.close()
     return redirect("/clientes")
 
-# ------------------------------
-# PRESTAMOS
 # ------------------------------
 @app.route("/prestamos", methods=["GET","POST"])
 def prestamos():
@@ -213,18 +217,18 @@ def prestamos():
 
         conn.commit()
 
+    # 🔥 CORREGIDO
     cur.execute("""
-    SELECT p.id, c.nombre, p.total
-    FROM prestamos p
-    JOIN clientes c ON p.cliente_id = c.id
-""")
+        SELECT p.id, c.nombre, p.total
+        FROM prestamos p
+        JOIN clientes c ON p.cliente_id = c.id
+    """)
+
     prestamos = cur.fetchall()
 
     conn.close()
     return render_template("prestamos.html", clientes=clientes, prestamos=prestamos)
 
-# ------------------------------
-# ABONOS MEJORADO
 # ------------------------------
 @app.route("/abonos", methods=["GET","POST"])
 def abonos():
