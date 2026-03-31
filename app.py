@@ -213,9 +213,11 @@ def prestamos():
 
         conn.commit()
 
-    cur.execute("SELECT p.id, c.nombre, p.total FROM prestamos p
-                 JOIN clientes c ON p.cliente_id = c.id")
-
+    cur.execute("""
+    SELECT p.id, c.nombre, p.total
+    FROM prestamos p
+    JOIN clientes c ON p.cliente_id = c.id
+""")
     prestamos = cur.fetchall()
 
     conn.close()
