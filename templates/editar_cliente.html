@@ -1,27 +1,28 @@
 <!DOCTYPE html>
 <html>
 <head>
-<link rel="stylesheet" href="/static/style.css">
+    <title>Editar Cliente</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
 <div class="container">
 
-<h2>Editar Cliente</h2>
+    <h2>✏️ Editar Cliente</h2>
 
-<div class="card">
-<form method="POST">
-<input name="nombre" value="{{ cliente[1] }}">
-<input name="telefono" value="{{ cliente[2] }}">
-<input name="direccion" value="{{ cliente[3] }}">
-<button>Guardar cambios</button>
-</form>
-</div>
-  <!-- 🔥 BOTÓN VOLVER -->
+    <!-- 🔥 BOTÓN VOLVER -->
     <div style="margin-bottom:15px;">
         <a href="/clientes" class="btn">⬅️ Volver</a>
     </div>
-<a class="btn" href="/clientes">Volver</a>
+
+    <div class="card">
+        <form method="POST">
+            <input name="nombre" value="{{cliente[1]}}" required>
+            <input name="telefono" value="{{cliente[2]}}">
+            <input name="direccion" value="{{cliente[3]}}">
+            <button>Guardar cambios</button>
+        </form>
+    </div>
 
 </div>
 
