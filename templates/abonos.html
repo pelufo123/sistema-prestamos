@@ -1,43 +1,55 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Abonos</title>
-    <link rel="stylesheet" href="/static/style.css">
+<link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
 <div class="container">
 
-<h2>💵 Abonos</h2>
+<h2>Abonos</h2>
 
 <div class="card">
 <form method="POST">
 
-    <select name="cliente">
-        {% for c in clientes %}
-        <option value="{{ c[0] }}">{{ c[1] }}</option>
-        {% endfor %}
-    </select>
+<select name="cliente" onchange="this.form.submit()">
+    <option value="">Seleccione cliente</option>
+    {% for c in clientes %}
+    <option value="{{ c[0] }}" {% if cliente_id == c[0]|string %}selected{% endif %}>
+        {{ c[1] }}
+    </option>
+    {% endfor %}
+</select>
 
-    <input name="prestamo" placeholder="ID préstamo">
-    <input name="monto" placeholder="Monto">
+{% if prestamos %}
+<select name="prestamo">
+    {% for p in prestamos %}
+    <option value="{{ p[0] }}">
+        Préstamo #{{ p[0] }} - {{ p[1] }} - {{ p[2] }}
+    </option>
+    {% endfor %}
+</select>
+{% endif %}
 
-    <select name="tipo">
-        <option value="capital">Capital</option>
-        <option value="interes">Interés</option>
-    </select>
+<input name="monto" placeholder="Monto">
 
-    <button>Guardar</button>
+<select name="tipo">
+    <option value="capital">Capital</option>
+    <option value="interes">Interés</option>
+</select>
+
+<button>Guardar</button>
+
 </form>
 </div>
 
 {% if mensaje %}
 <div class="alert alert-warning">
-    {{ mensaje }}
+{{ mensaje }}
 </div>
 {% endif %}
 
-<a class="btn" href="/">⬅ Volver</a>
+<a class="btn" href="/">Volver</a>
 
 </div>
 

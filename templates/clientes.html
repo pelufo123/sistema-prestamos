@@ -1,45 +1,22 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Clientes</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-
-<div class="container">
-
-<h2>👥 Clientes</h2>
-
-<div class="card">
-<form method="POST">
-    <input name="nombre" placeholder="Nombre">
-    <input name="telefono" placeholder="Teléfono">
-    <input name="direccion" placeholder="Dirección">
-    <button>Guardar</button>
-</form>
-</div>
-
 <div class="card">
 <table>
-    <tr>
-        <th>Nombre</th>
-        <th>Teléfono</th>
-        <th>Dirección</th>
-    </tr>
+<tr>
+<th>Nombre</th>
+<th>Teléfono</th>
+<th>Total</th>
+<th>Acciones</th>
+</tr>
 
-    {% for c in clientes %}
-    <tr>
-        <td>{{ c[1] }}</td>
-        <td>{{ c[2] }}</td>
-        <td>{{ c[3] }}</td>
-    </tr>
-    {% endfor %}
+{% for c in clientes %}
+<tr>
+<td>{{ c[1] }}</td>
+<td>{{ c[2] }}</td>
+<td>{{ formato(resumen[loop.index0]) }}</td>
+<td>
+    <a class="btn btn-edit" href="/editar_cliente/{{ c[0] }}">Editar</a>
+    <a class="btn btn-del" href="/eliminar_cliente/{{ c[0] }}">Eliminar</a>
+</td>
+</tr>
+{% endfor %}
 </table>
 </div>
-
-<a class="btn" href="/">⬅ Volver</a>
-
-</div>
-
-</body>
-</html>
