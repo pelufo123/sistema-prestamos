@@ -336,18 +336,17 @@ def abonos():
 # ------------------------------
 # HISTORIAL DE CLIENTE 🔥
 # ------------------------------
-# Esta ruta permite ver todo el historial de préstamos y abonos de un cliente
+# ------------------------------
+# 🔥 HISTORIAL DE CLIENTES (NUEVO)
+# ------------------------------
 @app.route("/historial/<int:id>")
 def historial(id):
     conn = conectar()
-    if not conn:
-        return "Error DB", 500
-
     cur = conn.cursor()
 
-    # 🔹 Obtener todos los préstamos del cliente
+    # 🔹 Obtener préstamos del cliente
     cur.execute("""
-        SELECT id, fecha, vencimiento
+        SELECT id, fecha
         FROM prestamos
         WHERE cliente_id=%s
     """, (id,))
@@ -355,14 +354,13 @@ def historial(id):
 
     data = []
 
-    # 🔹 Recorrer cada préstamo del cliente
     for p in prestamos:
-        pid, fecha, venc = p
+        pid = p[0]
 
-        # 🔹 Calcular estado real del préstamo (capital, interés, saldo)
-        cap_rest, int_rest, saldo, abonado_cap, abonado_int = calcular(pid, conn)
+        # 🔹 Calcular estado del préstamo
+        cap_rest, int_rest, saldo, ab_cap, ab_int = calcular(pid, conn)
 
-        # 🔹 Obtener todos los abonos de ese préstamo
+        # 🔹 Obtener abonos
         cur.execute("""
             SELECT monto, tipo, fecha
             FROM abonos
@@ -371,22 +369,19 @@ def historial(id):
         """, (pid,))
         abonos = cur.fetchall()
 
-        # 🔹 Guardar toda la info organizada
         data.append({
             "prestamo": pid,
-            "fecha": fecha,
-            "vencimiento": venc,
+            "fecha": p[1],
             "capital_restante": formato(cap_rest),
             "interes_restante": formato(int_rest),
             "saldo": formato(saldo),
-            "abonado_capital": formato(abonado_cap),
-            "abonado_interes": formato(abonado_int),
+            "abonado_capital": formato(ab_cap),
+            "abonado_interes": formato(ab_int),
             "abonos": abonos
         })
 
     conn.close()
 
-    # 🔹 Enviar todo al HTML
     return render_template("historial.html", data=data)
 # ------------------------------
 if __name__ == "__main__":
