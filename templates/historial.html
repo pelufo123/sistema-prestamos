@@ -1,54 +1,51 @@
-<!DOCTYPE html>
-<html>
-<head>
-<link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-
 <div class="container">
+    <h2>📄 Historial del Cliente</h2>
 
-<h2>Historial de {{ cliente[1] }}</h2>
+    {% for p in data %}
+    <div class="card">
 
-{% for p in data %}
-<div class="card">
+        <h3>Préstamo #{{ p.prestamo }}</h3>
 
-<h3>Préstamo #{{ p.prestamo }}</h3>
+        <!-- Datos del préstamo -->
+        <p><b>Fecha:</b> {{ p.fecha }}</p>
+        <p><b>Vencimiento:</b> {{ p.vencimiento }}</p>
 
-<p>Total: {{ p.total }}</p>
-<p>Capital: <span class="verde">{{ p.capital }}</span></p>
-<p>Interés: <span class="azul">{{ p.interes }}</span></p>
-<p>Saldo: <span class="rojo">{{ p.saldo }}</span></p>
+        <!-- Estado financiero -->
+        <p class="verde">Capital restante: ${{ p.capital_restante }}</p>
+        <p class="azul">Interés restante: ${{ p.interes_restante }}</p>
+        <p class="rojo">Saldo total: ${{ p.saldo }}</p>
 
-<hr>
+        <p>Abonado capital: ${{ p.abonado_capital }}</p>
+        <p>Abonado interés: ${{ p.abonado_interes }}</p>
 
-<table>
-<tr>
-<th>Monto</th>
-<th>Tipo</th>
-<th>Fecha</th>
-</tr>
+        <hr>
 
-{% for a in p.abonos %}
-<tr>
-<td>{{ a[0] }}</td>
-<td>
-{% if a[1] == "capital" %}
-<span class="verde">Capital</span>
-{% else %}
-<span class="azul">Interés</span>
-{% endif %}
-</td>
-<td>{{ a[2] }}</td>
-</tr>
-{% endfor %}
-</table>
+        <!-- Tabla de abonos -->
+        <h4>Abonos</h4>
 
+        {% if p.abonos %}
+        <table>
+            <tr>
+                <th>Monto</th>
+                <th>Tipo</th>
+                <th>Fecha</th>
+            </tr>
+
+            {% for a in p.abonos %}
+            <tr>
+                <td>${{ a[0] }}</td>
+                <td>{{ a[1] }}</td>
+                <td>{{ a[2] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p>No hay abonos</p>
+        {% endif %}
+
+    </div>
+    {% endfor %}
+
+    <!-- Botón volver -->
+    <a href="/clientes" class="btn">⬅ Volver</a>
 </div>
-{% endfor %}
-
-<a class="btn" href="/clientes">Volver</a>
-
-</div>
-
-</body>
-</html>

@@ -1,5 +1,3 @@
-codigo para actualizar:
-
 git add .
-git commit -m "sistema capital e interes completo"
+git commit -m "mejora diseño UI"
 git push

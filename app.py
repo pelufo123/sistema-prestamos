@@ -333,7 +333,61 @@ def abonos():
         mensaje=mensaje,
         cliente_id=cliente_id
     )
+# ------------------------------
+# HISTORIAL DE CLIENTE 🔥
+# ------------------------------
+# Esta ruta permite ver todo el historial de préstamos y abonos de un cliente
+@app.route("/historial/<int:id>")
+def historial(id):
+    conn = conectar()
+    if not conn:
+        return "Error DB", 500
 
+    cur = conn.cursor()
+
+    # 🔹 Obtener todos los préstamos del cliente
+    cur.execute("""
+        SELECT id, fecha, vencimiento
+        FROM prestamos
+        WHERE cliente_id=%s
+    """, (id,))
+    prestamos = cur.fetchall()
+
+    data = []
+
+    # 🔹 Recorrer cada préstamo del cliente
+    for p in prestamos:
+        pid, fecha, venc = p
+
+        # 🔹 Calcular estado real del préstamo (capital, interés, saldo)
+        cap_rest, int_rest, saldo, abonado_cap, abonado_int = calcular(pid, conn)
+
+        # 🔹 Obtener todos los abonos de ese préstamo
+        cur.execute("""
+            SELECT monto, tipo, fecha
+            FROM abonos
+            WHERE prestamo_id=%s
+            ORDER BY fecha DESC
+        """, (pid,))
+        abonos = cur.fetchall()
+
+        # 🔹 Guardar toda la info organizada
+        data.append({
+            "prestamo": pid,
+            "fecha": fecha,
+            "vencimiento": venc,
+            "capital_restante": formato(cap_rest),
+            "interes_restante": formato(int_rest),
+            "saldo": formato(saldo),
+            "abonado_capital": formato(abonado_cap),
+            "abonado_interes": formato(abonado_int),
+            "abonos": abonos
+        })
+
+    conn.close()
+
+    # 🔹 Enviar todo al HTML
+    return render_template("historial.html", data=data)
 # ------------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
