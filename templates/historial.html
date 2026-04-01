@@ -1,29 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Historial</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
 <div class="container">
-    <h2>📄 Historial del Cliente</h2>
+
+    <h2>📊 Historial de Cliente</h2>
+
+    <a href="/clientes" class="btn">⬅ Volver</a>
 
     {% for p in data %}
     <div class="card">
 
-        <h3>Préstamo #{{ p.prestamo }}</h3>
-
-        <!-- Datos del préstamo -->
+        <h3>📄 Préstamo #{{ p.prestamo }}</h3>
         <p><b>Fecha:</b> {{ p.fecha }}</p>
-        <p><b>Vencimiento:</b> {{ p.vencimiento }}</p>
 
-        <!-- Estado financiero -->
-        <p class="verde">Capital restante: ${{ p.capital_restante }}</p>
-        <p class="azul">Interés restante: ${{ p.interes_restante }}</p>
-        <p class="rojo">Saldo total: ${{ p.saldo }}</p>
-
-        <p>Abonado capital: ${{ p.abonado_capital }}</p>
-        <p>Abonado interés: ${{ p.abonado_interes }}</p>
+        <p>💰 Capital restante: <span class="verde">{{ p.capital_restante }}</span></p>
+        <p>📈 Interés restante: <span class="azul">{{ p.interes_restante }}</span></p>
+        <p>📊 Total saldo: <span class="rojo">{{ p.saldo }}</span></p>
 
         <hr>
 
-        <!-- Tabla de abonos -->
-        <h4>Abonos</h4>
+        <p>💵 Abonado capital: {{ p.abonado_capital }}</p>
+        <p>💸 Abonado interés: {{ p.abonado_interes }}</p>
 
-        {% if p.abonos %}
+        <h4>📥 Abonos</h4>
+
         <table>
             <tr>
                 <th>Monto</th>
@@ -33,19 +38,17 @@
 
             {% for a in p.abonos %}
             <tr>
-                <td>${{ a[0] }}</td>
+                <td>{{ a[0] }}</td>
                 <td>{{ a[1] }}</td>
                 <td>{{ a[2] }}</td>
             </tr>
             {% endfor %}
         </table>
-        {% else %}
-        <p>No hay abonos</p>
-        {% endif %}
 
     </div>
     {% endfor %}
 
-    <!-- Botón volver -->
-    <a href="/clientes" class="btn">⬅ Volver</a>
 </div>
+
+</body>
+</html>
