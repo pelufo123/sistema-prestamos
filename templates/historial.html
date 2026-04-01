@@ -18,14 +18,14 @@
         <h3>📄 Préstamo #{{ p.prestamo }}</h3>
         <p><b>Fecha:</b> {{ p.fecha }}</p>
 
-        <p>💰 Capital restante: <span class="verde">{{ p.capital_restante }}</span></p>
-        <p>📈 Interés restante: <span class="azul">{{ p.interes_restante }}</span></p>
-        <p>📊 Total saldo: <span class="rojo">{{ p.saldo }}</span></p>
+        <p>💰 Capital restante: <span class="verde">${{ p.capital_restante }}</span></p>
+        <p>📈 Interés restante: <span class="azul">${{ p.interes_restante }}</span></p>
+        <p>📊 Total saldo: <span class="rojo">${{ p.saldo }}</span></p>
 
         <hr>
 
-        <p>💵 Abonado capital: {{ p.abonado_capital }}</p>
-        <p>💸 Abonado interés: {{ p.abonado_interes }}</p>
+        <p>💵 Abonado capital: ${{ p.abonado_capital }}</p>
+        <p>💸 Abonado interés: ${{ p.abonado_interes }}</p>
 
         <h4>📥 Abonos</h4>
 
@@ -38,7 +38,8 @@
 
             {% for a in p.abonos %}
             <tr>
-                <td>{{ a[0] }}</td>
+                <!-- 🔥 FORMATO PERFECTO -->
+                <td>${{ formato_miles(a[0]) }}</td>
                 <td>{{ a[1] }}</td>
                 <td>{{ a[2] }}</td>
             </tr>
