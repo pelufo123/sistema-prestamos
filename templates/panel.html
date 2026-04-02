@@ -1,88 +1,94 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Panel</title>
+    <title>Préstamos</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
 <div class="container">
 
-    <h2>💰 Dashboard</h2>
+<h2>💸 Préstamos</h2>
 
-    <div>
-        <a href="/clientes" class="btn">Clientes</a>
-        <a href="/prestamos" class="btn">Préstamos</a>
-        <a href="/abonos" class="btn">Abonos</a>
-    </div>
+<div class="card">
+<form method="POST">
+    <select name="cliente">
+        {% for c in clientes %}
+        <option value="{{ c[0] }}">{{ c[1] }}</option>
+        {% endfor %}
+    </select>
 
-    <!-- 🔥 ALERTA PRINCIPAL (NUEVO) -->
-    {% if vencidos %}
-    <div class="card rojo">
-        <h3>🚨 URGENTE</h3>
-        <p>
-            {{ vencidos[0][1] }} tiene un préstamo vencido hace {{ vencidos[0][2] }} días
-            por ${{ vencidos[0][3] }}
-        </p>
-    </div>
-    {% elif por_vencer %}
-    <div class="card amarillo">
-        <h3>⚠️ Atención</h3>
-        <p>
-            {{ por_vencer[0][1] }} vence en {{ por_vencer[0][2] }} días
-            por ${{ por_vencer[0][3] }}
-        </p>
-    </div>
+    <input name="capital" placeholder="Capital">
+    <input name="interes" placeholder="Interés">
+    <input name="dias" placeholder="Días">
+
+    <button>Guardar</button>
+</form>
+</div>
+
+<!-- 🔥 NUEVO: FILTRO POR FECHA -->
+<div class="card">
+<form method="POST">
+    <h3>📅 Ver préstamos por día</h3>
+    <input type="date" name="fecha" value="{{ fecha_filtro }}">
+    <button>Ver</button>
+</form>
+</div>
+
+<!-- 🔥 NUEVO: RESUMEN COMPLETO DEL DÍA -->
+<div class="card">
+    <h3>📊 Resumen del día</h3>
+
+    <p><strong>Fecha:</strong> {{ fecha_filtro }}</p>
+    <p><strong>Cantidad de préstamos:</strong> {{ cantidad_dia }}</p>
+
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Cliente</th>
+            <th>Capital</th>
+            <th>Interés %</th>
+            <th>Total</th>
+        </tr>
+
+        {% for p in prestamos_dia %}
+        <tr>
+            <td>{{ p[0] }}</td>
+            <td>{{ p[1] }}</td>
+            <td>${{ p[2] }}</td>
+            <td>{{ p[3] }}%</td>
+            <td>${{ (p[2] + (p[2]*p[3]/100)) | int }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    {% if cantidad_dia == 0 %}
+        <p>No hubo préstamos este día</p>
     {% endif %}
+</div>
 
-    <div class="grid">
-        <div class="card">
-            <h3>Capital total</h3>
-            <h2>{{ capital_total }}</h2>
-        </div>
+<!-- 🔥 LISTADO GENERAL (NO TOCADO) -->
+<div class="card">
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Cliente</th>
+        <th>Total</th>
+        <th>Saldo actual</th>
+    </tr>
 
-        <div class="card">
-            <h3>Capital del día</h3>
-            <h2>{{ capital_dia }}</h2>
-        </div>
+    {% for p in prestamos %}
+    <tr>
+        <td>{{ p.id }}</td>
+        <td>{{ p.cliente }}</td>
+        <td>${{ p.total }}</td>
+        <td>${{ p.saldo }}</td>
+    </tr>
+    {% endfor %}
+</table>
+</div>
 
-        <div class="card">
-            <h3>Interés del día</h3>
-            <h2>{{ interes_dia }}</h2>
-        </div>
-    </div>
-
-    <!-- 🔥 POR VENCER (MEJORADO) -->
-    <div class="card">
-        <h3>⚠️ Por vencer</h3>
-
-        {% if por_vencer %}
-            {% for p in por_vencer %}
-            <div class="item">
-                👤 {{p[1]}} | Préstamo #{{p[0]}} 
-                vence en {{p[2]}} días - ${{p[3]}}
-            </div>
-            {% endfor %}
-        {% else %}
-            <p>No hay préstamos por vencer</p>
-        {% endif %}
-    </div>
-
-    <!-- 🔥 VENCIDOS (MEJORADO) -->
-    <div class="card">
-        <h3>🚨 Vencidos</h3>
-
-        {% if vencidos %}
-            {% for p in vencidos %}
-            <div class="item rojo">
-                👤 {{p[1]}} | Préstamo #{{p[0]}} 
-                vencido hace {{p[2]}} días - ${{p[3]}}
-            </div>
-            {% endfor %}
-        {% else %}
-            <p>No hay préstamos vencidos</p>
-        {% endif %}
-    </div>
+<a class="btn" href="/">⬅ Volver</a>
 
 </div>
 
