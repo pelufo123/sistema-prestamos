@@ -72,7 +72,7 @@ def init_db():
 init_db()
 
 # ------------------------------
-# 💲 FORMATO DE DINERO
+# 💲 FORMATO
 # ------------------------------
 def formato(x):
     try:
@@ -81,10 +81,14 @@ def formato(x):
         return "0"
 
 # ------------------------------
-# 🔥 FUNCIONES NUEVAS (NO BORRAN NADA)
+# 🔹 VALIDACIÓN
 # ------------------------------
+def cliente_valido(cliente_id):
+    return cliente_id and str(cliente_id).isdigit()
 
-# 🔹 interés del día dinámico
+# ------------------------------
+# 🔥 INTERÉS DIARIO
+# ------------------------------
 def interes_hoy(pid, conn):
     cur = conn.cursor()
     hoy = datetime.now().date()
@@ -107,42 +111,29 @@ def interes_hoy(pid, conn):
 
     return 0 if pago_hoy > 0 else interes_total
 
-
-# 🔹 saldo real (capital + interés dinámico)
-def saldo_real(pid, conn):
-    cap_rest, _, _, _, _ = calcular(pid, conn)
-    interes = interes_hoy(pid, conn)
-    return cap_rest + interes
-
-
-# 🔹 validación segura cliente
-def cliente_valido(cliente_id):
-    return cliente_id and str(cliente_id).isdigit()
-
-
 # ------------------------------
-# 🧠 CÁLCULO PRINCIPAL
+# 🧠 CÁLCULO
 # ------------------------------
 def calcular(pid, conn):
     cur = conn.cursor()
 
-    cur.execute("SELECT capital, interes FROM prestamos WHERE id=%s", (int(pid),))
+    cur.execute("SELECT capital, interes FROM prestamos WHERE id=%s", (pid,))
     data = cur.fetchone()
 
     if not data:
         return 0,0,0,0,0
 
     capital, interes = data
-
     interes_total = capital * interes / 100
 
+    # capital abonado
     cur.execute("SELECT SUM(monto) FROM abonos WHERE prestamo_id=%s AND tipo='capital'", (pid,))
     abonado_capital = cur.fetchone()[0] or 0
 
+    # interés pagado hoy
     hoy = datetime.now().date()
-
     cur.execute("""
-        SELECT SUM(monto) FROM abonos 
+        SELECT SUM(monto) FROM abonos
         WHERE prestamo_id=%s AND tipo='interes' AND DATE(fecha)=%s
     """, (pid, hoy))
 
@@ -161,7 +152,6 @@ def calcular(pid, conn):
 
     return capital_restante, interes_restante, saldo_total, abonado_capital, abonado_interes_total
 
-
 # ------------------------------
 # 🏠 PANEL
 # ------------------------------
@@ -173,6 +163,7 @@ def panel():
     fecha = request.form.get("fecha")
     fecha = datetime.strptime(fecha, "%Y-%m-%d").date() if fecha else datetime.now().date()
 
+    # capital real
     cur.execute("SELECT SUM(capital) FROM prestamos")
     total_prestado = cur.fetchone()[0] or 0
 
@@ -181,7 +172,7 @@ def panel():
 
     capital_total = total_prestado - total_abonado
 
-    # 🔥 movimiento día
+    # movimiento día
     cur.execute("SELECT monto, tipo, fecha FROM abonos")
 
     capital_dia = 0
@@ -194,7 +185,7 @@ def panel():
             else:
                 interes_dia += m
 
-    # 🔥 alertas
+    # alertas
     cur.execute("SELECT id, vencimiento FROM prestamos")
 
     por_vencer = []
@@ -203,7 +194,9 @@ def panel():
     hoy = datetime.now().date()
 
     for pid, venc in cur.fetchall():
-        saldo = saldo_real(pid, conn)
+
+        cap_rest, _, _, _, _ = calcular(pid, conn)
+        saldo = cap_rest + interes_hoy(pid, conn)
 
         if saldo <= 0:
             continue
@@ -229,9 +222,85 @@ def panel():
         vencidos=vencidos
     )
 
+# ------------------------------
+# 👥 CLIENTES (RESTAURADO)
+# ------------------------------
+@app.route("/clientes", methods=["GET","POST"])
+def clientes():
+    conn = conectar()
+    cur = conn.cursor()
+
+    if request.method == "POST":
+        cur.execute(
+            "INSERT INTO clientes(nombre,telefono,direccion) VALUES (%s,%s,%s)",
+            (request.form["nombre"], request.form["telefono"], request.form["direccion"])
+        )
+        conn.commit()
+
+    cur.execute("SELECT * FROM clientes")
+    clientes = cur.fetchall()
+
+    resumen = []
+    for c in clientes:
+        cur.execute("SELECT SUM(capital) FROM prestamos WHERE cliente_id=%s", (c[0],))
+        total = cur.fetchone()[0] or 0
+        resumen.append(total)
+
+    conn.close()
+    return render_template("clientes.html", clientes=clientes, resumen=resumen, formato=formato)
 
 # ------------------------------
-# 💸 ABONOS (ULTRA SEGURO)
+# 💼 PRÉSTAMOS (RESTAURADO)
+# ------------------------------
+@app.route("/prestamos", methods=["GET","POST"])
+def prestamos():
+    conn = conectar()
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM clientes")
+    clientes = cur.fetchall()
+
+    if request.method == "POST":
+        capital = float(request.form["capital"])
+        interes = float(request.form["interes"])
+        dias = int(request.form["dias"])
+
+        total = capital + (capital * interes / 100)
+
+        fecha = datetime.now()
+        venc = fecha + timedelta(days=dias)
+
+        cur.execute("""
+        INSERT INTO prestamos(cliente_id,capital,interes,dias,fecha,vencimiento,total)
+        VALUES (%s,%s,%s,%s,%s,%s,%s)
+        """, (request.form["cliente"], capital, interes, dias, fecha.date(), venc.date(), total))
+
+        conn.commit()
+
+    cur.execute("""
+        SELECT p.id, c.nombre, p.total
+        FROM prestamos p
+        JOIN clientes c ON p.cliente_id = c.id
+    """)
+
+    prestamos = []
+
+    for p in cur.fetchall():
+        cap_rest, _, _, _, _ = calcular(p[0], conn)
+        saldo = cap_rest + interes_hoy(p[0], conn)
+
+        prestamos.append({
+            "id": p[0],
+            "cliente": p[1],
+            "total": formato(p[2]),
+            "saldo": formato(saldo)
+        })
+
+    conn.close()
+    return render_template("prestamos.html", clientes=clientes, prestamos=prestamos)
+
+# ------------------------------
+# 💸 ABONOS
 # ------------------------------
 @app.route("/abonos", methods=["GET","POST"])
 def abonos():
@@ -247,7 +316,6 @@ def abonos():
     cliente_id = request.form.get("cliente") or request.args.get("cliente")
 
     if cliente_valido(cliente_id):
-
         cur.execute("""
             SELECT p.id, c.nombre
             FROM prestamos p
@@ -256,12 +324,10 @@ def abonos():
         """, (cliente_id,))
 
         for pid, nombre in cur.fetchall():
-            saldo = saldo_real(pid, conn)
-
+            saldo = calcular(pid, conn)[0] + interes_hoy(pid, conn)
             if saldo > 0:
                 prestamos.append((pid, nombre, formato(saldo)))
 
-    # 🔥 GUARDAR ABONO
     if request.method == "POST" and request.form.get("prestamo"):
 
         pid = int(request.form.get("prestamo"))
@@ -302,64 +368,7 @@ def abonos():
         cliente_id=cliente_id
     )
 
-
 # ------------------------------
-# 📊 HISTORIAL (MEJORADO)
-# ------------------------------
-@app.route("/historial/<int:id>")
-def historial(id):
-    conn = conectar()
-    cur = conn.cursor()
-
-    cur.execute("SELECT * FROM clientes WHERE id=%s", (id,))
-    if not cur.fetchone():
-        return "❌ Cliente no existe"
-
-    cur.execute("SELECT id, fecha FROM prestamos WHERE cliente_id=%s", (id,))
-    prestamos = cur.fetchall()
-
-    data = []
-
-    for pid, fecha in prestamos:
-
-        cap_rest, int_rest, _, ab_cap, ab_int = calcular(pid, conn)
-
-        interes = interes_hoy(pid, conn)
-        saldo = cap_rest + interes
-
-        cur.execute("""
-            SELECT monto, tipo, fecha
-            FROM abonos WHERE prestamo_id=%s
-            ORDER BY fecha DESC
-        """, (pid,))
-
-        abonos = cur.fetchall()
-
-        cur.execute("""
-            SELECT COUNT(*) FROM abonos
-            WHERE prestamo_id=%s AND tipo='interes'
-        """, (pid,))
-
-        pagos_interes = cur.fetchone()[0]
-
-        data.append({
-            "prestamo": pid,
-            "fecha": fecha,
-            "capital_restante": formato(cap_rest),
-            "interes_restante": formato(int_rest),
-            "interes_hoy": formato(interes),
-            "saldo": formato(saldo),
-            "abonado_capital": formato(ab_cap),
-            "abonado_interes": formato(ab_int),
-            "abonos": abonos,
-            "pagos_interes": pagos_interes
-        })
-
-    conn.close()
-
-    return render_template("historial.html", data=data)
-
-
 # ------------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
