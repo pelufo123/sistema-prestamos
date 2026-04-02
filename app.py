@@ -11,15 +11,18 @@ app = Flask(__name__)
 def conectar():
     db_url = os.getenv("DATABASE_URL")
 
+    # 🔥 CORRECCIÓN (NO ROMPE SI NO EXISTE)
     if not db_url:
         print("❌ No hay DATABASE_URL")
         return None
 
+    # 🔥 CORRECCIÓN PARA RENDER
     if db_url.startswith("postgres://"):
         db_url = db_url.replace("postgres://", "postgresql://", 1)
 
     try:
-        return psycopg2.connect(db_url, sslmode="require")
+        conn = psycopg2.connect(db_url, sslmode="require")
+        return conn
     except Exception as e:
         print("❌ Error conexión:", e)
         return None
@@ -155,32 +158,22 @@ def calcular(pid, conn):
 # ------------------------------
 @app.route("/", methods=["GET","POST"])
 def panel():
+    print("🔥 Entrando a PANEL")  # DEBUG
+
     conn = conectar()
+    
+    if not conn:
+        return "❌ Error de conexión a base de datos"
+
     cur = conn.cursor()
 
+    # 🔥 PROTECCIÓN DE FECHA
     fecha = request.form.get("fecha")
-    fecha = datetime.strptime(fecha, "%Y-%m-%d").date() if fecha else datetime.now().date()
-
-    cur.execute("SELECT SUM(capital) FROM prestamos")
-    total_prestado = cur.fetchone()[0] or 0
-
-    cur.execute("SELECT SUM(monto) FROM abonos WHERE tipo='capital'")
-    total_abonado = cur.fetchone()[0] or 0
-
-    capital_total = total_prestado - total_abonado
-
-    cur.execute("SELECT monto, tipo, fecha FROM abonos")
-
-    capital_dia = 0
-    interes_dia = 0
-
-    for m, t, f in cur.fetchall():
-        if f.date() == fecha:
-            if t == "capital":
-                capital_dia += m
-            else:
-                interes_dia += m
-
+    try:
+        fecha = datetime.strptime(fecha, "%Y-%m-%d").date() if fecha else datetime.now().date()
+    except:
+        fecha = datetime.now().date()
+        
     # 🔥 ALERTAS MEJORADAS (CON NOMBRE)
     cur.execute("""
         SELECT p.id, p.vencimiento, c.nombre
