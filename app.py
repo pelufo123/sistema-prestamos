@@ -84,14 +84,12 @@ def calcular(pid, conn):
     capital, interes = data
     interes_total = capital * interes / 100
 
-    # Abonos
     cur.execute("SELECT SUM(monto) FROM abonos WHERE prestamo_id=%s AND tipo='capital'", (pid,))
     abonado_capital = cur.fetchone()[0] or 0
 
     cur.execute("SELECT SUM(monto) FROM abonos WHERE prestamo_id=%s AND tipo='interes'", (pid,))
     abonado_interes = cur.fetchone()[0] or 0
 
-    # 🔥 LÓGICA CORRECTA
     capital_restante = capital - abonado_capital
     interes_restante = interes_total - abonado_interes
     saldo_total = capital_restante + interes_restante
@@ -128,7 +126,6 @@ def panel():
             else:
                 interes_dia += m
 
-    # 🔥 ALERTAS
     cur.execute("SELECT id, vencimiento FROM prestamos")
 
     por_vencer = []
@@ -143,7 +140,6 @@ def panel():
         if saldo <= 0:
             continue
 
-        # 🔥 FIX ERROR 500
         if isinstance(venc, str):
             venc = datetime.strptime(venc, "%Y-%m-%d").date()
 
@@ -302,12 +298,7 @@ def abonos():
                 prestamos.append((p[0], p[1], formato(saldo)))
 
     if request.method == "POST" and request.form.get("prestamo"):
-        pid = request.form.get("prestamo")
-
-        if not pid:
-            return redirect("/abonos")
-
-        pid = int(pid)
+        pid = int(request.form.get("prestamo"))
         monto = float(request.form.get("monto"))
         tipo = request.form.get("tipo")
 
@@ -333,23 +324,31 @@ def abonos():
         mensaje=mensaje,
         cliente_id=cliente_id
     )
+
 # ------------------------------
-# HISTORIAL DE CLIENTE 🔥
-# ------------------------------
-# ------------------------------
-# 🔥 HISTORIAL DE CLIENTES (NUEVO)
+# 🔥 HISTORIAL CORREGIDO (NO ROMPE)
 # ------------------------------
 @app.route("/historial/<int:id>")
 def historial(id):
     conn = conectar()
+
+    if not conn:
+        return "Error DB", 500
+
     cur = conn.cursor()
 
-    # 🔹 Obtener préstamos del cliente
+    # VALIDAR CLIENTE
+    cur.execute("SELECT * FROM clientes WHERE id=%s", (id,))
+    if not cur.fetchone():
+        conn.close()
+        return "❌ Cliente no existe"
+
     cur.execute("""
         SELECT id, fecha
         FROM prestamos
         WHERE cliente_id=%s
     """, (id,))
+
     prestamos = cur.fetchall()
 
     data = []
@@ -357,16 +356,15 @@ def historial(id):
     for p in prestamos:
         pid = p[0]
 
-        # 🔹 Calcular estado del préstamo
         cap_rest, int_rest, saldo, ab_cap, ab_int = calcular(pid, conn)
 
-        # 🔹 Obtener abonos
         cur.execute("""
             SELECT monto, tipo, fecha
             FROM abonos
             WHERE prestamo_id=%s
             ORDER BY fecha DESC
         """, (pid,))
+
         abonos = cur.fetchall()
 
         data.append({
@@ -383,6 +381,7 @@ def historial(id):
     conn.close()
 
     return render_template("historial.html", data=data)
+
 # ------------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
