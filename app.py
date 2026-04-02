@@ -126,11 +126,9 @@ def calcular(pid, conn):
     capital, interes = data
     interes_total = capital * interes / 100
 
-    # capital abonado
     cur.execute("SELECT SUM(monto) FROM abonos WHERE prestamo_id=%s AND tipo='capital'", (pid,))
     abonado_capital = cur.fetchone()[0] or 0
 
-    # interés pagado hoy
     hoy = datetime.now().date()
     cur.execute("""
         SELECT SUM(monto) FROM abonos
@@ -163,7 +161,6 @@ def panel():
     fecha = request.form.get("fecha")
     fecha = datetime.strptime(fecha, "%Y-%m-%d").date() if fecha else datetime.now().date()
 
-    # capital real
     cur.execute("SELECT SUM(capital) FROM prestamos")
     total_prestado = cur.fetchone()[0] or 0
 
@@ -172,7 +169,6 @@ def panel():
 
     capital_total = total_prestado - total_abonado
 
-    # movimiento día
     cur.execute("SELECT monto, tipo, fecha FROM abonos")
 
     capital_dia = 0
@@ -185,15 +181,19 @@ def panel():
             else:
                 interes_dia += m
 
-    # alertas
-    cur.execute("SELECT id, vencimiento FROM prestamos")
+    # 🔥 ALERTAS MEJORADAS (CON NOMBRE)
+    cur.execute("""
+        SELECT p.id, p.vencimiento, c.nombre
+        FROM prestamos p
+        JOIN clientes c ON p.cliente_id = c.id
+    """)
 
     por_vencer = []
     vencidos = []
 
     hoy = datetime.now().date()
 
-    for pid, venc in cur.fetchall():
+    for pid, venc, nombre in cur.fetchall():
 
         cap_rest, _, _, _, _ = calcular(pid, conn)
         saldo = cap_rest + interes_hoy(pid, conn)
@@ -207,9 +207,9 @@ def panel():
         dias = (venc - hoy).days
 
         if dias < 0:
-            vencidos.append((pid, abs(dias), formato(saldo)))
+            vencidos.append((pid, nombre, abs(dias), formato(saldo)))
         elif dias <= 3:
-            por_vencer.append((pid, dias, formato(saldo)))
+            por_vencer.append((pid, nombre, dias, formato(saldo)))
 
     conn.close()
 
@@ -223,7 +223,7 @@ def panel():
     )
 
 # ------------------------------
-# 👥 CLIENTES (RESTAURADO)
+# 👥 CLIENTES
 # ------------------------------
 @app.route("/clientes", methods=["GET","POST"])
 def clientes():
@@ -250,7 +250,7 @@ def clientes():
     return render_template("clientes.html", clientes=clientes, resumen=resumen, formato=formato)
 
 # ------------------------------
-# 💼 PRÉSTAMOS (RESTAURADO)
+# 💼 PRÉSTAMOS
 # ------------------------------
 @app.route("/prestamos", methods=["GET","POST"])
 def prestamos():
@@ -260,7 +260,6 @@ def prestamos():
     cur.execute("SELECT * FROM clientes")
     clientes = cur.fetchall()
 
-    # 🔥 CREAR PRÉSTAMO (NO SE TOCA)
     if request.method == "POST" and request.form.get("capital"):
         capital = float(request.form["capital"])
         interes = float(request.form["interes"])
@@ -278,38 +277,20 @@ def prestamos():
 
         conn.commit()
 
-    # =========================
-    # 🔥 NUEVO: FILTRO POR FECHA
-    # =========================
+    # 🔥 FILTRO
     fecha_filtro = request.form.get("fecha")
+    fecha_filtro = datetime.strptime(fecha_filtro, "%Y-%m-%d").date() if fecha_filtro else datetime.now().date()
 
-    if fecha_filtro:
-        try:
-            fecha_filtro = datetime.strptime(fecha_filtro, "%Y-%m-%d").date()
-        except:
-            fecha_filtro = datetime.now().date()
-    else:
-        fecha_filtro = datetime.now().date()
-
-    # =========================
-    # 🔥 NUEVO: PRÉSTAMOS DEL DÍA
-    # =========================
     cur.execute("""
-        SELECT p.id, c.nombre, p.capital, p.interes, p.fecha
+        SELECT p.id, c.nombre, p.capital, p.total, p.fecha
         FROM prestamos p
         JOIN clientes c ON p.cliente_id = c.id
         WHERE p.fecha=%s
-        ORDER BY p.id DESC
     """, (fecha_filtro,))
 
     prestamos_dia = cur.fetchall()
-
-    # 🔥 contador
     cantidad_dia = len(prestamos_dia)
 
-    # =========================
-    # 🔥 LISTADO GENERAL (TU LÓGICA ORIGINAL)
-    # =========================
     cur.execute("""
         SELECT p.id, c.nombre, p.total
         FROM prestamos p
@@ -334,8 +315,6 @@ def prestamos():
     return render_template("prestamos.html",
         clientes=clientes,
         prestamos=prestamos,
-
-        # 🔥 NUEVOS (NO ROMPEN NADA)
         prestamos_dia=prestamos_dia,
         cantidad_dia=cantidad_dia,
         fecha_filtro=fecha_filtro
@@ -410,7 +389,6 @@ def abonos():
         cliente_id=cliente_id
     )
 
-# ------------------------------
 # ------------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
