@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 app = Flask(__name__)
 
 # ------------------------------
-# 🔌 CONEXIÓN A BD
+# 🔌 CONEXIÓN A BASE DE DATOS
 # ------------------------------
 def conectar():
     db_url = os.getenv("DATABASE_URL")
@@ -25,7 +25,7 @@ def conectar():
         return None
 
 # ------------------------------
-# 🧱 CREAR TABLAS
+# 🗄 CREACIÓN DE TABLAS
 # ------------------------------
 def init_db():
     conn = conectar()
@@ -72,13 +72,13 @@ def init_db():
 init_db()
 
 # ------------------------------
-# 💰 FORMATO DINERO
+# 💲 FORMATO DE DINERO
 # ------------------------------
 def formato(x):
     return "{:,.0f}".format(x).replace(",", ".")
 
 # ------------------------------
-# 🧠 CÁLCULO DE SALDOS
+# 🧠 CÁLCULO REAL (CAPITAL + INTERÉS DIARIO)
 # ------------------------------
 def calcular(pid, conn):
     cur = conn.cursor()
@@ -90,19 +90,42 @@ def calcular(pid, conn):
         return 0,0,0,0,0
 
     capital, interes = data
+
+    # 🔥 INTERÉS BASE (SIEMPRE EL MISMO)
     interes_total = capital * interes / 100
 
+    # 🔥 CAPITAL ABONADO (PERMANENTE)
     cur.execute("SELECT SUM(monto) FROM abonos WHERE prestamo_id=%s AND tipo='capital'", (pid,))
     abonado_capital = cur.fetchone()[0] or 0
 
-    cur.execute("SELECT SUM(monto) FROM abonos WHERE prestamo_id=%s AND tipo='interes'", (pid,))
-    abonado_interes = cur.fetchone()[0] or 0
+    # 🔥 INTERÉS PAGADO SOLO HOY
+    hoy = datetime.now().date()
 
+    cur.execute("""
+        SELECT SUM(monto) FROM abonos 
+        WHERE prestamo_id=%s 
+        AND tipo='interes'
+        AND DATE(fecha)=%s
+    """, (pid, hoy))
+
+    abonado_interes_hoy = cur.fetchone()[0] or 0
+
+    # 🔥 CAPITAL RESTANTE
     capital_restante = capital - abonado_capital
-    interes_restante = interes_total - abonado_interes
+
+    # 🔥 INTERÉS DIARIO (SE REINICIA)
+    interes_restante = interes_total - abonado_interes_hoy
+    if interes_restante < 0:
+        interes_restante = 0
+
+    # 🔥 SALDO TOTAL
     saldo_total = capital_restante + interes_restante
 
-    return capital_restante, interes_restante, saldo_total, abonado_capital, abonado_interes
+    # 🔥 TOTAL INTERÉS PAGADO (HISTORIAL)
+    cur.execute("SELECT SUM(monto) FROM abonos WHERE prestamo_id=%s AND tipo='interes'", (pid,))
+    abonado_interes_total = cur.fetchone()[0] or 0
+
+    return capital_restante, interes_restante, saldo_total, abonado_capital, abonado_interes_total
 
 # ------------------------------
 # 🏠 PANEL PRINCIPAL
@@ -121,7 +144,7 @@ def panel():
     else:
         fecha = datetime.now().date()
 
-    # 🔥 CAPITAL REAL (LO QUE REALMENTE DEBEN)
+    # 🔥 CAPITAL REAL
     cur.execute("SELECT SUM(capital) FROM prestamos")
     total_prestado = cur.fetchone()[0] or 0
 
@@ -152,7 +175,6 @@ def panel():
     hoy = datetime.now().date()
 
     for pid, venc in cur.fetchall():
-
         cap_rest, int_rest, saldo, _, _ = calcular(pid, conn)
 
         if saldo <= 0:
@@ -207,7 +229,7 @@ def clientes():
     return render_template("clientes.html", clientes=clientes, resumen=resumen, formato=formato)
 
 # ------------------------------
-# ✏️ EDITAR CLIENTE
+# ✏ EDITAR CLIENTE
 # ------------------------------
 @app.route("/editar_cliente/<int:id>", methods=["GET","POST"])
 def editar_cliente(id):
@@ -229,7 +251,7 @@ def editar_cliente(id):
     return render_template("editar_cliente.html", cliente=cliente)
 
 # ------------------------------
-# ❌ ELIMINAR CLIENTE
+# 🗑 ELIMINAR CLIENTE
 # ------------------------------
 @app.route("/eliminar_cliente/<int:id>")
 def eliminar_cliente(id):
@@ -243,7 +265,7 @@ def eliminar_cliente(id):
     return redirect("/clientes")
 
 # ------------------------------
-# 💳 PRÉSTAMOS
+# 💼 PRÉSTAMOS
 # ------------------------------
 @app.route("/prestamos", methods=["GET","POST"])
 def prestamos():
@@ -295,7 +317,7 @@ def prestamos():
     return render_template("prestamos.html", clientes=clientes, prestamos=prestamos)
 
 # ------------------------------
-# 💰 ABONOS (MEJORADO)
+# 💸 ABONOS
 # ------------------------------
 @app.route("/abonos", methods=["GET","POST"])
 def abonos():
@@ -385,7 +407,6 @@ def historial(id):
     """, (id,))
 
     prestamos = cur.fetchall()
-
     data = []
 
     for p in prestamos:
@@ -401,7 +422,7 @@ def historial(id):
         """, (pid,))
         abonos = cur.fetchall()
 
-        # 🔥 CONTAR INTERESES
+        # 🔥 CONTEO INTERÉS
         cur.execute("""
             SELECT COUNT(*) FROM abonos
             WHERE prestamo_id=%s AND tipo='interes'
