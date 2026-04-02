@@ -260,7 +260,8 @@ def prestamos():
     cur.execute("SELECT * FROM clientes")
     clientes = cur.fetchall()
 
-    if request.method == "POST":
+    # 🔥 CREAR PRÉSTAMO (NO SE TOCA)
+    if request.method == "POST" and request.form.get("capital"):
         capital = float(request.form["capital"])
         interes = float(request.form["interes"])
         dias = int(request.form["dias"])
@@ -277,6 +278,38 @@ def prestamos():
 
         conn.commit()
 
+    # =========================
+    # 🔥 NUEVO: FILTRO POR FECHA
+    # =========================
+    fecha_filtro = request.form.get("fecha")
+
+    if fecha_filtro:
+        try:
+            fecha_filtro = datetime.strptime(fecha_filtro, "%Y-%m-%d").date()
+        except:
+            fecha_filtro = datetime.now().date()
+    else:
+        fecha_filtro = datetime.now().date()
+
+    # =========================
+    # 🔥 NUEVO: PRÉSTAMOS DEL DÍA
+    # =========================
+    cur.execute("""
+        SELECT p.id, c.nombre, p.capital, p.interes, p.fecha
+        FROM prestamos p
+        JOIN clientes c ON p.cliente_id = c.id
+        WHERE p.fecha=%s
+        ORDER BY p.id DESC
+    """, (fecha_filtro,))
+
+    prestamos_dia = cur.fetchall()
+
+    # 🔥 contador
+    cantidad_dia = len(prestamos_dia)
+
+    # =========================
+    # 🔥 LISTADO GENERAL (TU LÓGICA ORIGINAL)
+    # =========================
     cur.execute("""
         SELECT p.id, c.nombre, p.total
         FROM prestamos p
@@ -297,7 +330,16 @@ def prestamos():
         })
 
     conn.close()
-    return render_template("prestamos.html", clientes=clientes, prestamos=prestamos)
+
+    return render_template("prestamos.html",
+        clientes=clientes,
+        prestamos=prestamos,
+
+        # 🔥 NUEVOS (NO ROMPEN NADA)
+        prestamos_dia=prestamos_dia,
+        cantidad_dia=cantidad_dia,
+        fecha_filtro=fecha_filtro
+    )
 
 # ------------------------------
 # 💸 ABONOS

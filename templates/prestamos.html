@@ -10,6 +10,7 @@
 
 <h2>💸 Préstamos</h2>
 
+<!-- 🔹 FORMULARIO -->
 <div class="card">
 <form method="POST">
     <select name="cliente">
@@ -18,25 +19,69 @@
         {% endfor %}
     </select>
 
-    <input name="capital" placeholder="Capital">
-    <input name="interes" placeholder="Interés">
-    <input name="dias" placeholder="Días">
+    <input name="capital" placeholder="Capital" required>
+    <input name="interes" placeholder="Interés %" required>
+    <input name="dias" placeholder="Días" required>
 
     <button>Guardar</button>
 </form>
 </div>
 
+<!-- 🔹 LISTA GENERAL -->
 <div class="card">
+<h3>📋 Préstamos activos</h3>
+
 <table>
     <tr>
         <th>ID</th>
+        <th>Cliente</th>
         <th>Total</th>
+        <th>Saldo</th>
     </tr>
 
     {% for p in prestamos %}
     <tr>
-        <td>{{ p[0] }}</td>
-        <td>{{ p[7] }}</td>
+        <td>{{ p.id }}</td>
+        <td>{{ p.cliente }}</td>
+        <td>{{ p.total }}</td>
+        <td>{{ p.saldo }}</td>
+    </tr>
+    {% endfor %}
+</table>
+</div>
+
+<!-- 🔥 NUEVO: FILTRO POR FECHA -->
+<div class="card">
+<h3>📅 Ver préstamos por día</h3>
+
+<form method="GET">
+    <input type="date" name="fecha" value="{{ fecha }}">
+    <button>Buscar</button>
+</form>
+</div>
+
+<!-- 🔥 NUEVO: RESUMEN DEL DÍA -->
+<div class="card">
+<h3>📊 Resumen del día</h3>
+
+<p><b>Total préstamos hoy:</b> {{ prestamos_dia|length }}</p>
+
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Cliente</th>
+        <th>Capital</th>
+        <th>Total</th>
+        <th>Fecha</th>
+    </tr>
+
+    {% for p in prestamos_dia %}
+    <tr>
+        <td>{{ p.id }}</td>
+        <td>{{ p.cliente }}</td>
+        <td>{{ p.capital }}</td>
+        <td>{{ p.total }}</td>
+        <td>{{ p.fecha }}</td>
     </tr>
     {% endfor %}
 </table>
