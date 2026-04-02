@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 app = Flask(__name__)
 
 # ------------------------------
+# 🔌 CONEXIÓN DB
+# ------------------------------
 def conectar():
     db_url = os.getenv("DATABASE_URL")
 
@@ -22,6 +24,8 @@ def conectar():
         print("❌ Error conexión:", e)
         return None
 
+# ------------------------------
+# 🧱 CREAR TABLAS
 # ------------------------------
 def init_db():
     conn = conectar()
@@ -68,9 +72,13 @@ def init_db():
 init_db()
 
 # ------------------------------
+# 💰 FORMATO
+# ------------------------------
 def formato(x):
     return "{:,.0f}".format(x).replace(",", ".")
 
+# ------------------------------
+# 🧮 CALCULAR
 # ------------------------------
 def calcular(pid, conn):
     cur = conn.cursor()
@@ -97,6 +105,8 @@ def calcular(pid, conn):
     return capital_restante, interes_restante, saldo_total, abonado_capital, abonado_interes
 
 # ------------------------------
+# 📊 PANEL
+# ------------------------------
 @app.route("/", methods=["GET","POST"])
 def panel():
     conn = conectar()
@@ -111,9 +121,16 @@ def panel():
     else:
         fecha = datetime.now().date()
 
-    cur.execute("SELECT SUM(capital) FROM prestamos")
-    capital_total = cur.fetchone()[0] or 0
+    # 🔥 NUEVO: CAPITAL REAL (DESCUENTA ABONOS)
+    cur.execute("SELECT id FROM prestamos")
+    prestamos_ids = cur.fetchall()
 
+    capital_total = 0
+    for p in prestamos_ids:
+        cap_rest, _, _, _, _ = calcular(p[0], conn)
+        capital_total += cap_rest
+
+    # 🔥 DIARIO
     cur.execute("SELECT monto, tipo, fecha FROM abonos")
 
     capital_dia = 0
@@ -126,6 +143,7 @@ def panel():
             else:
                 interes_dia += m
 
+    # 🔥 ALERTAS
     cur.execute("SELECT id, vencimiento FROM prestamos")
 
     por_vencer = []
@@ -162,112 +180,7 @@ def panel():
     )
 
 # ------------------------------
-@app.route("/clientes", methods=["GET","POST"])
-def clientes():
-    conn = conectar()
-    cur = conn.cursor()
-
-    if request.method == "POST":
-        cur.execute(
-            "INSERT INTO clientes(nombre,telefono,direccion) VALUES (%s,%s,%s)",
-            (request.form["nombre"], request.form["telefono"], request.form["direccion"])
-        )
-        conn.commit()
-
-    cur.execute("SELECT * FROM clientes")
-    clientes = cur.fetchall()
-
-    resumen = []
-    for c in clientes:
-        cur.execute("SELECT SUM(capital) FROM prestamos WHERE cliente_id=%s", (c[0],))
-        total = cur.fetchone()[0] or 0
-        resumen.append(total)
-
-    conn.close()
-    return render_template("clientes.html", clientes=clientes, resumen=resumen, formato=formato)
-
-# ------------------------------
-@app.route("/editar_cliente/<int:id>", methods=["GET","POST"])
-def editar_cliente(id):
-    conn = conectar()
-    cur = conn.cursor()
-
-    if request.method == "POST":
-        cur.execute("""
-            UPDATE clientes SET nombre=%s, telefono=%s, direccion=%s WHERE id=%s
-        """, (request.form["nombre"], request.form["telefono"], request.form["direccion"], id))
-        conn.commit()
-        conn.close()
-        return redirect("/clientes")
-
-    cur.execute("SELECT * FROM clientes WHERE id=%s", (id,))
-    cliente = cur.fetchone()
-
-    conn.close()
-    return render_template("editar_cliente.html", cliente=cliente)
-
-# ------------------------------
-@app.route("/eliminar_cliente/<int:id>")
-def eliminar_cliente(id):
-    conn = conectar()
-    cur = conn.cursor()
-
-    cur.execute("DELETE FROM clientes WHERE id=%s", (id,))
-    conn.commit()
-
-    conn.close()
-    return redirect("/clientes")
-
-# ------------------------------
-@app.route("/prestamos", methods=["GET","POST"])
-def prestamos():
-    conn = conectar()
-    cur = conn.cursor()
-
-    cur.execute("SELECT * FROM clientes")
-    clientes = cur.fetchall()
-
-    if request.method == "POST":
-        capital = float(request.form["capital"])
-        interes = float(request.form["interes"])
-        dias = int(request.form["dias"])
-
-        total = capital + (capital * interes / 100)
-
-        fecha = datetime.now()
-        venc = fecha + timedelta(days=dias)
-
-        cur.execute("""
-        INSERT INTO prestamos(cliente_id,capital,interes,dias,fecha,vencimiento,total)
-        VALUES (%s,%s,%s,%s,%s,%s,%s)
-        """, (request.form["cliente"], capital, interes, dias, fecha.date(), venc.date(), total))
-
-        conn.commit()
-
-    cur.execute("""
-        SELECT p.id, c.nombre, p.total
-        FROM prestamos p
-        JOIN clientes c ON p.cliente_id = c.id
-    """)
-
-    data = cur.fetchall()
-    prestamos = []
-
-    for p in data:
-        cap_rest, int_rest, saldo, ab_cap, ab_int = calcular(p[0], conn)
-
-        prestamos.append({
-            "id": p[0],
-            "cliente": p[1],
-            "total": formato(p[2]),
-            "capital_restante": formato(cap_rest),
-            "interes_restante": formato(int_rest),
-            "saldo": formato(saldo)
-        })
-
-    conn.close()
-    return render_template("prestamos.html", clientes=clientes, prestamos=prestamos)
-
+# 💵 ABONOS (MEJORADO)
 # ------------------------------
 @app.route("/abonos", methods=["GET","POST"])
 def abonos():
@@ -297,6 +210,7 @@ def abonos():
             if saldo > 0:
                 prestamos.append((p[0], p[1], formato(saldo)))
 
+    # 🔥 NUEVA LÓGICA
     if request.method == "POST" and request.form.get("prestamo"):
         pid = int(request.form.get("prestamo"))
         monto = float(request.form.get("monto"))
@@ -304,17 +218,37 @@ def abonos():
 
         cap_rest, int_rest, saldo, _, _ = calcular(pid, conn)
 
-        if tipo == "capital" and monto > cap_rest:
-            mensaje = "❌ Excede capital pendiente"
-        elif tipo == "interes" and monto > int_rest:
-            mensaje = "❌ Excede interés pendiente"
-        else:
-            cur.execute(
-                "INSERT INTO abonos(prestamo_id,monto,fecha,tipo) VALUES (%s,%s,%s,%s)",
-                (pid, monto, datetime.now(), tipo)
-            )
-            conn.commit()
-            mensaje = "✅ Guardado"
+        hoy = datetime.now().date()
+
+        # 🔥 SOLO 1 INTERÉS POR DÍA
+        if tipo == "interes":
+            cur.execute("""
+                SELECT COUNT(*) FROM abonos
+                WHERE prestamo_id=%s AND tipo='interes' AND DATE(fecha)=%s
+            """, (pid, hoy))
+
+            if cur.fetchone()[0] > 0:
+                mensaje = "❌ Ya pagó interés hoy"
+            elif monto > int_rest:
+                mensaje = "❌ Excede interés"
+            else:
+                cur.execute(
+                    "INSERT INTO abonos(prestamo_id,monto,fecha,tipo) VALUES (%s,%s,%s,%s)",
+                    (pid, monto, datetime.now(), tipo)
+                )
+                conn.commit()
+                mensaje = "✅ Interés registrado"
+
+        elif tipo == "capital":
+            if monto > cap_rest:
+                mensaje = "❌ Excede capital pendiente"
+            else:
+                cur.execute(
+                    "INSERT INTO abonos(prestamo_id,monto,fecha,tipo) VALUES (%s,%s,%s,%s)",
+                    (pid, monto, datetime.now(), tipo)
+                )
+                conn.commit()
+                mensaje = "✅ Capital abonado"
 
     conn.close()
 
@@ -326,7 +260,7 @@ def abonos():
     )
 
 # ------------------------------
-# 🔥 HISTORIAL CORREGIDO (NO ROMPE)
+# 🔥 HISTORIAL MEJORADO
 # ------------------------------
 @app.route("/historial/<int:id>")
 def historial(id):
@@ -337,7 +271,6 @@ def historial(id):
 
     cur = conn.cursor()
 
-    # VALIDAR CLIENTE
     cur.execute("SELECT * FROM clientes WHERE id=%s", (id,))
     if not cur.fetchone():
         conn.close()
@@ -358,6 +291,13 @@ def historial(id):
 
         cap_rest, int_rest, saldo, ab_cap, ab_int = calcular(pid, conn)
 
+        # 🔥 CONTADOR INTERÉS
+        cur.execute("""
+            SELECT COUNT(*) FROM abonos
+            WHERE prestamo_id=%s AND tipo='interes'
+        """, (pid,))
+        cantidad_interes = cur.fetchone()[0]
+
         cur.execute("""
             SELECT monto, tipo, fecha
             FROM abonos
@@ -375,7 +315,8 @@ def historial(id):
             "saldo": formato(saldo),
             "abonado_capital": formato(ab_cap),
             "abonado_interes": formato(ab_int),
-            "abonos": abonos
+            "cantidad_interes": cantidad_interes,
+            "abonos": [(formato(a[0]), a[1], a[2]) for a in abonos]
         })
 
     conn.close()
