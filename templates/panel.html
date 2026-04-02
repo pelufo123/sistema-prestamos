@@ -8,6 +8,14 @@
 
 <div class="container">
 
+<!-- 🔥 MENÚ DE NAVEGACIÓN (ESTE ES EL ARREGLO) -->
+<div>
+    <a href="/" class="btn">🏠 Inicio</a>
+    <a href="/clientes" class="btn">👥 Clientes</a>
+    <a href="/prestamos" class="btn">💸 Préstamos</a>
+    <a href="/abonos" class="btn">💰 Abonos</a>
+</div>
+
 <h2>💸 Préstamos</h2>
 
 <div class="card">
@@ -26,7 +34,7 @@
 </form>
 </div>
 
-<!-- 🔥 NUEVO: FILTRO POR FECHA -->
+<!-- 🔥 FILTRO POR FECHA -->
 <div class="card">
 <form method="POST">
     <h3>📅 Ver préstamos por día</h3>
@@ -35,12 +43,12 @@
 </form>
 </div>
 
-<!-- 🔥 NUEVO: RESUMEN COMPLETO DEL DÍA -->
+<!-- 🔥 RESUMEN DEL DÍA -->
 <div class="card">
     <h3>📊 Resumen del día</h3>
 
     <p><strong>Fecha:</strong> {{ fecha_filtro }}</p>
-    <p><strong>Cantidad de préstamos:</strong> {{ cantidad_dia }}</p>
+    <p><strong>Cantidad:</strong> {{ cantidad_dia }}</p>
 
     <table>
         <tr>
@@ -67,14 +75,14 @@
     {% endif %}
 </div>
 
-<!-- 🔥 LISTADO GENERAL (NO TOCADO) -->
+<!-- 🔥 LISTADO GENERAL -->
 <div class="card">
 <table>
     <tr>
         <th>ID</th>
         <th>Cliente</th>
         <th>Total</th>
-        <th>Saldo actual</th>
+        <th>Saldo</th>
     </tr>
 
     {% for p in prestamos %}
@@ -87,8 +95,6 @@
     {% endfor %}
 </table>
 </div>
-
-<a class="btn" href="/">⬅ Volver</a>
 
 </div>
 
