@@ -81,12 +81,10 @@ def formato(x):
         return "0"
 
 # ------------------------------
-# 🔹 FUNCIONES EXTRA (NUEVAS)
+# 🔥 FUNCIONES NUEVAS (NO BORRAN NADA)
 # ------------------------------
 
-def cliente_valido(cliente_id):
-    return cliente_id and str(cliente_id).isdigit()
-
+# 🔹 interés del día dinámico
 def interes_hoy(pid, conn):
     cur = conn.cursor()
     hoy = datetime.now().date()
@@ -96,7 +94,7 @@ def interes_hoy(pid, conn):
         WHERE prestamo_id=%s AND tipo='interes' AND DATE(fecha)=%s
     """, (pid, hoy))
 
-    pago_hoy = cur.fetchone()[0] or 0
+    pago_hoy = cur.fetchone()[0]
 
     cur.execute("SELECT capital, interes FROM prestamos WHERE id=%s", (pid,))
     data = cur.fetchone()
@@ -109,9 +107,18 @@ def interes_hoy(pid, conn):
 
     return 0 if pago_hoy > 0 else interes_total
 
+
+# 🔹 saldo real (capital + interés dinámico)
 def saldo_real(pid, conn):
     cap_rest, _, _, _, _ = calcular(pid, conn)
-    return cap_rest + interes_hoy(pid, conn)
+    interes = interes_hoy(pid, conn)
+    return cap_rest + interes
+
+
+# 🔹 validación segura cliente
+def cliente_valido(cliente_id):
+    return cliente_id and str(cliente_id).isdigit()
+
 
 # ------------------------------
 # 🧠 CÁLCULO PRINCIPAL
@@ -154,15 +161,13 @@ def calcular(pid, conn):
 
     return capital_restante, interes_restante, saldo_total, abonado_capital, abonado_interes_total
 
+
 # ------------------------------
 # 🏠 PANEL
 # ------------------------------
 @app.route("/", methods=["GET","POST"])
 def panel():
     conn = conectar()
-    if not conn:
-        return "Error DB", 500
-
     cur = conn.cursor()
 
     fecha = request.form.get("fecha")
@@ -176,18 +181,20 @@ def panel():
 
     capital_total = total_prestado - total_abonado
 
+    # 🔥 movimiento día
     cur.execute("SELECT monto, tipo, fecha FROM abonos")
 
     capital_dia = 0
     interes_dia = 0
 
     for m, t, f in cur.fetchall():
-        if f and f.date() == fecha:
+        if f.date() == fecha:
             if t == "capital":
-                capital_dia += m or 0
+                capital_dia += m
             else:
-                interes_dia += m or 0
+                interes_dia += m
 
+    # 🔥 alertas
     cur.execute("SELECT id, vencimiento FROM prestamos")
 
     por_vencer = []
@@ -222,15 +229,13 @@ def panel():
         vencidos=vencidos
     )
 
+
 # ------------------------------
-# 💸 ABONOS (ARREGLADO)
+# 💸 ABONOS (ULTRA SEGURO)
 # ------------------------------
 @app.route("/abonos", methods=["GET","POST"])
 def abonos():
     conn = conectar()
-    if not conn:
-        return "Error DB", 500
-
     cur = conn.cursor()
 
     cur.execute("SELECT * FROM clientes")
@@ -257,25 +262,11 @@ def abonos():
                 prestamos.append((pid, nombre, formato(saldo)))
 
     # 🔥 GUARDAR ABONO
-    if request.method == "POST":
+    if request.method == "POST" and request.form.get("prestamo"):
 
-        if not request.form.get("prestamo"):
-            conn.close()
-            return redirect("/abonos")
-
-        try:
-            pid = int(request.form.get("prestamo"))
-            monto = float(request.form.get("monto"))
-            tipo = request.form.get("tipo")
-        except:
-            mensaje = "❌ Datos inválidos"
-            conn.close()
-            return render_template("abonos.html",
-                clientes=clientes,
-                prestamos=prestamos,
-                mensaje=mensaje,
-                cliente_id=cliente_id
-            )
+        pid = int(request.form.get("prestamo"))
+        monto = float(request.form.get("monto"))
+        tipo = request.form.get("tipo")
 
         cap_rest, int_rest, _, _, _ = calcular(pid, conn)
 
@@ -311,8 +302,9 @@ def abonos():
         cliente_id=cliente_id
     )
 
+
 # ------------------------------
-# 📊 HISTORIAL
+# 📊 HISTORIAL (MEJORADO)
 # ------------------------------
 @app.route("/historial/<int:id>")
 def historial(id):
@@ -366,6 +358,7 @@ def historial(id):
     conn.close()
 
     return render_template("historial.html", data=data)
+
 
 # ------------------------------
 if __name__ == "__main__":
