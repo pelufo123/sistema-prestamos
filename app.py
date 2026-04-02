@@ -158,22 +158,32 @@ def calcular(pid, conn):
 # ------------------------------
 @app.route("/", methods=["GET","POST"])
 def panel():
-    print("🔥 Entrando a PANEL")  # DEBUG
-
     conn = conectar()
-    
-    if not conn:
-        return "❌ Error de conexión a base de datos"
-
     cur = conn.cursor()
 
-    # 🔥 PROTECCIÓN DE FECHA
     fecha = request.form.get("fecha")
-    try:
-        fecha = datetime.strptime(fecha, "%Y-%m-%d").date() if fecha else datetime.now().date()
-    except:
-        fecha = datetime.now().date()
-        
+    fecha = datetime.strptime(fecha, "%Y-%m-%d").date() if fecha else datetime.now().date()
+
+    cur.execute("SELECT SUM(capital) FROM prestamos")
+    total_prestado = cur.fetchone()[0] or 0
+
+    cur.execute("SELECT SUM(monto) FROM abonos WHERE tipo='capital'")
+    total_abonado = cur.fetchone()[0] or 0
+
+    capital_total = total_prestado - total_abonado
+
+    cur.execute("SELECT monto, tipo, fecha FROM abonos")
+
+    capital_dia = 0
+    interes_dia = 0
+
+    for m, t, f in cur.fetchall():
+        if f.date() == fecha:
+            if t == "capital":
+                capital_dia += m
+            else:
+                interes_dia += m
+
     # 🔥 ALERTAS MEJORADAS (CON NOMBRE)
     cur.execute("""
         SELECT p.id, p.vencimiento, c.nombre
