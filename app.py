@@ -1,6 +1,6 @@
 import os
 import psycopg2
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, url_for
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
@@ -11,12 +11,10 @@ app = Flask(__name__)
 def conectar():
     db_url = os.getenv("DATABASE_URL")
 
-    # 🔥 CORRECCIÓN (NO ROMPE SI NO EXISTE)
     if not db_url:
         print("❌ No hay DATABASE_URL")
         return None
 
-    # 🔥 CORRECCIÓN PARA RENDER
     if db_url.startswith("postgres://"):
         db_url = db_url.replace("postgres://", "postgresql://", 1)
 
@@ -154,11 +152,24 @@ def calcular(pid, conn):
     return capital_restante, interes_restante, saldo_total, abonado_capital, abonado_interes_total
 
 # ------------------------------
-# 🏠 PANEL
+# 🏠 PANEL (CORREGIDO)
 # ------------------------------
 @app.route("/", methods=["GET","POST"])
 def panel():
+
     conn = conectar()
+
+    # 🔥 SI FALLA LA DB NO SE CAE LA APP
+    if not conn:
+        return render_template("panel.html",
+            capital_total="0",
+            capital_dia="0",
+            interes_dia="0",
+            fecha=datetime.now().date(),
+            por_vencer=[],
+            vencidos=[]
+        )
+
     cur = conn.cursor()
 
     fecha = request.form.get("fecha")
@@ -184,7 +195,6 @@ def panel():
             else:
                 interes_dia += m
 
-    # 🔥 ALERTAS MEJORADAS (CON NOMBRE)
     cur.execute("""
         SELECT p.id, p.vencimiento, c.nombre
         FROM prestamos p
@@ -224,6 +234,13 @@ def panel():
         por_vencer=por_vencer,
         vencidos=vencidos
     )
+
+# ------------------------------
+# 🔥 RUTA EXTRA PARA ASEGURAR INICIO
+# ------------------------------
+@app.route("/inicio")
+def inicio():
+    return redirect(url_for("panel"))
 
 # ------------------------------
 # 👥 CLIENTES
@@ -280,7 +297,6 @@ def prestamos():
 
         conn.commit()
 
-    # 🔥 FILTRO
     fecha_filtro = request.form.get("fecha")
     fecha_filtro = datetime.strptime(fecha_filtro, "%Y-%m-%d").date() if fecha_filtro else datetime.now().date()
 
