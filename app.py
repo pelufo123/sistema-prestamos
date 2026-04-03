@@ -152,14 +152,13 @@ def calcular(pid, conn):
     return capital_restante, interes_restante, saldo_total, abonado_capital, abonado_interes_total
 
 # ------------------------------
-# 🏠 PANEL (CORREGIDO)
+# 🏠 PANEL
 # ------------------------------
 @app.route("/", methods=["GET","POST"])
 def panel():
 
     conn = conectar()
 
-    # 🔥 SI FALLA LA DB NO SE CAE LA APP
     if not conn:
         return render_template("panel.html",
             capital_total="0",
@@ -236,10 +235,14 @@ def panel():
     )
 
 # ------------------------------
-# 🔥 RUTA EXTRA PARA ASEGURAR INICIO
+# 🔥 RUTAS NUEVAS (AÑADIDAS)
 # ------------------------------
-@app.route("/inicio")
+@app.route("/inicio", methods=["GET","POST"])
 def inicio():
+    return redirect(url_for("panel"))
+
+@app.route("/home")
+def home():
     return redirect(url_for("panel"))
 
 # ------------------------------
@@ -268,6 +271,92 @@ def clientes():
 
     conn.close()
     return render_template("clientes.html", clientes=clientes, resumen=resumen, formato=formato)
+
+# ------------------------------
+# ✏️ EDITAR CLIENTE
+# ------------------------------
+@app.route("/editar_cliente/<int:id>", methods=["GET","POST"])
+def editar_cliente(id):
+    conn = conectar()
+    cur = conn.cursor()
+
+    if request.method == "POST":
+        cur.execute("""
+            UPDATE clientes
+            SET nombre=%s, telefono=%s, direccion=%s
+            WHERE id=%s
+        """, (
+            request.form["nombre"],
+            request.form["telefono"],
+            request.form["direccion"],
+            id
+        ))
+        conn.commit()
+        conn.close()
+        return redirect(url_for("clientes"))
+
+    cur.execute("SELECT * FROM clientes WHERE id=%s", (id,))
+    cliente = cur.fetchone()
+
+    conn.close()
+    return render_template("editar_cliente.html", cliente=cliente)
+
+# ------------------------------
+# 🗑 ELIMINAR CLIENTE
+# ------------------------------
+@app.route("/eliminar_cliente/<int:id>")
+def eliminar_cliente(id):
+    conn = conectar()
+    cur = conn.cursor()
+
+    cur.execute("DELETE FROM abonos WHERE prestamo_id IN (SELECT id FROM prestamos WHERE cliente_id=%s)", (id,))
+    cur.execute("DELETE FROM prestamos WHERE cliente_id=%s", (id,))
+    cur.execute("DELETE FROM clientes WHERE id=%s", (id,))
+
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for("clientes"))
+
+# ------------------------------
+# 📄 HISTORIAL
+# ------------------------------
+@app.route("/historial/<int:id>")
+def historial(id):
+    conn = conectar()
+    cur = conn.cursor()
+
+    cur.execute("SELECT nombre FROM clientes WHERE id=%s", (id,))
+    cliente = cur.fetchone()
+
+    cur.execute("""
+        SELECT id, capital, total, fecha
+        FROM prestamos
+        WHERE cliente_id=%s
+    """, (id,))
+    prestamos = cur.fetchall()
+
+    historial = []
+
+    for p in prestamos:
+        cur.execute("""
+            SELECT monto, tipo, fecha
+            FROM abonos
+            WHERE prestamo_id=%s
+        """, (p[0],))
+        abonos = cur.fetchall()
+
+        historial.append({
+            "prestamo": p,
+            "abonos": abonos
+        })
+
+    conn.close()
+
+    return render_template("historial.html",
+        cliente=cliente,
+        historial=historial
+    )
 
 # ------------------------------
 # 💼 PRÉSTAMOS

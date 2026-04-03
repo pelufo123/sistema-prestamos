@@ -10,16 +10,17 @@
 
     <h2>✏️ Editar Cliente</h2>
 
-    <!-- 🔥 BOTÓN VOLVER -->
+    <!-- 🔥 BOTONES DE NAVEGACIÓN -->
     <div style="margin-bottom:15px;">
-        <a href="/clientes" class="btn">⬅️ Volver</a>
+        <a href="{{ url_for('panel') }}" class="btn">🏠 Inicio</a>
+        <a href="{{ url_for('clientes') }}" class="btn">⬅️ Volver</a>
     </div>
 
     <div class="card">
         <form method="POST">
-            <input name="nombre" value="{{cliente[1]}}" required>
-            <input name="telefono" value="{{cliente[2]}}">
-            <input name="direccion" value="{{cliente[3]}}">
+            <input name="nombre" value="{{ cliente[1] }}" required>
+            <input name="telefono" value="{{ cliente[2] }}">
+            <input name="direccion" value="{{ cliente[3] }}">
             <button>Guardar cambios</button>
         </form>
     </div>

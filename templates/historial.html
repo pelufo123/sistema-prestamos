@@ -8,30 +8,26 @@
 
 <div class="container">
 
-    <h2>📊 Historial de Cliente</h2>
+    <h2>📊 Historial de {{ cliente[0] }}</h2>
 
-    <a href="/clientes" class="btn">⬅ Volver</a>
+    <div style="margin-bottom:15px;">
+        <a href="{{ url_for('panel') }}" class="btn">🏠 Inicio</a>
+        <a href="{{ url_for('clientes') }}" class="btn">⬅ Volver</a>
+    </div>
 
-    {% if not data %}
+    {% if not historial %}
     <div class="alert alert-warning">
         ⚠️ Este cliente no tiene historial todavía
     </div>
     {% endif %}
 
-    {% for p in data %}
+    {% for item in historial %}
     <div class="card">
 
-        <h3>📄 Préstamo #{{ p.prestamo }}</h3>
-        <p><b>Fecha:</b> {{ p.fecha }}</p>
-
-        <p>💰 Capital restante: <span class="verde">{{ p.capital_restante }}</span></p>
-        <p>📈 Interés restante: <span class="azul">{{ p.interes_restante }}</span></p>
-        <p>📊 Total saldo: <span class="rojo">{{ p.saldo }}</span></p>
-
-        <hr>
-
-        <p>💵 Abonado capital: {{ p.abonado_capital }}</p>
-        <p>💸 Abonado interés: {{ p.abonado_interes }}</p>
+        <h3>📄 Préstamo #{{ item.prestamo[0] }}</h3>
+        <p><b>Fecha:</b> {{ item.prestamo[3] }}</p>
+        <p><b>Capital:</b> {{ item.prestamo[1] }}</p>
+        <p><b>Total:</b> {{ item.prestamo[2] }}</p>
 
         <h4>📥 Abonos</h4>
 
@@ -42,7 +38,7 @@
                 <th>Fecha</th>
             </tr>
 
-            {% for a in p.abonos %}
+            {% for a in item.abonos %}
             <tr>
                 <td>{{ "{:,.0f}".format(a[0]).replace(",", ".") }}</td>
                 <td>{{ a[1] }}</td>
