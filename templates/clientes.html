@@ -10,14 +10,11 @@
 
     <h2>👥 Clientes</h2>
 
-    <!-- 🔥 BOTONES DE NAVEGACIÓN -->
+    <!-- 🔥 NAVEGACIÓN -->
     <div style="margin-bottom:15px;">
-        <a href="/" class="btn">🏠 Panel</a>
-        <a href="/prestamos" class="btn">💰 Préstamos</a>
-        <a href="/abonos" class="btn">💳 Abonos</a>
-
-        <!-- 🔥 BOTÓN SEGURO -->
-        <a href="{{ url_for('panel') }}" class="btn">🏠 Inicio Seguro</a>
+        <a href="{{ url_for('panel') }}" class="btn">🏠 Panel</a>
+        <a href="{{ url_for('prestamos') }}" class="btn">💰 Préstamos</a>
+        <a href="{{ url_for('abonos') }}" class="btn">💳 Abonos</a>
     </div>
 
     <!-- FORMULARIO -->
@@ -49,7 +46,14 @@
                 <td>{{ formato(resumen[loop.index0]) }}</td>
                 <td>
                     <a href="/editar_cliente/{{c[0]}}" class="btn btn-edit">✏️</a>
-                    <a href="/eliminar_cliente/{{c[0]}}" class="btn btn-del">🗑️</a>
+
+                    <!-- 🔥 CONFIRMACIÓN ANTES DE ELIMINAR -->
+                    <a href="/eliminar_cliente/{{c[0]}}"
+                       class="btn btn-del"
+                       onclick="return confirm('⚠️ ¿Seguro que deseas eliminar este cliente? Se borrarán también sus préstamos y abonos.')">
+                       🗑️
+                    </a>
+
                     <a href="/historial/{{c[0]}}" class="btn btn-his">📄</a>
                 </td>
             </tr>
@@ -57,7 +61,8 @@
         </table>
     </div>
 
-<a class="btn" href="/">⬅ Volver</a>
+    <a class="btn" href="{{ url_for('panel') }}">⬅ Volver</a>
+
 </div>
 
 </body>
