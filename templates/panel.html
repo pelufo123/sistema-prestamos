@@ -1,99 +1,85 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Préstamos</title>
+    <title>Panel Principal</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
 <div class="container">
 
-<!-- 🔥 MENÚ DE NAVEGACIÓN (ESTE ES EL ARREGLO) -->
-<div>
-    <a href="/" class="btn">🏠 Inicio</a>
-    <a href="/clientes" class="btn">👥 Clientes</a>
-    <a href="/prestamos" class="btn">💸 Préstamos</a>
-    <a href="/abonos" class="btn">💰 Abonos</a>
+<!-- 🔥 MENÚ DE NAVEGACIÓN -->
+<div style="margin-bottom:15px;">
+    <a href="{{ url_for('panel') }}" class="btn">🏠 Inicio</a>
+    <a href="{{ url_for('clientes') }}" class="btn">👥 Clientes</a>
+    <a href="{{ url_for('prestamos') }}" class="btn">💸 Préstamos</a>
+    <a href="{{ url_for('abonos') }}" class="btn">💰 Abonos</a>
 </div>
 
-<h2>💸 Préstamos</h2>
+<h2>📊 Panel Principal</h2>
 
+<!-- 🔥 RESUMEN GENERAL -->
 <div class="card">
-<form method="POST">
-    <select name="cliente">
-        {% for c in clientes %}
-        <option value="{{ c[0] }}">{{ c[1] }}</option>
-        {% endfor %}
-    </select>
+    <h3>💰 Resumen</h3>
 
-    <input name="capital" placeholder="Capital">
-    <input name="interes" placeholder="Interés">
-    <input name="dias" placeholder="Días">
-
-    <button>Guardar</button>
-</form>
+    <p><strong>Capital total:</strong> {{ capital_total }}</p>
+    <p><strong>Capital del día:</strong> {{ capital_dia }}</p>
+    <p><strong>Interés del día:</strong> {{ interes_dia }}</p>
+    <p><strong>Fecha:</strong> {{ fecha }}</p>
 </div>
 
-<!-- 🔥 FILTRO POR FECHA -->
+<!-- 🔥 PRÉSTAMOS POR VENCER -->
 <div class="card">
-<form method="POST">
-    <h3>📅 Ver préstamos por día</h3>
-    <input type="date" name="fecha" value="{{ fecha_filtro }}">
-    <button>Ver</button>
-</form>
-</div>
-
-<!-- 🔥 RESUMEN DEL DÍA -->
-<div class="card">
-    <h3>📊 Resumen del día</h3>
-
-    <p><strong>Fecha:</strong> {{ fecha_filtro }}</p>
-    <p><strong>Cantidad:</strong> {{ cantidad_dia }}</p>
+    <h3>⚠️ Por vencer</h3>
 
     <table>
         <tr>
             <th>ID</th>
             <th>Cliente</th>
-            <th>Capital</th>
-            <th>Interés %</th>
-            <th>Total</th>
+            <th>Días</th>
+            <th>Saldo</th>
         </tr>
 
-        {% for p in prestamos_dia %}
+        {% for p in por_vencer %}
         <tr>
             <td>{{ p[0] }}</td>
             <td>{{ p[1] }}</td>
-            <td>${{ p[2] }}</td>
-            <td>{{ p[3] }}%</td>
-            <td>${{ (p[2] + (p[2]*p[3]/100)) | int }}</td>
+            <td>{{ p[2] }}</td>
+            <td>{{ p[3] }}</td>
         </tr>
         {% endfor %}
     </table>
 
-    {% if cantidad_dia == 0 %}
-        <p>No hubo préstamos este día</p>
+    {% if por_vencer|length == 0 %}
+        <p>No hay préstamos próximos a vencer</p>
     {% endif %}
 </div>
 
-<!-- 🔥 LISTADO GENERAL -->
+<!-- 🔥 PRÉSTAMOS VENCIDOS -->
 <div class="card">
-<table>
-    <tr>
-        <th>ID</th>
-        <th>Cliente</th>
-        <th>Total</th>
-        <th>Saldo</th>
-    </tr>
+    <h3>❌ Vencidos</h3>
 
-    {% for p in prestamos %}
-    <tr>
-        <td>{{ p.id }}</td>
-        <td>{{ p.cliente }}</td>
-        <td>${{ p.total }}</td>
-        <td>${{ p.saldo }}</td>
-    </tr>
-    {% endfor %}
-</table>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Cliente</th>
+            <th>Días atraso</th>
+            <th>Saldo</th>
+        </tr>
+
+        {% for v in vencidos %}
+        <tr>
+            <td>{{ v[0] }}</td>
+            <td>{{ v[1] }}</td>
+            <td>{{ v[2] }}</td>
+            <td>{{ v[3] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    {% if vencidos|length == 0 %}
+        <p>No hay préstamos vencidos</p>
+    {% endif %}
 </div>
 
 </div>
