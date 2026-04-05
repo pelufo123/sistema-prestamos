@@ -171,17 +171,22 @@ def panel():
 
     cur = conn.cursor()
 
+    # 📅 FECHA SELECCIONADA
     fecha = request.form.get("fecha")
     fecha = datetime.strptime(fecha, "%Y-%m-%d").date() if fecha else datetime.now().date()
 
-    cur.execute("SELECT SUM(capital) FROM prestamos")
-    total_prestado = cur.fetchone()[0] or 0
+    # 🔥 CAPITAL TOTAL REAL (CORREGIDO)
+    capital_total = 0
 
-    cur.execute("SELECT SUM(monto) FROM abonos WHERE tipo='capital'")
-    total_abonado = cur.fetchone()[0] or 0
+    cur.execute("SELECT id FROM prestamos")
+    prestamos_ids = cur.fetchall()
 
-    capital_total = total_prestado - total_abonado
+    for (pid,) in prestamos_ids:
+        cap_rest, _, _, _, _ = calcular(pid, conn)
+        if cap_rest > 0:
+            capital_total += cap_rest
 
+    # 💰 MOVIMIENTOS DEL DÍA
     cur.execute("SELECT monto, tipo, fecha FROM abonos")
 
     capital_dia = 0
@@ -194,6 +199,7 @@ def panel():
             else:
                 interes_dia += m
 
+    # 📊 VENCIMIENTOS
     cur.execute("""
         SELECT p.id, p.vencimiento, c.nombre
         FROM prestamos p
