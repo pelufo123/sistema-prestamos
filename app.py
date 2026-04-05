@@ -151,7 +151,6 @@ def calcular(pid, conn):
 
     return capital_restante, interes_restante, saldo_total, abonado_capital, abonado_interes_total
 
-# ------PANEL------------------------PANEL
 @app.route("/", methods=["GET","POST"])
 def panel():
 
@@ -162,7 +161,7 @@ def panel():
 
     cur = conn.cursor()
 
-    # 🔥 FILTRO (dia o mes)
+    # 🔥 FILTRO
     tipo = request.form.get("tipo") or "dia"
     fecha_str = request.form.get("fecha")
 
@@ -171,7 +170,7 @@ def panel():
     else:
         fecha = datetime.now().date()
 
-    # 🔥 RANGOS
+    # 🔥 RANGO
     if tipo == "mes":
         inicio = fecha.replace(day=1)
         fin = fecha
@@ -179,7 +178,20 @@ def panel():
         inicio = fecha
         fin = fecha
 
-    # 🔥 CONSULTA GENERAL
+    # =============================
+    # 💰 CAPITAL TOTAL EN CALLE
+    # =============================
+    capital_total = 0
+    cur.execute("SELECT id FROM prestamos")
+
+    for (pid,) in cur.fetchall():
+        cap_rest, _, _, _, _ = calcular(pid, conn)
+        if cap_rest > 0:
+            capital_total += cap_rest
+
+    # =============================
+    # 📊 MOVIMIENTOS FILTRADOS
+    # =============================
     cur.execute("""
         SELECT monto, tipo, DATE(fecha)
         FROM abonos
@@ -189,7 +201,6 @@ def panel():
     capital = 0
     interes = 0
 
-    # 🔥 PARA GRÁFICA
     datos_grafica = {}
 
     for m, t, f in cur.fetchall():
@@ -206,21 +217,118 @@ def panel():
 
         datos_grafica[clave][t] += m
 
-    # 🔥 FORMATO PARA JS
     labels = list(datos_grafica.keys())
     capital_data = [datos_grafica[d]["capital"] for d in labels]
     interes_data = [datos_grafica[d]["interes"] for d in labels]
+
+    # =============================
+    # 📅 HOY (para tu panel original)
+    # =============================
+    capital_dia = 0
+    interes_dia = 0
+
+    cur.execute("SELECT monto, tipo, fecha FROM abonos")
+
+    for m, t, f in cur.fetchall():
+        if f.date() == fecha:
+            if t == "capital":
+                capital_dia += m
+            else:
+                interes_dia += m
+
+    # =============================
+    # 📆 MES ACTUAL
+    # =============================
+    inicio_mes = fecha.replace(day=1)
+
+    cur.execute("""
+        SELECT monto, tipo FROM abonos
+        WHERE DATE(fecha) >= %s AND DATE(fecha) <= %s
+    """, (inicio_mes, fecha))
+
+    capital_mes = 0
+    interes_mes = 0
+
+    for m, t in cur.fetchall():
+        if t == "capital":
+            capital_mes += m
+        else:
+            interes_mes += m
+
+    # =============================
+    # 📈 ACUMULADO
+    # =============================
+    cur.execute("""
+        SELECT monto, tipo FROM abonos
+        WHERE DATE(fecha) <= %s
+    """, (fecha,))
+
+    capital_acumulado = 0
+    interes_acumulado = 0
+
+    for m, t in cur.fetchall():
+        if t == "capital":
+            capital_acumulado += m
+        else:
+            interes_acumulado += m
+
+    # =============================
+    # ⚠️ VENCIMIENTOS
+    # =============================
+    cur.execute("""
+        SELECT p.id, p.vencimiento, c.nombre
+        FROM prestamos p
+        JOIN clientes c ON p.cliente_id = c.id
+    """)
+
+    por_vencer = []
+    vencidos = []
+
+    hoy = datetime.now().date()
+
+    for pid, venc, nombre in cur.fetchall():
+
+        cap_rest, _, _, _, _ = calcular(pid, conn)
+        saldo = cap_rest + interes_hoy(pid, conn)
+
+        if saldo <= 0:
+            continue
+
+        if isinstance(venc, str):
+            venc = datetime.strptime(venc, "%Y-%m-%d").date()
+
+        dias = (venc - hoy).days
+
+        if dias < 0:
+            vencidos.append((pid, nombre, abs(dias), formato(saldo)))
+        elif dias <= 3:
+            por_vencer.append((pid, nombre, dias, formato(saldo)))
 
     conn.close()
 
     return render_template("panel.html",
         fecha=fecha,
         tipo=tipo,
+
         capital=formato(capital),
         interes=formato(interes),
+
+        capital_total=formato(capital_total),
+        capital_dia=formato(capital_dia),
+        interes_dia=formato(interes_dia),
+
+        capital_mes=formato(capital_mes),
+        interes_mes=formato(interes_mes),
+
+        capital_acumulado=formato(capital_acumulado),
+        interes_acumulado=formato(interes_acumulado),
+
         labels=labels,
         capital_data=capital_data,
-        interes_data=interes_data
+        interes_data=interes_data,
+
+        por_vencer=por_vencer,
+        vencidos=vencidos
     )
 
 # ------------------------------
