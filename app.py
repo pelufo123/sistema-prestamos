@@ -158,126 +158,69 @@ def panel():
     conn = conectar()
 
     if not conn:
-        return render_template("panel.html",
-            capital_total="0",
-            capital_dia="0",
-            interes_dia="0",
-            capital_mes="0",
-            interes_mes="0",
-            capital_acumulado="0",
-            interes_acumulado="0",
-            fecha=datetime.now().date(),
-            por_vencer=[],
-            vencidos=[]
-        )
+        return render_template("panel.html")
 
     cur = conn.cursor()
 
-    # 🔥 FECHA CORRECTA (SIEMPRE HOY SI NO SE ENVÍA)
+    # 🔥 FILTRO (dia o mes)
+    tipo = request.form.get("tipo") or "dia"
     fecha_str = request.form.get("fecha")
+
     if fecha_str:
         fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
     else:
         fecha = datetime.now().date()
 
-    # 🔥 CAPITAL TOTAL REAL
-    capital_total = 0
-    cur.execute("SELECT id FROM prestamos")
+    # 🔥 RANGOS
+    if tipo == "mes":
+        inicio = fecha.replace(day=1)
+        fin = fecha
+    else:
+        inicio = fecha
+        fin = fecha
 
-    for (pid,) in cur.fetchall():
-        cap_rest, _, _, _, _ = calcular(pid, conn)
-        if cap_rest > 0:
-            capital_total += cap_rest
+    # 🔥 CONSULTA GENERAL
+    cur.execute("""
+        SELECT monto, tipo, DATE(fecha)
+        FROM abonos
+        WHERE DATE(fecha) >= %s AND DATE(fecha) <= %s
+    """, (inicio, fin))
 
-    # 🔥 MOVIMIENTOS DEL DÍA
-    cur.execute("SELECT monto, tipo, fecha FROM abonos")
+    capital = 0
+    interes = 0
 
-    capital_dia = 0
-    interes_dia = 0
+    # 🔥 PARA GRÁFICA
+    datos_grafica = {}
 
     for m, t, f in cur.fetchall():
-        if f.date() == fecha:
-            if t == "capital":
-                capital_dia += m
-            else:
-                interes_dia += m
 
-    # 🔥 INICIO DE MES
-    inicio_mes = fecha.replace(day=1)
-
-    # 🔥 TOTAL DEL MES
-    cur.execute("""
-        SELECT monto, tipo FROM abonos
-        WHERE DATE(fecha) >= %s AND DATE(fecha) <= %s
-    """, (inicio_mes, fecha))
-
-    capital_mes = 0
-    interes_mes = 0
-
-    for m, t in cur.fetchall():
         if t == "capital":
-            capital_mes += m
+            capital += m
         else:
-            interes_mes += m
+            interes += m
 
-    # 🔥 ACUMULADO HASTA LA FECHA (HISTÓRICO)
-    cur.execute("""
-        SELECT monto, tipo FROM abonos
-        WHERE DATE(fecha) <= %s
-    """, (fecha,))
+        clave = f.strftime("%Y-%m-%d")
 
-    capital_acumulado = 0
-    interes_acumulado = 0
+        if clave not in datos_grafica:
+            datos_grafica[clave] = {"capital":0, "interes":0}
 
-    for m, t in cur.fetchall():
-        if t == "capital":
-            capital_acumulado += m
-        else:
-            interes_acumulado += m
+        datos_grafica[clave][t] += m
 
-    # 🔥 VENCIMIENTOS
-    cur.execute("""
-        SELECT p.id, p.vencimiento, c.nombre
-        FROM prestamos p
-        JOIN clientes c ON p.cliente_id = c.id
-    """)
-
-    por_vencer = []
-    vencidos = []
-
-    hoy = datetime.now().date()
-
-    for pid, venc, nombre in cur.fetchall():
-
-        cap_rest, _, _, _, _ = calcular(pid, conn)
-        saldo = cap_rest + interes_hoy(pid, conn)
-
-        if saldo <= 0:
-            continue
-
-        if isinstance(venc, str):
-            venc = datetime.strptime(venc, "%Y-%m-%d").date()
-
-        dias = (venc - hoy).days
-
-        if dias < 0:
-            vencidos.append((pid, nombre, abs(dias), formato(saldo)))
-        elif dias <= 3:
-            por_vencer.append((pid, nombre, dias, formato(saldo)))
+    # 🔥 FORMATO PARA JS
+    labels = list(datos_grafica.keys())
+    capital_data = [datos_grafica[d]["capital"] for d in labels]
+    interes_data = [datos_grafica[d]["interes"] for d in labels]
 
     conn.close()
 
     return render_template("panel.html",
-        capital_total=formato(capital_total),
-        capital_dia=formato(capital_dia),
-        interes_dia=formato(interes_dia),
-        capital_mes=formato(capital_mes),
-        interes_mes=formato(interes_mes),
-        capital_acumulado=formato(capital_acumulado),
-        interes_acumulado=formato(interes_acumulado),
         fecha=fecha,
-        por_vencer=por_vencer,
-        vencidos=vencidos
+        tipo=tipo,
+        capital=formato(capital),
+        interes=formato(interes),
+        labels=labels,
+        capital_data=capital_data,
+        interes_data=interes_data
     )
 
 # ------------------------------
