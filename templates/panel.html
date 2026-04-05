@@ -1,5 +1,28 @@
 <!DOCTYPE html>
 <html>
+    <div class="card">
+    <h3>📅 Fecha: {{ fecha }}</h3>
+
+    <p>💰 <b>Capital total en calle:</b> {{ capital_total }}</p>
+
+    <hr>
+
+    <h4>📊 Hoy</h4>
+    <p>Capital: {{ capital_dia }}</p>
+    <p>Interés: {{ interes_dia }}</p>
+
+    <hr>
+
+    <h4>📆 Mes actual</h4>
+    <p>Capital recogido: {{ capital_mes }}</p>
+    <p>Interés ganado: {{ interes_mes }}</p>
+
+    <hr>
+
+    <h4>📈 Acumulado total</h4>
+    <p>Capital total recuperado: {{ capital_acumulado }}</p>
+    <p>Interés total ganado: {{ interes_acumulado }}</p>
+</div>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Principal</title>
