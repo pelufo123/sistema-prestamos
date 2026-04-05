@@ -18,7 +18,7 @@
 <div class="card">
 <form method="POST">
 
-<select name="cliente" onchange="this.form.submit()">
+<select name="cliente" onchange="cambiarCliente(this.value)">
     <option value="">Seleccione cliente</option>
     {% for c in clientes %}
     <option value="{{ c[0] }}" {% if cliente_id == c[0]|string %}selected{% endif %}>
@@ -58,6 +58,12 @@
 <a class="btn" href="/">Volver</a>
 
 </div>
-
+<script>
+function cambiarCliente(valor) {
+    if (valor) {
+        window.location.href = "/abonos?cliente=" + valor;
+    }
+}
+</script>
 </body>
 </html>

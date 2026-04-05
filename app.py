@@ -457,36 +457,52 @@ def abonos():
             if saldo > 0:
                 prestamos.append((pid, nombre, formato(saldo)))
 
-    if request.method == "POST" and request.form.get("prestamo"):
+    # 🔥 CORRECCIÓN: VALIDAR TODO ANTES DE PROCESAR
+    if request.method == "POST":
 
-        pid = int(request.form.get("prestamo"))
-        monto = float(request.form.get("monto"))
-        tipo = request.form.get("tipo")
+        # 🔥 SI SOLO CAMBIÓ CLIENTE → NO HACER NADA
+        if not request.form.get("prestamo"):
+            conn.close()
+            return render_template("abonos.html",
+                clientes=clientes,
+                prestamos=prestamos,
+                mensaje=mensaje,
+                cliente_id=cliente_id
+            )
 
-        cap_rest, int_rest, _, _, _ = calcular(pid, conn)
+        try:
+            pid = int(request.form.get("prestamo"))
+            monto = float(request.form.get("monto") or 0)
+            tipo = request.form.get("tipo")
 
-        if tipo == "interes":
-            hoy = datetime.now().date()
+            cap_rest, int_rest, _, _, _ = calcular(pid, conn)
 
-            cur.execute("""
-                SELECT COUNT(*) FROM abonos
-                WHERE prestamo_id=%s AND tipo='interes' AND DATE(fecha)=%s
-            """, (pid, hoy))
+            if tipo == "interes":
+                hoy = datetime.now().date()
 
-            if cur.fetchone()[0] > 0:
-                mensaje = "❌ Ya pagó interés hoy"
+                cur.execute("""
+                    SELECT COUNT(*) FROM abonos
+                    WHERE prestamo_id=%s AND tipo='interes' AND DATE(fecha)=%s
+                """, (pid, hoy))
 
-        if tipo == "capital" and monto > cap_rest:
-            mensaje = "❌ Excede capital"
-        elif tipo == "interes" and monto > int_rest:
-            mensaje = "❌ Excede interés"
-        elif mensaje == "":
-            cur.execute("""
-                INSERT INTO abonos(prestamo_id,monto,fecha,tipo)
-                VALUES (%s,%s,%s,%s)
-            """, (pid, monto, datetime.now(), tipo))
-            conn.commit()
-            mensaje = "✅ Guardado"
+                if cur.fetchone()[0] > 0:
+                    mensaje = "❌ Ya pagó interés hoy"
+
+            if tipo == "capital" and monto > cap_rest:
+                mensaje = "❌ Excede capital"
+            elif tipo == "interes" and monto > int_rest:
+                mensaje = "❌ Excede interés"
+            elif mensaje == "":
+                cur.execute("""
+                    INSERT INTO abonos(prestamo_id,monto,fecha,tipo)
+                    VALUES (%s,%s,%s,%s)
+                """, (pid, monto, datetime.now(), tipo))
+                conn.commit()
+                mensaje = "✅ Guardado"
+
+        except Exception as e:
+            print("Error abonos:", e)
+            mensaje = "❌ Error en datos"
 
     conn.close()
 
