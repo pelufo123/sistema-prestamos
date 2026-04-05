@@ -1,6 +1,49 @@
 <!DOCTYPE html>
 <html>
-    <div class="card">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Principal</title>
+    <link rel="stylesheet" href="/static/style.css">
+
+    <!-- 🔥 LIBRERÍA GRÁFICAS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- 🔥 MENÚ DE NAVEGACIÓN -->
+<div style="margin-bottom:15px;">
+    <a href="{{ url_for('panel') }}" class="btn">🏠 Inicio</a>
+    <a href="{{ url_for('clientes') }}" class="btn">👥 Clientes</a>
+    <a href="{{ url_for('prestamos') }}" class="btn">💸 Préstamos</a>
+    <a href="{{ url_for('abonos') }}" class="btn">💰 Abonos</a>
+</div>
+
+<h2>📊 Panel Principal</h2>
+
+<!-- 🔥 FILTRO NUEVO -->
+<div class="card">
+<form method="POST">
+
+    <label>📅 Fecha:</label>
+    <input type="date" name="fecha" value="{{ fecha }}">
+
+    <label>📊 Vista:</label>
+    <select name="tipo">
+        <option value="dia">Día</option>
+        <option value="mes">Mes</option>
+    </select>
+
+    <button>Actualizar</button>
+
+</form>
+</div>
+
+<!-- 🔥 RESUMEN SUPERIOR (EL TUYO + MEJORADO) -->
+<div class="card">
     <h3>📅 Fecha: {{ fecha }}</h3>
 
     <p>💰 <b>Capital total en calle:</b> {{ capital_total }}</p>
@@ -23,26 +66,14 @@
     <p>Capital total recuperado: {{ capital_acumulado }}</p>
     <p>Interés total ganado: {{ interes_acumulado }}</p>
 </div>
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Principal</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
 
-<div class="container">
-
-<!-- 🔥 MENÚ DE NAVEGACIÓN -->
-<div style="margin-bottom:15px;">
-    <a href="{{ url_for('panel') }}" class="btn">🏠 Inicio</a>
-    <a href="{{ url_for('clientes') }}" class="btn">👥 Clientes</a>
-    <a href="{{ url_for('prestamos') }}" class="btn">💸 Préstamos</a>
-    <a href="{{ url_for('abonos') }}" class="btn">💰 Abonos</a>
+<!-- 🔥 NUEVO: GRÁFICA -->
+<div class="card">
+    <h3>📊 Gráfica de ingresos</h3>
+    <canvas id="grafica"></canvas>
 </div>
 
-<h2>📊 Panel Principal</h2>
-
-<!-- 🔥 RESUMEN GENERAL -->
+<!-- 🔥 RESUMEN GENERAL ORIGINAL -->
 <div class="card">
     <h3>💰 Resumen</h3>
 
@@ -107,6 +138,38 @@
 </div>
 
 </div>
+
+<!-- 🔥 SCRIPT GRÁFICA -->
+<script>
+const ctx = document.getElementById('grafica');
+
+// 🔥 VALORES SEGUROS DESDE JINJA
+const labels = JSON.parse('{{ labels | tojson | safe }}' || '[]');
+const capitalData = JSON.parse('{{ capital_data | tojson | safe }}' || '[]');
+const interesData = JSON.parse('{{ interes_data | tojson | safe }}' || '[]');
+
+if (ctx) {
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Capital',
+                    data: capitalData
+                },
+                {
+                    label: 'Interés',
+                    data: interesData
+                }
+            ]
+        },
+        options: {
+            responsive: true
+        }
+    });
+}
+</script>
 
 </body>
 </html>
