@@ -113,6 +113,8 @@ def interes_hoy(pid, conn):
     return 0 if pago_hoy > 0 else interes_total
 
 # ------------------------------
+# ------------------------------
+# ------------------------------
 # 🧠 CÁLCULO
 # ------------------------------
 def calcular(pid, conn):
@@ -122,20 +124,24 @@ def calcular(pid, conn):
     data = cur.fetchone()
 
     if not data:
-        return 0,0,0,0,0
+        return 0, 0, 0, 0, 0
 
     capital, interes = data
     interes_total = capital * interes / 100
 
-    cur.execute("SELECT SUM(monto) FROM abonos WHERE prestamo_id=%s AND tipo='capital'", (pid,))
+    cur.execute("""
+        SELECT SUM(monto)
+        FROM abonos
+        WHERE prestamo_id=%s AND tipo='capital'
+    """, (pid,))
     abonado_capital = cur.fetchone()[0] or 0
 
     hoy = datetime.now().date()
     cur.execute("""
-        SELECT SUM(monto) FROM abonos
+        SELECT SUM(monto)
+        FROM abonos
         WHERE prestamo_id=%s AND tipo='interes' AND DATE(fecha)=%s
     """, (pid, hoy))
-
     abonado_interes_hoy = cur.fetchone()[0] or 0
 
     capital_restante = capital - abonado_capital
@@ -146,10 +152,65 @@ def calcular(pid, conn):
 
     saldo_total = capital_restante + interes_restante
 
-    cur.execute("SELECT SUM(monto) FROM abonos WHERE prestamo_id=%s AND tipo='interes'", (pid,))
+    cur.execute("""
+        SELECT SUM(monto)
+        FROM abonos
+        WHERE prestamo_id=%s AND tipo='interes'
+    """, (pid,))
     abonado_interes_total = cur.fetchone()[0] or 0
 
     return capital_restante, interes_restante, saldo_total, abonado_capital, abonado_interes_total
+
+
+# ------------------------------
+# 👤 GANANCIA POR CLIENTE
+# ------------------------------
+def ganancia_por_cliente(conn):
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT c.id, c.nombre
+        FROM clientes c
+    """)
+
+    resultado = []
+
+    for cid, nombre in cur.fetchall():
+
+        cur.execute("""
+            SELECT SUM(capital)
+            FROM prestamos
+            WHERE cliente_id=%s
+        """, (cid,))
+        capital = cur.fetchone()[0] or 0
+
+        cur.execute("""
+            SELECT SUM(a.monto)
+            FROM abonos a
+            JOIN prestamos p ON a.prestamo_id = p.id
+            WHERE p.cliente_id=%s AND a.tipo='interes'
+        """, (cid,))
+        interes = cur.fetchone()[0] or 0
+
+        cur.execute("""
+            SELECT SUM(a.monto)
+            FROM abonos a
+            JOIN prestamos p ON a.prestamo_id = p.id
+            WHERE p.cliente_id=%s AND a.tipo='capital'
+        """, (cid,))
+        recuperado = cur.fetchone()[0] or 0
+
+        deuda = capital - recuperado
+
+        resultado.append({
+            "nombre": nombre,
+            "capital": capital,
+            "recuperado": recuperado,
+            "interes": interes,
+            "deuda": deuda
+        })
+
+    return resultado
 
 @app.route("/", methods=["GET","POST"])
 def panel():
@@ -222,7 +283,7 @@ def panel():
     interes_data = [datos_grafica[d]["interes"] for d in labels]
 
     # =============================
-    # 📅 HOY (para tu panel original)
+    # 📅 HOY
     # =============================
     capital_dia = 0
     interes_dia = 0
@@ -304,11 +365,15 @@ def panel():
         elif dias <= 3:
             por_vencer.append((pid, nombre, dias, formato(saldo)))
 
+    # ✅ AQUÍ VA (FUERA DEL FOR)
+    clientes_ganancia = ganancia_por_cliente(conn)
+
     conn.close()
 
     return render_template("panel.html",
         fecha=fecha,
         tipo=tipo,
+        clientes_ganancia=clientes_ganancia,  # 🔥 COMA IMPORTANTE
 
         capital=formato(capital),
         interes=formato(interes),

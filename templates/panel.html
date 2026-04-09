@@ -14,7 +14,7 @@
 
 <div class="container">
 
-<!-- 🔥 MENÚ DE NAVEGACIÓN -->
+<!-- 🔥 MENÚ -->
 <div style="margin-bottom:15px;">
     <a href="{{ url_for('panel') }}" class="btn">🏠 Inicio</a>
     <a href="{{ url_for('clientes') }}" class="btn">👥 Clientes</a>
@@ -24,7 +24,7 @@
 
 <h2>📊 Panel Principal</h2>
 
-<!-- 🔥 FILTRO NUEVO -->
+<!-- 🔥 FILTRO -->
 <div class="card">
 <form method="POST">
 
@@ -33,8 +33,8 @@
 
     <label>📊 Vista:</label>
     <select name="tipo">
-        <option value="dia">Día</option>
-        <option value="mes">Mes</option>
+        <option value="dia" {% if tipo == 'dia' %}selected{% endif %}>Día</option>
+        <option value="mes" {% if tipo == 'mes' %}selected{% endif %}>Mes</option>
     </select>
 
     <button>Actualizar</button>
@@ -42,7 +42,7 @@
 </form>
 </div>
 
-<!-- 🔥 RESUMEN SUPERIOR (EL TUYO + MEJORADO) -->
+<!-- 🔥 RESUMEN -->
 <div class="card">
     <h3>📅 Fecha: {{ fecha }}</h3>
 
@@ -67,23 +67,47 @@
     <p>Interés total ganado: {{ interes_acumulado }}</p>
 </div>
 
-<!-- 🔥 NUEVO: GRÁFICA -->
+<!-- 🔥 GRÁFICA -->
 <div class="card">
     <h3>📊 Gráfica de ingresos</h3>
     <canvas id="grafica"></canvas>
 </div>
 
-<!-- 🔥 RESUMEN GENERAL ORIGINAL -->
-<div class="card">
-    <h3>💰 Resumen</h3>
+<!-- 🔥 DATOS SEGUROS (CLAVE DEL ARREGLO) -->
+<script id="datos-grafica" type="application/json">
+{
+    "labels": {{ labels | default([]) | tojson }},
+    "capital": {{ capital_data | default([]) | tojson }},
+    "interes": {{ interes_data | default([]) | tojson }}
+}
+</script>
 
-    <p><strong>Capital total:</strong> {{ capital_total }}</p>
-    <p><strong>Capital del día:</strong> {{ capital_dia }}</p>
-    <p><strong>Interés del día:</strong> {{ interes_dia }}</p>
-    <p><strong>Fecha:</strong> {{ fecha }}</p>
+<!-- 🔥 GANANCIA POR CLIENTE -->
+<div class="card">
+    <h3>👤 Ganancia por cliente</h3>
+
+    <table>
+        <tr>
+            <th>Cliente</th>
+            <th>Capital</th>
+            <th>Recuperado</th>
+            <th>Interés</th>
+            <th>Deuda</th>
+        </tr>
+
+        {% for c in clientes_ganancia %}
+        <tr>
+            <td>{{ c.nombre }}</td>
+            <td>{{ c.capital }}</td>
+            <td>{{ c.recuperado }}</td>
+            <td>{{ c.interes }}</td>
+            <td>{{ c.deuda }}</td>
+        </tr>
+        {% endfor %}
+    </table>
 </div>
 
-<!-- 🔥 PRÉSTAMOS POR VENCER -->
+<!-- 🔥 VENCIMIENTOS -->
 <div class="card">
     <h3>⚠️ Por vencer</h3>
 
@@ -104,13 +128,8 @@
         </tr>
         {% endfor %}
     </table>
-
-    {% if por_vencer|length == 0 %}
-        <p>No hay préstamos próximos a vencer</p>
-    {% endif %}
 </div>
 
-<!-- 🔥 PRÉSTAMOS VENCIDOS -->
 <div class="card">
     <h3>❌ Vencidos</h3>
 
@@ -131,44 +150,42 @@
         </tr>
         {% endfor %}
     </table>
-
-    {% if vencidos|length == 0 %}
-        <p>No hay préstamos vencidos</p>
-    {% endif %}
 </div>
 
 </div>
 
-<!-- 🔥 SCRIPT GRÁFICA -->
+<!-- 🔥 SCRIPT FINAL (SIN ERRORES) -->
 <script>
-const ctx = document.getElementById('grafica');
+document.addEventListener("DOMContentLoaded", function () {
 
-// 🔥 VALORES SEGUROS DESDE JINJA
-const labels = JSON.parse('{{ labels | tojson | safe }}' || '[]');
-const capitalData = JSON.parse('{{ capital_data | tojson | safe }}' || '[]');
-const interesData = JSON.parse('{{ interes_data | tojson | safe }}' || '[]');
+    const ctx = document.getElementById('grafica');
 
-if (ctx) {
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Capital',
-                    data: capitalData
-                },
-                {
-                    label: 'Interés',
-                    data: interesData
-                }
-            ]
-        },
-        options: {
-            responsive: true
-        }
-    });
-}
+    const rawData = document.getElementById("datos-grafica").textContent;
+    const data = JSON.parse(rawData);
+
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.labels,
+                datasets: [
+                    {
+                        label: 'Capital',
+                        data: data.capital
+                    },
+                    {
+                        label: 'Interés',
+                        data: data.interes
+                    }
+                ]
+            },
+            options: {
+                responsive: true
+            }
+        });
+    }
+
+});
 </script>
 
 </body>
