@@ -674,7 +674,45 @@ def abonos():
         mensaje=mensaje,
         cliente_id=cliente_id
     )
+import pandas as pd
+from flask import send_file
+import io
 
+# ------------------------------
+# 📥 EXPORTAR A EXCEL
+# ------------------------------
+@app.route("/exportar_excel")
+def exportar_excel():
+    conn = conectar()
+    cur = conn.cursor()
+
+    # 📊 CLIENTES
+    cur.execute("SELECT * FROM clientes")
+    clientes = pd.DataFrame(cur.fetchall(), columns=["id","nombre","telefono","direccion"])
+
+    # 📊 PRÉSTAMOS
+    cur.execute("SELECT * FROM prestamos")
+    prestamos = pd.DataFrame(cur.fetchall(), columns=["id","cliente_id","capital","interes","dias","fecha","vencimiento","total"])
+
+    # 📊 ABONOS
+    cur.execute("SELECT * FROM abonos")
+    abonos = pd.DataFrame(cur.fetchall(), columns=["id","prestamo_id","monto","fecha","tipo"])
+
+    conn.close()
+
+    # 📁 Crear archivo en memoria
+    output = io.BytesIO()
+
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        clientes.to_excel(writer, index=False, sheet_name="clientes")
+        prestamos.to_excel(writer, index=False, sheet_name="prestamos")
+        abonos.to_excel(writer, index=False, sheet_name="abonos")
+
+    output.seek(0)
+
+    return send_file(output,
+                     download_name="backup_prestamos.xlsx",
+                     as_attachment=True)
 # ------------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
