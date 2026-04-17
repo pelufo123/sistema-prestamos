@@ -1,9 +1,10 @@
 import os
 import psycopg2
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
+app.secret_key = "clave_super_segura"
 
 # ------------------------------
 # 🔌 CONEXIÓN A BASE DE DATOS
@@ -25,6 +26,7 @@ def conectar():
         print("❌ Error conexión:", e)
         return None
 
+
 # ------------------------------
 # 🗄 CREACIÓN DE TABLAS
 # ------------------------------
@@ -35,15 +37,33 @@ def init_db():
 
     cur = conn.cursor()
 
+    # ============================
+    # 👤 USUARIOS
+    # ============================
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS usuarios(
+        id SERIAL PRIMARY KEY,
+        username TEXT UNIQUE,
+        password TEXT
+    )
+    """)
+
+    # ============================
+    # 👥 CLIENTES
+    # ============================
     cur.execute("""
     CREATE TABLE IF NOT EXISTS clientes(
         id SERIAL PRIMARY KEY,
         nombre TEXT,
         telefono TEXT,
-        direccion TEXT
+        direccion TEXT,
+        usuario TEXT
     )
     """)
 
+    # ============================
+    # 💸 PRÉSTAMOS
+    # ============================
     cur.execute("""
     CREATE TABLE IF NOT EXISTS prestamos(
         id SERIAL PRIMARY KEY,
@@ -53,23 +73,48 @@ def init_db():
         dias INTEGER,
         fecha DATE,
         vencimiento DATE,
-        total REAL
+        total REAL,
+        usuario TEXT
     )
     """)
 
+    # ============================
+    # 💰 ABONOS
+    # ============================
     cur.execute("""
     CREATE TABLE IF NOT EXISTS abonos(
         id SERIAL PRIMARY KEY,
         prestamo_id INTEGER REFERENCES prestamos(id),
         monto REAL,
         fecha TIMESTAMP,
-        tipo TEXT
+        tipo TEXT,
+        usuario TEXT
     )
     """)
+
+    # ============================
+    # 🔧 COMPATIBILIDAD (SI YA EXISTEN TABLAS)
+    # ============================
+    try:
+        cur.execute("ALTER TABLE clientes ADD COLUMN usuario TEXT")
+    except:
+        pass
+
+    try:
+        cur.execute("ALTER TABLE prestamos ADD COLUMN usuario TEXT")
+    except:
+        pass
+
+    try:
+        cur.execute("ALTER TABLE abonos ADD COLUMN usuario TEXT")
+    except:
+        pass
 
     conn.commit()
     conn.close()
 
+
+# 🔥 EJECUTAR AL INICIAR
 init_db()
 
 # ------------------------------
@@ -415,13 +460,23 @@ def clientes():
     conn = conectar()
     cur = conn.cursor()
 
+    # 🔐 Validar sesión
+    if not session.get("usuario"):
+        return redirect(url_for("login"))
+
     if request.method == "POST":
         cur.execute(
-            "INSERT INTO clientes(nombre,telefono,direccion) VALUES (%s,%s,%s)",
-            (request.form["nombre"], request.form["telefono"], request.form["direccion"])
+            "INSERT INTO clientes(nombre,telefono,direccion,usuario) VALUES (%s,%s,%s,%s)",
+            (
+                request.form["nombre"],
+                request.form["telefono"],
+                request.form["direccion"],
+                session.get("usuario")
+            )
         )
         conn.commit()
 
+    # 📊 Mostrar clientes
     cur.execute("SELECT * FROM clientes")
     clientes = cur.fetchall()
 
@@ -432,8 +487,40 @@ def clientes():
         resumen.append(total)
 
     conn.close()
-    return render_template("clientes.html", clientes=clientes, resumen=resumen, formato=formato)
 
+    return render_template("clientes.html",
+        clientes=clientes,
+        resumen=resumen,
+        formato=formato
+    )
+# ------------------------------
+# 🔐 LOGIN
+# ------------------------------
+@app.route("/login", methods=["GET","POST"])
+def login():
+    conn = conectar()
+    cur = conn.cursor()
+
+    if request.method == "POST":
+        user = request.form["usuario"]
+        password = request.form["password"]
+
+        cur.execute("SELECT * FROM usuarios WHERE username=%s AND password=%s", (user, password))
+        data = cur.fetchone()
+
+        if data:
+            session["usuario"] = user
+            return redirect(url_for("panel"))
+        else:
+            return "❌ Usuario o contraseña incorrectos"
+
+    return render_template("login.html")
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
 # ------------------------------
 # ✏️ EDITAR CLIENTE
 # ------------------------------
