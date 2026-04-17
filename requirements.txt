@@ -6,4 +6,5 @@ Jinja2==3.1.6
 Werkzeug==3.1.7
 click==8.3.1
 MarkupSafe==3.0.3
-python-3.11.9
+pandas==2.2.2
+openpyxl==3.1.5
