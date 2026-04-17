@@ -1,7 +1,7 @@
 <h2>Login</h2>
 <link rel="stylesheet" href="/static/style.css">
-<form method="post">
-    <input name="user" placeholder="Usuario"><br><br>
-    <input name="pass" type="password" placeholder="Contraseña"><br><br>
-    <button>Ingresar</button>
+<form method="POST" action="/login">
+    <input type="text" name="username" required>
+    <input type="password" name="password" required>
+    <button type="submit">Ingresar</button>
 </form>
