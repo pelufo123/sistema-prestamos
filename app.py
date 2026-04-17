@@ -457,6 +457,10 @@ def home():
 # ------------------------------
 @app.route("/clientes", methods=["GET","POST"])
 def clientes():
+    # 🔐 PROTEGER RUTA
+    if not session.get("usuario"):
+        return redirect(url_for("login"))
+
     conn = conectar()
     cur = conn.cursor()
 
