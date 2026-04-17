@@ -6,6 +6,12 @@ from datetime import datetime, timedelta
 app = Flask(__name__)
 app.secret_key = "clave_super_segura"
 
+@app.before_request
+def proteger_rutas():
+    rutas_libres = ["login", "static"]
+
+    if request.endpoint not in rutas_libres and not session.get("usuario"):
+        return redirect(url_for("login"))
 # ------------------------------
 # 🔌 CONEXIÓN A BASE DE DATOS
 # ------------------------------
@@ -457,9 +463,6 @@ def home():
 # ------------------------------
 @app.route("/clientes", methods=["GET","POST"])
 def clientes():
-    # 🔐 PROTEGER RUTA
-    if not session.get("usuario"):
-        return redirect(url_for("login"))
 
     conn = conectar()
     cur = conn.cursor()
@@ -497,24 +500,27 @@ def clientes():
 # ------------------------------
 # 🔐 LOGIN
 # ------------------------------
-@app.route("/login", methods=["GET","POST"])
+@app.route("/login", methods=["GET", "POST"])
 def login():
     conn = conectar()
     cur = conn.cursor()
 
     if request.method == "POST":
-        user = request.form["usuario"]
+        user = request.form["username"]
         password = request.form["password"]
 
         cur.execute("SELECT * FROM usuarios WHERE username=%s AND password=%s", (user, password))
-        data = cur.fetchone()
+        usuario = cur.fetchone()
 
-        if data:
+        if usuario:
             session["usuario"] = user
+            conn.close()
             return redirect(url_for("panel"))
         else:
-            return "❌ Usuario o contraseña incorrectos"
+            conn.close()
+            return render_template("login.html", error="Credenciales incorrectas")
 
+    conn.close()
     return render_template("login.html")
 
 
