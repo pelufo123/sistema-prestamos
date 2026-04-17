@@ -37,6 +37,7 @@ def conectar():
 # 🗄 CREACIÓN DE TABLAS
 # ------------------------------
 def init_db():
+    
     conn = conectar()
     if not conn:
         return
@@ -122,7 +123,30 @@ def init_db():
 
 # 🔥 EJECUTAR AL INICIAR
 init_db()
+def crear_usuario():
+    conn = conectar()
+    if not conn:
+        print("❌ No hay conexión a la base de datos")
+        return
 
+    cur = conn.cursor()
+
+    try:
+        cur.execute(
+            "INSERT INTO usuarios(username, password) VALUES (%s,%s)",
+            ("admin", "1234")
+        )
+        conn.commit()
+        print("✅ Usuario creado: admin / 1234")
+
+    except Exception as e:
+        print("⚠️ Usuario ya existe o error:", e)
+
+    finally:
+        conn.close()
+
+# 🔥 EJECUTAR UNA VEZ
+crear_usuario()
 # ------------------------------
 # 💲 FORMATO
 # ------------------------------
