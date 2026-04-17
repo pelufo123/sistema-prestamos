@@ -460,10 +460,6 @@ def clientes():
     conn = conectar()
     cur = conn.cursor()
 
-    # 🔐 Validar sesión
-    if not session.get("usuario"):
-        return redirect(url_for("login"))
-
     if request.method == "POST":
         cur.execute(
             "INSERT INTO clientes(nombre,telefono,direccion,usuario) VALUES (%s,%s,%s,%s)",
@@ -476,7 +472,7 @@ def clientes():
         )
         conn.commit()
 
-    # 📊 Mostrar clientes
+    # 🔹 Mostrar clientes
     cur.execute("SELECT * FROM clientes")
     clientes = cur.fetchall()
 
@@ -488,7 +484,8 @@ def clientes():
 
     conn.close()
 
-    return render_template("clientes.html",
+    return render_template(
+        "clientes.html",
         clientes=clientes,
         resumen=resumen,
         formato=formato

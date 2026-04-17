@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clientes</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-
+ 
 <div class="container">
-
+   
     <h2>👥 Clientes</h2>
 
     <!-- 🔥 NAVEGACIÓN -->
@@ -37,6 +38,7 @@
                 <th>Dirección</th>
                 <th>Capital Prestado</th>
                 <th>Acciones</th>
+                <th>Usuario</th>
             </tr>
 
             {% for c in clientes %}
@@ -44,6 +46,7 @@
                 <td>{{ c[1] }}</td>
                 <td>{{ c[2] }}</td>
                 <td>{{ c[3] }}</td>
+                <td>{{ c[4] }}</td>
                 <td>{{ formato(resumen[loop.index0]) }}</td>
                 <td>
                     <a href="/editar_cliente/{{c[0]}}" class="btn btn-edit">✏️</a>
