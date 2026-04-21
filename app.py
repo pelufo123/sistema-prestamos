@@ -155,12 +155,58 @@ def formato(x):
         return "{:,.0f}".format(x).replace(",", ".")
     except:
         return "0"
+# ------------------------------
+# 📆 MESES DE ATRASO
+# ------------------------------
+def meses_atraso(fecha_inicio):
+    hoy = datetime.now().date()
 
+    if isinstance(fecha_inicio, str):
+        fecha_inicio = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
+
+    return (hoy.year - fecha_inicio.year) * 12 + (hoy.month - fecha_inicio.month)
 # ------------------------------
 # 🔹 VALIDACIÓN
 # ------------------------------
 def cliente_valido(cliente_id):
     return cliente_id and str(cliente_id).isdigit()
+
+# ------------------------------
+# 💰 INTERÉS ACUMULADO
+# ------------------------------
+def interes_acumulado(pid, conn):
+    cur = conn.cursor()
+
+    # Obtener datos del préstamo
+    cur.execute("SELECT capital, interes, fecha FROM prestamos WHERE id=%s", (pid,))
+    data = cur.fetchone()
+
+    if not data:
+        return 0, 0
+
+    capital, interes, fecha = data
+
+    # 🔥 calcular meses atrasados
+    meses = meses_atraso(fecha)
+
+    # 🔥 interés total generado
+    interes_total = capital * (interes / 100) * meses
+
+    # 🔥 cuánto ha pagado en interés
+    cur.execute("""
+        SELECT SUM(monto)
+        FROM abonos
+        WHERE prestamo_id=%s AND tipo='interes'
+    """, (pid,))
+    pagado = cur.fetchone()[0] or 0
+
+    # 🔥 deuda real
+    deuda = interes_total - pagado
+
+    if deuda < 0:
+        deuda = 0
+
+    return deuda, meses
 
 # ------------------------------
 # 🔥 INTERÉS DIARIO
@@ -202,7 +248,9 @@ def calcular(pid, conn):
         return 0, 0, 0, 0, 0
 
     capital, interes = data
-    interes_total = capital * interes / 100
+
+# 🔥 NUEVO SISTEMA
+    interes_restante, meses = interes_acumulado(pid, conn)
 
     cur.execute("""
         SELECT SUM(monto)
@@ -221,9 +269,6 @@ def calcular(pid, conn):
 
     capital_restante = capital - abonado_capital
 
-    interes_restante = interes_total - abonado_interes_hoy
-    if interes_restante < 0:
-        interes_restante = 0
 
     saldo_total = capital_restante + interes_restante
 
@@ -649,23 +694,40 @@ def prestamos():
     cur.execute("SELECT * FROM clientes")
     clientes = cur.fetchall()
 
+    # 🔥 GUARDAR PRÉSTAMO
     if request.method == "POST" and request.form.get("capital"):
+
         capital = float(request.form["capital"])
         interes = float(request.form["interes"])
         dias = int(request.form["dias"])
 
         total = capital + (capital * interes / 100)
 
-        fecha = datetime.now()
+        fecha_input = request.form.get("fecha")
+
+        if fecha_input:
+            fecha = datetime.strptime(fecha_input, "%Y-%m-%d")
+        else:
+            fecha = datetime.now()
+
         venc = fecha + timedelta(days=dias)
 
         cur.execute("""
-        INSERT INTO prestamos(cliente_id,capital,interes,dias,fecha,vencimiento,total)
-        VALUES (%s,%s,%s,%s,%s,%s,%s)
-        """, (request.form["cliente"], capital, interes, dias, fecha.date(), venc.date(), total))
+            INSERT INTO prestamos(cliente_id,capital,interes,dias,fecha,vencimiento,total)
+            VALUES (%s,%s,%s,%s,%s,%s,%s)
+        """, (
+            request.form["cliente"],
+            capital,
+            interes,
+            dias,
+            fecha.date(),
+            venc.date(),
+            total
+        ))
 
         conn.commit()
 
+    # 🔍 FILTRO POR FECHA
     fecha_filtro = request.form.get("fecha")
     fecha_filtro = datetime.strptime(fecha_filtro, "%Y-%m-%d").date() if fecha_filtro else datetime.now().date()
 
@@ -679,19 +741,20 @@ def prestamos():
     prestamos_dia = cur.fetchall()
     cantidad_dia = len(prestamos_dia)
 
+    # 🔥 LISTADO GENERAL
     cur.execute("""
         SELECT p.id, c.nombre, p.total
         FROM prestamos p
         JOIN clientes c ON p.cliente_id = c.id
     """)
 
-    prestamos = []
+    prestamos_lista = []
 
     for p in cur.fetchall():
         cap_rest, _, _, _, _ = calcular(p[0], conn)
         saldo = cap_rest + interes_hoy(p[0], conn)
 
-        prestamos.append({
+        prestamos_lista.append({
             "id": p[0],
             "cliente": p[1],
             "total": formato(p[2]),
@@ -702,7 +765,7 @@ def prestamos():
 
     return render_template("prestamos.html",
         clientes=clientes,
-        prestamos=prestamos,
+        prestamos=prestamos_lista,
         prestamos_dia=prestamos_dia,
         cantidad_dia=cantidad_dia,
         fecha_filtro=fecha_filtro

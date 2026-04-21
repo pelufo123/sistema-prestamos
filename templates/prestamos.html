@@ -19,6 +19,7 @@
 <!-- 🔹 FORMULARIO -->
 <div class="card">
 <form method="POST">
+
     <select name="cliente">
         {% for c in clientes %}
         <option value="{{ c[0] }}">{{ c[1] }}</option>
@@ -28,6 +29,10 @@
     <input name="capital" placeholder="Capital" required>
     <input name="interes" placeholder="Interés %" required>
     <input name="dias" placeholder="Días" required>
+
+    <!-- 🔥 NUEVO: FECHA DEL PRÉSTAMO -->
+    <label>Fecha del préstamo:</label>
+    <input type="date" name="fecha">
 
     <button>Guardar</button>
 </form>
@@ -43,6 +48,11 @@
         <th>Cliente</th>
         <th>Total</th>
         <th>Capital pendiente</th>
+
+        <!-- 🔥 NUEVAS COLUMNAS -->
+        <th>Meses atraso</th>
+        <th>Interés acumulado</th>
+        <th>Último pago</th>
     </tr>
 
     {% for p in prestamos %}
@@ -51,6 +61,11 @@
         <td>{{ p.cliente }}</td>
         <td>{{ p.total }}</td>
         <td>{{ p.saldo }}</td>
+
+        <!-- 🔥 DATOS NUEVOS -->
+        <td>{{ p.meses }}</td>
+        <td>{{ p.interes }}</td>
+        <td>{{ p.ultimo_pago }}</td>
     </tr>
     {% endfor %}
 </table>
