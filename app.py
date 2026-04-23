@@ -800,7 +800,7 @@ def abonos():
             if saldo > 0:
                 prestamos.append((pid, nombre, formato(saldo)))
 
-    # 🔥 CORRECCIÓN: VALIDAR TODO ANTES DE PROCESAR
+    # 🔥 PROCESAR FORMULARIO
     if request.method == "POST":
 
         # 🔥 SI SOLO CAMBIÓ CLIENTE → NO HACER NADA
@@ -817,29 +817,33 @@ def abonos():
             pid = int(request.form.get("prestamo"))
             monto = float(request.form.get("monto") or 0)
             tipo = request.form.get("tipo")
+            mes_pagado = int(request.form.get("mes") or 0)
 
             cap_rest, int_rest, _, _, _ = calcular(pid, conn)
 
+            # 🔥 VALIDAR MES REPETIDO
             if tipo == "interes":
-                hoy = datetime.now().date()
-
                 cur.execute("""
                     SELECT COUNT(*) FROM abonos
-                    WHERE prestamo_id=%s AND tipo='interes' AND DATE(fecha)=%s
-                """, (pid, hoy))
+                    WHERE prestamo_id=%s AND tipo='interes' AND mes=%s
+                """, (pid, mes_pagado))
 
                 if cur.fetchone()[0] > 0:
-                    mensaje = "❌ Ya pagó interés hoy"
+                    mensaje = "❌ Ese mes ya está pagado"
 
+            # 🔥 VALIDACIONES
             if tipo == "capital" and monto > cap_rest:
                 mensaje = "❌ Excede capital"
+
             elif tipo == "interes" and monto > int_rest:
                 mensaje = "❌ Excede interés"
+
             elif mensaje == "":
                 cur.execute("""
-                    INSERT INTO abonos(prestamo_id,monto,fecha,tipo)
-                    VALUES (%s,%s,%s,%s)
-                """, (pid, monto, datetime.now(), tipo))
+                    INSERT INTO abonos(prestamo_id,monto,fecha,tipo,mes)
+                    VALUES (%s,%s,%s,%s,%s)
+                """, (pid, monto, datetime.now(), tipo, mes_pagado))
+
                 conn.commit()
                 mensaje = "✅ Guardado"
 
