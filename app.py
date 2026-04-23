@@ -282,6 +282,44 @@ def calcular(pid, conn):
 
     return capital_restante, interes_restante, saldo_total, abonado_capital, abonado_interes
 
+def meses_disponibles(pid, conn):
+    cur = conn.cursor()
+
+    # 📅 obtener fecha del préstamo
+    cur.execute("SELECT fecha FROM prestamos WHERE id=%s", (pid,))
+    data = cur.fetchone()
+
+    if not data:
+        return []
+
+    fecha = data[0]
+
+    if isinstance(fecha, str):
+        fecha = datetime.strptime(fecha, "%Y-%m-%d")
+
+    hoy = datetime.now()
+
+    # 🔢 meses transcurridos
+    total_meses = (hoy.year - fecha.year) * 12 + (hoy.month - fecha.month)
+
+    if total_meses < 1:
+        return []
+
+    # 📌 meses ya pagados
+    cur.execute("""
+        SELECT mes FROM abonos
+        WHERE prestamo_id=%s AND tipo='interes'
+    """, (pid,))
+
+    pagados = [m[0] for m in cur.fetchall()]
+
+    # 🔥 generar meses válidos
+    meses = []
+    for i in range(1, total_meses + 1):
+        if i not in pagados:
+            meses.append(i)
+
+    return meses
 
 # ------------------------------
 # 👤 GANANCIA POR CLIENTE
