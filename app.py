@@ -172,12 +172,9 @@ def cliente_valido(cliente_id):
     return cliente_id and str(cliente_id).isdigit()
 
 # ------------------------------
-# 💰 INTERÉS ACUMULADO
-# ------------------------------
 def interes_acumulado(pid, conn):
     cur = conn.cursor()
 
-    # Obtener datos del préstamo
     cur.execute("SELECT capital, interes, fecha FROM prestamos WHERE id=%s", (pid,))
     data = cur.fetchone()
 
@@ -186,13 +183,16 @@ def interes_acumulado(pid, conn):
 
     capital, interes, fecha = data
 
-    # 🔥 calcular meses atrasados
+    # 🔥 meses reales transcurridos
     meses = meses_atraso(fecha)
+
+    if meses < 1:
+        return 0, 0
 
     # 🔥 interés total generado
     interes_total = capital * (interes / 100) * meses
 
-    # 🔥 cuánto ha pagado en interés
+    # 🔥 interés ya pagado
     cur.execute("""
         SELECT SUM(monto)
         FROM abonos
@@ -200,14 +200,12 @@ def interes_acumulado(pid, conn):
     """, (pid,))
     pagado = cur.fetchone()[0] or 0
 
-    # 🔥 deuda real
     deuda = interes_total - pagado
 
     if deuda < 0:
         deuda = 0
 
     return deuda, meses
-
 # ------------------------------
 # 🔥 INTERÉS DIARIO
 # ------------------------------
@@ -241,17 +239,33 @@ def interes_hoy(pid, conn):
 def calcular(pid, conn):
     cur = conn.cursor()
 
-    cur.execute("SELECT capital, interes FROM prestamos WHERE id=%s", (pid,))
+    cur.execute("SELECT capital, interes, fecha FROM prestamos WHERE id=%s", (pid,))
     data = cur.fetchone()
 
     if not data:
         return 0, 0, 0, 0, 0
 
-    capital, interes = data
+    capital, interes, fecha = data
 
-# 🔥 NUEVO SISTEMA
-    interes_restante, meses = interes_acumulado(pid, conn)
+    # 📅 meses transcurridos
+    meses = meses_atraso(fecha)
 
+    # 💰 interés total generado
+    interes_total = capital * (interes / 100) * meses
+
+    # 💸 interés pagado
+    cur.execute("""
+        SELECT SUM(monto)
+        FROM abonos
+        WHERE prestamo_id=%s AND tipo='interes'
+    """, (pid,))
+    abonado_interes = cur.fetchone()[0] or 0
+
+    interes_restante = interes_total - abonado_interes
+    if interes_restante < 0:
+        interes_restante = 0
+
+    # 💸 capital pagado
     cur.execute("""
         SELECT SUM(monto)
         FROM abonos
@@ -259,27 +273,14 @@ def calcular(pid, conn):
     """, (pid,))
     abonado_capital = cur.fetchone()[0] or 0
 
-    hoy = datetime.now().date()
-    cur.execute("""
-        SELECT SUM(monto)
-        FROM abonos
-        WHERE prestamo_id=%s AND tipo='interes' AND DATE(fecha)=%s
-    """, (pid, hoy))
-    abonado_interes_hoy = cur.fetchone()[0] or 0
-
     capital_restante = capital - abonado_capital
+    if capital_restante < 0:
+        capital_restante = 0
 
-
+    # 🔥 TOTAL REAL
     saldo_total = capital_restante + interes_restante
 
-    cur.execute("""
-        SELECT SUM(monto)
-        FROM abonos
-        WHERE prestamo_id=%s AND tipo='interes'
-    """, (pid,))
-    abonado_interes_total = cur.fetchone()[0] or 0
-
-    return capital_restante, interes_restante, saldo_total, abonado_capital, abonado_interes_total
+    return capital_restante, interes_restante, saldo_total, abonado_capital, abonado_interes
 
 
 # ------------------------------
@@ -787,6 +788,7 @@ def abonos():
 
     cliente_id = request.form.get("cliente") or request.args.get("cliente")
 
+    # 🔍 cargar préstamos del cliente
     if cliente_valido(cliente_id):
         cur.execute("""
             SELECT p.id, c.nombre
@@ -796,14 +798,23 @@ def abonos():
         """, (cliente_id,))
 
         for pid, nombre in cur.fetchall():
-            saldo = calcular(pid, conn)[0] + interes_hoy(pid, conn)
-            if saldo > 0:
-                prestamos.append((pid, nombre, formato(saldo)))
+            cap_rest, int_rest, total, _, _ = calcular(pid, conn)
+
+            if total > 0:
+                meses = meses_disponibles(pid, conn)
+
+                prestamos.append({
+                    "id": pid,
+                    "nombre": nombre,
+                    "capital": formato(cap_rest),
+                    "interes": formato(int_rest),
+                    "total": formato(total),
+                    "meses": meses
+                })
 
     # 🔥 PROCESAR FORMULARIO
     if request.method == "POST":
 
-        # 🔥 SI SOLO CAMBIÓ CLIENTE → NO HACER NADA
         if not request.form.get("prestamo"):
             conn.close()
             return render_template("abonos.html",

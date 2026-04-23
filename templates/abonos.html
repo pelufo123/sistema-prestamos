@@ -2,82 +2,100 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
 <div class="container">
 
-<!-- 🔥 BOTÓN SEGURO -->
+<!-- 🏠 BOTÓN INICIO -->
 <div style="margin-bottom:15px;">
     <a href="{{ url_for('panel') }}" class="btn">🏠 Inicio</a>
 </div>
 
 <h2>Abonos</h2>
 
+<!-- 🔍 SELECCIÓN DE CLIENTE -->
 <div class="card">
-<form method="POST">
+<form method="GET">
 
-<select name="cliente" onchange="cambiarCliente(this.value)">
-    <option value="">Seleccione cliente</option>
-    {% for c in clientes %}
-    <option value="{{ c[0] }}" {% if cliente_id == c[0]|string %}selected{% endif %}>
-        {{ c[1] }}
-    </option>
-    {% endfor %}
-</select>
-
-<select name="mes">
-  <option value="1">Enero</option>
-  <option value="2">Febrero</option>
-  <option value="3">Marzo</option>
-  <option value="4">Abril</option>
-  <option value="5">Mayo</option>
-  <option value="6">Junio</option>
-  <option value="7">Julio</option>
-  <option value="8">Agosto</option>
-  <option value="9">Septiembre</option>
-  <option value="10">Octubre</option>
-  <option value="11">Noviembre</option>
-  <option value="12">Diciembre</option>
-</select>
-{% if prestamos %}
-<select name="prestamo">
-    {% for p in prestamos %}
-    <option value="{{ p[0] }}">
-        Préstamo #{{ p[0] }} - {{ p[1] }} - {{ p[2] }}
-    </option>
-    {% endfor %}
-</select>
-{% endif %}
-
-<input name="monto" placeholder="Monto">
-
-<select name="tipo">
-    <option value="capital">Capital</option>
-    <option value="interes">Interés</option>
-</select>
-
-<button>Guardar</button>
+    <select name="cliente" onchange="this.form.submit()">
+        <option value="">Seleccione cliente</option>
+        {% for c in clientes %}
+        <option value="{{ c[0] }}" {% if cliente_id == c[0]|string %}selected{% endif %}>
+            {{ c[1] }}
+        </option>
+        {% endfor %}
+    </select>
 
 </form>
 </div>
 
+<!-- 💳 PRÉSTAMOS DEL CLIENTE -->
+{% if prestamos %}
+    {% for p in prestamos %}
+    <div class="card" style="margin-top:10px;">
+
+        <h4>{{ p.nombre }}</h4>
+
+        💰 Capital: <b>{{ p.capital }}</b><br>
+        📈 Interés: <b>{{ p.interes }}</b><br>
+        🧾 Total: <b>{{ p.total }}</b><br><br>
+
+        <form method="POST">
+
+            <!-- 🔒 DATOS OCULTOS -->
+            <input type="hidden" name="cliente" value="{{ cliente_id }}">
+            <input type="hidden" name="prestamo" value="{{ p.id }}">
+
+            <!-- 🔥 MESES DINÁMICOS -->
+            <label>Mes a pagar:</label>
+            <select name="mes" required>
+                {% if p.meses %}
+                    {% for m in p.meses %}
+                        <option value="{{m}}">Mes {{m}}</option>
+                    {% endfor %}
+                {% else %}
+                    <option value="">Sin meses disponibles</option>
+                {% endif %}
+            </select>
+
+            <br><br>
+
+            <!-- 💰 MONTO -->
+            <input name="monto" placeholder="Monto" required>
+
+            <br><br>
+
+            <!-- 📌 TIPO -->
+            <select name="tipo">
+                <option value="capital">Capital</option>
+                <option value="interes">Interés</option>
+            </select>
+
+            <br><br>
+
+            <button class="btn">Guardar</button>
+
+        </form>
+
+    </div>
+    {% endfor %}
+{% endif %}
+
+<!-- ⚠️ MENSAJE -->
 {% if mensaje %}
-<div class="alert alert-warning">
-{{ mensaje }}
+<div class="alert alert-warning" style="margin-top:15px;">
+    {{ mensaje }}
 </div>
 {% endif %}
 
-<a class="btn" href="/">Volver</a>
+<!-- 🔙 VOLVER -->
+<div style="margin-top:20px;">
+    <a class="btn" href="/">Volver</a>
+</div>
 
 </div>
-<script>
-function cambiarCliente(valor) {
-    if (valor) {
-        window.location.href = "/abonos?cliente=" + valor;
-    }
-}
-</script>
+
 </body>
 </html>
