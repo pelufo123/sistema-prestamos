@@ -818,6 +818,7 @@ def abonos():
     conn = conectar()
     cur = conn.cursor()
 
+    # 🔹 obtener clientes
     cur.execute("SELECT * FROM clientes")
     clientes = cur.fetchall()
 
@@ -826,33 +827,46 @@ def abonos():
 
     cliente_id = request.form.get("cliente") or request.args.get("cliente")
 
-    # 🔍 cargar préstamos del cliente
+    # 🔍 CARGAR PRÉSTAMOS
     if cliente_valido(cliente_id):
-        cur.execute("""
-            SELECT p.id, c.nombre
-            FROM prestamos p
-            JOIN clientes c ON p.cliente_id = c.id
-            WHERE c.id=%s
-        """, (cliente_id,))
+        try:
+            cur.execute("""
+                SELECT p.id, c.nombre
+                FROM prestamos p
+                JOIN clientes c ON p.cliente_id = c.id
+                WHERE c.id=%s
+            """, (cliente_id,))
 
-        for pid, nombre in cur.fetchall():
-            cap_rest, int_rest, total, _, _ = calcular(pid, conn)
+            resultados = cur.fetchall()
 
-            if total > 0:
-                meses = meses_disponibles(pid, conn)
+            for fila in resultados:
+                pid = fila[0]
+                nombre = fila[1]
 
-                prestamos.append({
-                    "id": pid,
-                    "nombre": nombre,
-                    "capital": formato(cap_rest),
-                    "interes": formato(int_rest),
-                    "total": formato(total),
-                    "meses": meses
-                })
+                cap_rest, int_rest, total, _, _ = calcular(pid, conn)
+
+                if total > 0:
+                    try:
+                        meses = meses_disponibles(pid, conn)
+                    except:
+                        meses = []
+
+                    prestamos.append({
+                        "id": pid,
+                        "nombre": nombre,
+                        "capital": formato(cap_rest),
+                        "interes": formato(int_rest),
+                        "total": formato(total),
+                        "meses": meses
+                    })
+
+        except Exception as e:
+            print("Error cargando préstamos:", e)
 
     # 🔥 PROCESAR FORMULARIO
     if request.method == "POST":
 
+        # si solo cambió cliente
         if not request.form.get("prestamo"):
             conn.close()
             return render_template("abonos.html",
@@ -870,24 +884,13 @@ def abonos():
 
             cap_rest, int_rest, _, _, _ = calcular(pid, conn)
 
-            # 🔥 VALIDAR MES REPETIDO
-            if tipo == "interes":
-                cur.execute("""
-                    SELECT COUNT(*) FROM abonos
-                    WHERE prestamo_id=%s AND tipo='interes' AND mes=%s
-                """, (pid, mes_pagado))
-
-                if cur.fetchone()[0] > 0:
-                    mensaje = "❌ Ese mes ya está pagado"
-
-            # 🔥 VALIDACIONES
             if tipo == "capital" and monto > cap_rest:
                 mensaje = "❌ Excede capital"
 
             elif tipo == "interes" and monto > int_rest:
                 mensaje = "❌ Excede interés"
 
-            elif mensaje == "":
+            else:
                 cur.execute("""
                     INSERT INTO abonos(prestamo_id,monto,fecha,tipo,mes)
                     VALUES (%s,%s,%s,%s,%s)
