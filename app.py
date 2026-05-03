@@ -54,7 +54,8 @@ def init_db():
         password TEXT
     )
     """)
-
+    conn.commit()
+    conn.close()
     # ============================
     # 👥 CLIENTES
     # ============================
@@ -122,28 +123,19 @@ def init_db():
 
 
 # 🔥 EJECUTAR AL INICIAR
-init_db()
 def crear_usuario():
     conn = conectar()
-    if not conn:
-        print("❌ No hay conexión a la base de datos")
-        return
-
     cur = conn.cursor()
 
-    try:
+    cur.execute("SELECT * FROM usuarios WHERE username=%s", ("admin",))
+    if not cur.fetchone():
         cur.execute(
             "INSERT INTO usuarios(username, password) VALUES (%s,%s)",
             ("admin", "1234")
         )
         conn.commit()
-        print("✅ Usuario creado: admin / 1234")
 
-    except Exception as e:
-        print("⚠️ Usuario ya existe o error:", e)
-
-    finally:
-        conn.close()
+    conn.close()
 
 # 🔥 EJECUTAR UNA VEZ
 crear_usuario()
@@ -926,5 +918,8 @@ def abonos():
 
 # ------------------------------
 if __name__ == "__main__":
+    init_db()        # 🔥 CREA TABLAS
+    crear_usuario()  # 🔥 CREA ADMIN
+
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
