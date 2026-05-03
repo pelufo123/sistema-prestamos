@@ -613,24 +613,45 @@ def login():
     conn = conectar()
     cur = conn.cursor()
 
+    # 🔥 crear usuario si no existe
+    try:
+        cur.execute("SELECT * FROM usuarios WHERE username=%s", ("admin",))
+        if not cur.fetchone():
+            cur.execute(
+                "INSERT INTO usuarios(username, password) VALUES (%s,%s)",
+                ("admin", "1234")
+            )
+            conn.commit()
+            print("✅ Usuario creado automáticamente")
+    except Exception as e:
+        print("Error creando usuario:", e)
+
     if request.method == "POST":
         user = request.form["username"]
         password = request.form["password"]
 
-        cur.execute("SELECT * FROM usuarios WHERE username=%s AND password=%s", (user, password))
-        usuario = cur.fetchone()
+        try:
+            cur.execute(
+                "SELECT * FROM usuarios WHERE username=%s AND password=%s",
+                (user, password)
+            )
+            usuario = cur.fetchone()
 
-        if usuario:
-            session["usuario"] = user
+            if usuario:
+                session["usuario"] = user
+                conn.close()
+                return redirect(url_for("panel"))
+            else:
+                conn.close()
+                return render_template("login.html", error="Credenciales incorrectas")
+
+        except Exception as e:
+            print("Error login:", e)
             conn.close()
-            return redirect(url_for("panel"))
-        else:
-            conn.close()
-            return render_template("login.html", error="Credenciales incorrectas")
+            return "Error interno en login"
 
     conn.close()
     return render_template("login.html")
-
 
 @app.route("/logout")
 def logout():
