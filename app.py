@@ -41,7 +41,7 @@ def init_db():
     cur = conn.cursor()
 
     try:
-        # 🔹 TABLA USUARIOS
+        # 🔹 USUARIOS
         cur.execute("""
         CREATE TABLE IF NOT EXISTS usuarios (
             id SERIAL PRIMARY KEY,
@@ -50,7 +50,7 @@ def init_db():
         );
         """)
 
-        # 🔹 TABLA CLIENTES
+        # 🔹 CLIENTES
         cur.execute("""
         CREATE TABLE IF NOT EXISTS clientes (
             id SERIAL PRIMARY KEY,
@@ -60,14 +60,38 @@ def init_db():
         );
         """)
 
+        # 🔹 PRESTAMOS
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS prestamos (
+            id SERIAL PRIMARY KEY,
+            cliente_id INTEGER,
+            monto NUMERIC,
+            interes NUMERIC,
+            total NUMERIC,
+            fecha TEXT,
+            FOREIGN KEY(cliente_id) REFERENCES clientes(id)
+        );
+        """)
+
+        # 🔹 ABONOS
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS abonos (
+            id SERIAL PRIMARY KEY,
+            prestamo_id INTEGER,
+            monto NUMERIC,
+            fecha TEXT,
+            FOREIGN KEY(prestamo_id) REFERENCES prestamos(id)
+        );
+        """)
+
         conn.commit()
-        print("✅ Tablas creadas correctamente")
+        print("✅ TODAS las tablas creadas correctamente")
 
     except Exception as e:
         print("❌ Error en init_db:", e)
 
     finally:
-        conn.close()  # ✅ SOLO aquí se cierra
+        conn.close()   # ✅ SOLO AQUÍ y al FINAL
 
     # ============================
     # 💸 PRÉSTAMOS
