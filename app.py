@@ -37,37 +37,37 @@ def conectar():
 # 🗄 CREACIÓN DE TABLAS
 # ------------------------------
 def init_db():
-    
     conn = conectar()
-    if not conn:
-        return
-
     cur = conn.cursor()
 
-    # ============================
-    # 👤 USUARIOS
-    # ============================
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS usuarios(
-        id SERIAL PRIMARY KEY,
-        username TEXT UNIQUE,
-        password TEXT
-    )
-    """)
-    conn.commit()
-    conn.close()
-    # ============================
-    # 👥 CLIENTES
-    # ============================
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS clientes(
-        id SERIAL PRIMARY KEY,
-        nombre TEXT,
-        telefono TEXT,
-        direccion TEXT,
-        usuario TEXT
-    )
-    """)
+    try:
+        # 🔹 TABLA USUARIOS
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS usuarios (
+            id SERIAL PRIMARY KEY,
+            username TEXT UNIQUE,
+            password TEXT
+        );
+        """)
+
+        # 🔹 TABLA CLIENTES
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS clientes (
+            id SERIAL PRIMARY KEY,
+            nombre TEXT,
+            telefono TEXT,
+            direccion TEXT
+        );
+        """)
+
+        conn.commit()
+        print("✅ Tablas creadas correctamente")
+
+    except Exception as e:
+        print("❌ Error en init_db:", e)
+
+    finally:
+        conn.close()  # ✅ SOLO aquí se cierra
 
     # ============================
     # 💸 PRÉSTAMOS
