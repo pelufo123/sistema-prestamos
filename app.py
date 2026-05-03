@@ -923,10 +923,7 @@ def abonos():
         mensaje=mensaje,
         cliente_id=cliente_id
     )
-# 🔥 FORZAR CREACIÓN
-       
-init_db()
-crear_usuario()
+
 # ------------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
