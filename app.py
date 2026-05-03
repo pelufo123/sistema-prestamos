@@ -612,7 +612,9 @@ def clientes():
 def login():
     conn = conectar()
     cur = conn.cursor()
-
+# 🔥 FORZAR CREACIÓN
+    init_db()
+    crear_usuario()
     # 🔥 crear usuario si no existe
     try:
         cur.execute("SELECT * FROM usuarios WHERE username=%s", ("admin",))
