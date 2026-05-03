@@ -611,45 +611,36 @@ def clientes():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     conn = conectar()
+
+    if not conn:
+        return "Error de conexión a la base de datos"
+
     cur = conn.cursor()
 
-    # 🔥 crear usuario si no existe
-    try:
-        cur.execute("SELECT * FROM usuarios WHERE username=%s", ("admin",))
-        if not cur.fetchone():
-            cur.execute(
-                "INSERT INTO usuarios(username, password) VALUES (%s,%s)",
-                ("admin", "1234")
-            )
-            conn.commit()
-            print("✅ Usuario creado automáticamente")
-    except Exception as e:
-        print("Error creando usuario:", e)
-
     if request.method == "POST":
-        user = request.form["username"]
-        password = request.form["password"]
+        try:
+            user = request.form["username"]
+            password = request.form["password"]
 
-    try:
-        cur.execute(
-            "SELECT * FROM usuarios WHERE username=%s AND password=%s",
-            (user, password)
-        )
-        usuario = cur.fetchone()
+            cur.execute(
+                "SELECT * FROM usuarios WHERE username=%s AND password=%s",
+                (user, password)
+            )
+            usuario = cur.fetchone()
 
-        if usuario:
-            session["usuario"] = user
+            if usuario:
+                session["usuario"] = user
+                return redirect(url_for("panel"))
+            else:
+                return render_template("login.html", error="Credenciales incorrectas")
+
+        except Exception as e:
+            return f"Error en login: {e}"
+
+        finally:
             conn.close()
-            return redirect(url_for("panel"))
-        else:
-            conn.close()
-            return render_template("login.html", error="Credenciales incorrectas")
 
-    except Exception as e:
-        print("Error login:", e)
-        conn.close()
-        return "Error interno en login"
-
+    # 🔹 GET (cuando entra por primera vez)
     conn.close()
     return render_template("login.html")
 
