@@ -34,13 +34,11 @@ def conectar():
 
 
 # ------------------------------
-# 🗄 CREACIÓN DE TABLAS
 def init_db():
     conn = conectar()
     cur = conn.cursor()
 
     try:
-        # 🔹 USUARIOS
         cur.execute("""
         CREATE TABLE IF NOT EXISTS usuarios (
             id SERIAL PRIMARY KEY,
@@ -49,7 +47,6 @@ def init_db():
         );
         """)
 
-        # 🔹 CLIENTES
         cur.execute("""
         CREATE TABLE IF NOT EXISTS clientes (
             id SERIAL PRIMARY KEY,
@@ -60,7 +57,6 @@ def init_db():
         );
         """)
 
-        # 🔹 PRESTAMOS
         cur.execute("""
         CREATE TABLE IF NOT EXISTS prestamos(
             id SERIAL PRIMARY KEY,
@@ -75,7 +71,6 @@ def init_db():
         );
         """)
 
-        # 🔹 ABONOS
         cur.execute("""
         CREATE TABLE IF NOT EXISTS abonos(
             id SERIAL PRIMARY KEY,
@@ -88,116 +83,11 @@ def init_db():
         );
         """)
 
-        # 🔧 COMPATIBILIDAD
-        try:
-            cur.execute("ALTER TABLE clientes ADD COLUMN usuario TEXT")
-        except:
-            pass
-
-        try:
-            cur.execute("ALTER TABLE prestamos ADD COLUMN usuario TEXT")
-        except:
-            pass
-
-        try:
-            cur.execute("ALTER TABLE abonos ADD COLUMN usuario TEXT")
-        except:
-            pass
-
         conn.commit()
         print("✅ TODAS las tablas creadas correctamente")
 
     except Exception as e:
         print("❌ Error en init_db:", e)
-
-    finally:
-        conn.close()
-
-    # ============================
-    # 💸 PRÉSTAMOS
-    # ============================
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS prestamos(
-        id SERIAL PRIMARY KEY,
-        cliente_id INTEGER REFERENCES clientes(id),
-        capital REAL,
-        interes REAL,
-        dias INTEGER,
-        fecha DATE,
-        vencimiento DATE,
-        total REAL,
-        usuario TEXT
-    )
-    """)
-
-    # ============================
-    # 💰 ABONOS
-    # ============================
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS abonos(
-        id SERIAL PRIMARY KEY,
-        prestamo_id INTEGER REFERENCES prestamos(id),
-        monto REAL,
-        fecha TIMESTAMP,
-        tipo TEXT,
-        usuario TEXT
-    )
-    """)
-
-    # ============================
-    # 🔧 COMPATIBILIDAD (SI YA EXISTEN TABLAS)
-    # ============================
-    try:
-        cur.execute("ALTER TABLE clientes ADD COLUMN usuario TEXT")
-    except:
-        pass
-
-    try:
-        cur.execute("ALTER TABLE prestamos ADD COLUMN usuario TEXT")
-    except:
-        pass
-
-    try:
-        cur.execute("ALTER TABLE abonos ADD COLUMN usuario TEXT")
-    except:
-        pass
-
-    conn.commit()
-    conn.close()
-
-
-# 🔥 EJECUTAR AL INICIAR
-def crear_usuario():
-    conn = conectar()
-    cur = conn.cursor()
-
-    try:
-        # 🔹 Verificar si existe la tabla (por seguridad extra)
-        cur.execute("""
-        CREATE TABLE IF NOT EXISTS usuarios (
-            id SERIAL PRIMARY KEY,
-            username TEXT UNIQUE,
-            password TEXT
-        );
-        """)
-        conn.commit()
-
-        # 🔹 Verificar si ya existe el usuario admin
-        cur.execute("SELECT * FROM usuarios WHERE username=%s", ("admin",))
-        user = cur.fetchone()
-
-        if not user:
-            cur.execute(
-                "INSERT INTO usuarios (username, password) VALUES (%s, %s)",
-                ("admin", "1234")
-            )
-            conn.commit()
-            print("✅ Usuario admin creado")
-        else:
-            print("ℹ️ Usuario admin ya existe")
-
-    except Exception as e:
-        print("❌ Error en crear_usuario:", e)
 
     finally:
         conn.close()
