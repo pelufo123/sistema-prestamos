@@ -612,9 +612,7 @@ def clientes():
 def login():
     conn = conectar()
     cur = conn.cursor()
-# 🔥 FORZAR CREACIÓN
-    init_db()
-    crear_usuario()
+
     # 🔥 crear usuario si no existe
     try:
         cur.execute("SELECT * FROM usuarios WHERE username=%s", ("admin",))
@@ -934,7 +932,10 @@ def abonos():
         mensaje=mensaje,
         cliente_id=cliente_id
     )
-
+# 🔥 FORZAR CREACIÓN
+       
+init_db()
+crear_usuario()
 # ------------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
