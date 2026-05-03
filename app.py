@@ -35,7 +35,6 @@ def conectar():
 
 # ------------------------------
 # 🗄 CREACIÓN DE TABLAS
-# ------------------------------
 def init_db():
     conn = conectar()
     cur = conn.cursor()
@@ -68,8 +67,7 @@ def init_db():
             monto NUMERIC,
             interes NUMERIC,
             total NUMERIC,
-            fecha TEXT,
-            FOREIGN KEY(cliente_id) REFERENCES clientes(id)
+            fecha TEXT
         );
         """)
 
@@ -79,8 +77,7 @@ def init_db():
             id SERIAL PRIMARY KEY,
             prestamo_id INTEGER,
             monto NUMERIC,
-            fecha TEXT,
-            FOREIGN KEY(prestamo_id) REFERENCES prestamos(id)
+            fecha TEXT
         );
         """)
 
@@ -91,7 +88,7 @@ def init_db():
         print("❌ Error en init_db:", e)
 
     finally:
-        conn.close()   # ✅ SOLO AQUÍ y al FINAL
+        conn.close()
 
     # ============================
     # 💸 PRÉSTAMOS
