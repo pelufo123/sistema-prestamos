@@ -127,15 +127,36 @@ def crear_usuario():
     conn = conectar()
     cur = conn.cursor()
 
-    cur.execute("SELECT * FROM usuarios WHERE username=%s", ("admin",))
-    if not cur.fetchone():
-        cur.execute(
-            "INSERT INTO usuarios(username, password) VALUES (%s,%s)",
-            ("admin", "1234")
-        )
+    try:
+        # 🔹 Verificar si existe la tabla (por seguridad extra)
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS usuarios (
+            id SERIAL PRIMARY KEY,
+            username TEXT UNIQUE,
+            password TEXT
+        );
+        """)
         conn.commit()
 
-    conn.close()
+        # 🔹 Verificar si ya existe el usuario admin
+        cur.execute("SELECT * FROM usuarios WHERE username=%s", ("admin",))
+        user = cur.fetchone()
+
+        if not user:
+            cur.execute(
+                "INSERT INTO usuarios (username, password) VALUES (%s, %s)",
+                ("admin", "1234")
+            )
+            conn.commit()
+            print("✅ Usuario admin creado")
+        else:
+            print("ℹ️ Usuario admin ya existe")
+
+    except Exception as e:
+        print("❌ Error en crear_usuario:", e)
+
+    finally:
+        conn.close()
 
 # 🔥 EJECUTAR UNA VEZ
 crear_usuario()
