@@ -363,7 +363,6 @@ def panel():
         fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
     else:
         fecha = datetime.now().date()
-        
     # =============================
     # 💰 CAPITAL TOTAL EN CALLE
     # =============================
@@ -375,21 +374,21 @@ def panel():
         if cap_rest > 0:
             capital_total += cap_rest
 
-    # 📅 HOY
-    # =============================
+  # 📅 HOY
+# =============================
     capital_dia = 0
     interes_dia = 0
 
-    cur.execute("SELECT monto, tipo FROM abonos")
-
-    capital = 0
-    interes = 0
+    cur.execute("""
+    SELECT monto, tipo FROM abonos
+    WHERE DATE(fecha) = %s
+""", (fecha,))
 
     for m, t in cur.fetchall():
      if t == "capital":
-        capital += m
+        capital_dia += m
     else:
-        interes += m
+        interes_dia += m
     # =============================
     # 📆 MES ACTUAL
     # =============================
