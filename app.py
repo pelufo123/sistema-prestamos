@@ -97,6 +97,27 @@ def init_db():
     finally:
         conn.close()
 
+def crear_admin():
+    conn = conectar()
+    if not conn:
+        return
+
+    cur = conn.cursor()
+
+    try:
+        cur.execute("SELECT * FROM usuarios WHERE username=%s", ("admin",))
+        if not cur.fetchone():
+            cur.execute(
+                "INSERT INTO usuarios (username, password) VALUES (%s, %s)",
+                ("admin", "1234")
+            )
+            conn.commit()
+            print("✅ admin creado")
+    except Exception as e:
+        print("Error creando admin:", e)
+
+    finally:
+        conn.close()
 # ------------------------------
 # 💲 FORMATO
 # ------------------------------
@@ -877,6 +898,6 @@ def abonos():
 # ------------------------------
 if __name__ == "__main__":
     init_db()
-
+    crear_admin()
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
