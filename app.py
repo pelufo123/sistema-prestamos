@@ -36,6 +36,11 @@ def conectar():
 # ------------------------------
 def init_db():
     conn = conectar()
+
+    if not conn:
+        print("❌ No hay conexión a la base de datos")
+        return
+
     cur = conn.cursor()
 
     try:
@@ -84,10 +89,10 @@ def init_db():
         """)
 
         conn.commit()
-        print("✅ TODAS las tablas creadas correctamente")
+        print("✅ Base de datos lista")
 
     except Exception as e:
-        print("❌ Error en init_db:", e)
+        print("❌ Error en DB:", e)
 
     finally:
         conn.close()
