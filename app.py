@@ -351,6 +351,9 @@ def panel():
         return render_template("panel.html")
 
     cur = conn.cursor()
+    capital = 0
+    interes = 0
+
 
     # 🔥 FILTRO
     tipo = request.form.get("tipo") or "dia"
@@ -360,15 +363,7 @@ def panel():
         fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
     else:
         fecha = datetime.now().date()
-
-    # 🔥 RANGO
-    if tipo == "mes":
-        inicio = fecha.replace(day=1)
-        fin = fecha
-    else:
-        inicio = fecha
-        fin = fecha
-
+        
     # =============================
     # 💰 CAPITAL TOTAL EN CALLE
     # =============================
@@ -380,53 +375,21 @@ def panel():
         if cap_rest > 0:
             capital_total += cap_rest
 
-    # =============================
-    # 📊 MOVIMIENTOS FILTRADOS
-    # =============================
-    cur.execute("""
-        SELECT monto, tipo, DATE(fecha)
-        FROM abonos
-        WHERE DATE(fecha) >= %s AND DATE(fecha) <= %s
-    """, (inicio, fin))
-
-    capital = 0
-    interes = 0
-
-    datos_grafica = {}
-
-    for m, t, f in cur.fetchall():
-
-        if t == "capital":
-            capital += m
-        else:
-            interes += m
-
-        clave = f.strftime("%Y-%m-%d")
-
-        if clave not in datos_grafica:
-            datos_grafica[clave] = {"capital":0, "interes":0}
-
-        datos_grafica[clave][t] += m
-
-    labels = list(datos_grafica.keys())
-    capital_data = [datos_grafica[d]["capital"] for d in labels]
-    interes_data = [datos_grafica[d]["interes"] for d in labels]
-
-    # =============================
     # 📅 HOY
     # =============================
     capital_dia = 0
     interes_dia = 0
 
-    cur.execute("SELECT monto, tipo, fecha FROM abonos")
+    cur.execute("SELECT monto, tipo FROM abonos")
 
-    for m, t, f in cur.fetchall():
-        if f.date() == fecha:
-            if t == "capital":
-                capital_dia += m
-            else:
-                interes_dia += m
+    capital = 0
+    interes = 0
 
+    for m, t in cur.fetchall():
+     if t == "capital":
+        capital += m
+    else:
+        interes += m
     # =============================
     # 📆 MES ACTUAL
     # =============================
@@ -517,10 +480,6 @@ def panel():
 
         capital_acumulado=formato(capital_acumulado),
         interes_acumulado=formato(interes_acumulado),
-
-        labels=labels,
-        capital_data=capital_data,
-        interes_data=interes_data,
 
         por_vencer=por_vencer,
         vencidos=vencidos

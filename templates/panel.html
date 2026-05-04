@@ -6,8 +6,6 @@
     <title>Panel Principal</title>
     <link rel="stylesheet" href="/static/style.css">
 
-    <!-- 🔥 LIBRERÍA GRÁFICAS -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -67,21 +65,6 @@
     <p>Capital total recuperado: {{ capital_acumulado }}</p>
     <p>Interés total ganado: {{ interes_acumulado }}</p>
 </div>
-
-<!-- 🔥 GRÁFICA -->
-<div class="card">
-    <h3>📊 Gráfica de ingresos</h3>
-    <canvas id="grafica"></canvas>
-</div>
-
-<!-- 🔥 DATOS SEGUROS (CLAVE DEL ARREGLO) -->
-<script id="datos-grafica" type="application/json">
-{
-    "labels": {{ labels | default([]) | tojson }},
-    "capital": {{ capital_data | default([]) | tojson }},
-    "interes": {{ interes_data | default([]) | tojson }}
-}
-</script>
 
 <!-- 🔥 GANANCIA POR CLIENTE -->
 <div class="card">
@@ -156,38 +139,6 @@
 </div>
 
 <!-- 🔥 SCRIPT FINAL (SIN ERRORES) -->
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-
-    const ctx = document.getElementById('grafica');
-
-    const rawData = document.getElementById("datos-grafica").textContent;
-    const data = JSON.parse(rawData);
-
-    if (ctx) {
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: data.labels,
-                datasets: [
-                    {
-                        label: 'Capital',
-                        data: data.capital
-                    },
-                    {
-                        label: 'Interés',
-                        data: data.interes
-                    }
-                ]
-            },
-            options: {
-                responsive: true
-            }
-        });
-    }
-
-});
-</script>
 
 </body>
 </html>
