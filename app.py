@@ -380,15 +380,17 @@ def panel():
     interes_dia = 0
 
     cur.execute("""
-    SELECT monto, tipo FROM abonos
-    WHERE DATE(fecha) = %s
-""", (fecha,))
+         SELECT monto, tipo FROM abonos
+         WHERE DATE(fecha) = %s
+    """, (fecha,))
+    
+    rows = cur.fetchall()
 
     for m, t in cur.fetchall():
-     if t == "capital":
-        capital_dia += m
-    else:
-        interes_dia += m
+        if t == "capital":
+             capital_dia += m
+        else:
+             interes_dia += m
     # =============================
     # 📆 MES ACTUAL
     # =============================
