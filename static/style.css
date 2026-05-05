@@ -13,6 +13,7 @@
     --text-soft: #94a3b8;
 }
 
+/* BASE */
 body{
     margin:0;
     font-family: 'Segoe UI', sans-serif;
@@ -69,6 +70,7 @@ body{
     background:var(--card);
     padding:20px;
     border-radius:12px;
+    margin-bottom:15px;
     box-shadow:0 4px 20px rgba(0,0,0,0.3);
     transition:0.3s;
 }
@@ -77,6 +79,7 @@ body{
     transform:translateY(-3px);
 }
 
+/* COLORES DE CARDS */
 .card.green{ border-left:5px solid var(--success); }
 .card.blue{ border-left:5px solid var(--primary); }
 .card.orange{ border-left:5px solid var(--warning); }
@@ -93,7 +96,33 @@ body{
     font-weight:bold;
 }
 
-/* TABLA */
+/* INPUTS */
+input, select{
+    width:100%;
+    padding:10px;
+    margin:5px 0;
+    border-radius:8px;
+    border:none;
+    outline:none;
+}
+
+/* BOTONES */
+button{
+    background:var(--primary);
+    color:white;
+    border:none;
+    padding:10px;
+    border-radius:8px;
+    cursor:pointer;
+    width:100%;
+    transition:0.2s;
+}
+
+button:hover{
+    background:#2563eb;
+}
+
+/* TABLAS */
 table{
     width:100%;
     border-collapse:collapse;
@@ -107,6 +136,7 @@ th{
     background:#020617;
     color:var(--text-soft);
     font-size:13px;
+    padding:10px;
 }
 
 td{
@@ -117,8 +147,22 @@ tr:hover{
     background:#1e293b;
 }
 
+/* TEXTOS */
+h2{
+    margin-bottom:20px;
+}
+
+h3{ color:#60a5fa; }
+h4{ color:#cbd5f5; }
+
+/* BADGES */
+.activo{background:#22c55e;}
+.vencido{background:#ef4444;}
+.pagado{background:#3b82f6;}
+
 /* RESPONSIVE */
 @media (max-width:768px){
+
     .sidebar{
         position:relative;
         width:100%;
@@ -127,5 +171,9 @@ tr:hover{
 
     .main{
         margin-left:0;
+    }
+
+    .grid{
+        grid-template-columns:1fr;
     }
 }
