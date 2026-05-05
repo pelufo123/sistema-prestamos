@@ -11,23 +11,28 @@
 
 <div class="layout">
 
-    <!-- 🔥 SIDEBAR -->
+    <!-- SIDEBAR -->
     <div class="sidebar">
         <h2>💰 Sistema</h2>
 
-        <a href="{{ url_for('panel') }}">🏠 Inicio</a>
+        <a href="{{ url_for('panel') }}">🏠 Dashboard</a>
         <a href="{{ url_for('clientes') }}">👥 Clientes</a>
         <a href="{{ url_for('prestamos') }}">💸 Préstamos</a>
         <a href="{{ url_for('abonos') }}">💰 Abonos</a>
         <a href="/exportar_excel">📥 Backup</a>
     </div>
 
-    <!-- 🔥 CONTENIDO -->
+    <!-- TOPBAR -->
+    <div class="topbar">
+        SoftPelufo
+    </div>
+
+    <!-- MAIN -->
     <div class="main">
 
         <h2>📊 Panel Principal</h2>
 
-        <!-- 🔥 FILTRO -->
+        <!-- FILTRO -->
         <div class="card">
             <form method="POST">
 
@@ -45,7 +50,7 @@
             </form>
         </div>
 
-        <!-- 🔥 MÉTRICAS -->
+        <!-- MÉTRICAS -->
         <div class="grid">
 
             <div class="card green">
@@ -65,24 +70,20 @@
 
         </div>
 
-        <!-- 🔥 RESUMEN -->
+        <!-- RESUMEN -->
         <div class="card">
-            <h3>📅 Fecha: {{ fecha }}</h3>
-
-            <hr>
-
-            <h4>📆 Mes actual</h4>
+            <h3>📆 Mes actual</h3>
             <p>Capital: {{ capital_mes }}</p>
             <p>Interés: {{ interes_mes }}</p>
 
             <hr>
 
-            <h4>📈 Acumulado</h4>
+            <h3>📈 Acumulado</h3>
             <p>Capital: {{ capital_acumulado }}</p>
             <p>Interés: {{ interes_acumulado }}</p>
         </div>
 
-        <!-- 🔥 GANANCIA -->
+        <!-- GANANCIA -->
         <div class="card">
             <h3>👤 Ganancia por cliente</h3>
 
@@ -107,7 +108,7 @@
             </table>
         </div>
 
-        <!-- 🔥 POR VENCER -->
+        <!-- POR VENCER -->
         <div class="card">
             <h3>⚠️ Por vencer</h3>
 
@@ -130,7 +131,7 @@
             </table>
         </div>
 
-        <!-- 🔥 VENCIDOS -->
+        <!-- VENCIDOS -->
         <div class="card">
             <h3>❌ Vencidos</h3>
 
