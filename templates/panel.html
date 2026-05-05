@@ -5,140 +5,157 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Principal</title>
     <link rel="stylesheet" href="/static/style.css">
-
 </head>
 
 <body>
 
-<div class="container">
+<div class="layout">
 
-<!-- 🔥 MENÚ -->
-<div style="margin-bottom:15px;">
-    <a href="{{ url_for('panel') }}" class="btn">🏠 Inicio</a>
-    <a href="{{ url_for('clientes') }}" class="btn">👥 Clientes</a>
-    <a href="{{ url_for('prestamos') }}" class="btn">💸 Préstamos</a>
-    <a href="{{ url_for('abonos') }}" class="btn">💰 Abonos</a>
-    <a href="/exportar_excel" class="btn">📥 Descargar Backup Excel</a>
+    <!-- 🔥 SIDEBAR -->
+    <div class="sidebar">
+        <h2>💰 Sistema</h2>
+
+        <a href="{{ url_for('panel') }}">🏠 Inicio</a>
+        <a href="{{ url_for('clientes') }}">👥 Clientes</a>
+        <a href="{{ url_for('prestamos') }}">💸 Préstamos</a>
+        <a href="{{ url_for('abonos') }}">💰 Abonos</a>
+        <a href="/exportar_excel">📥 Backup</a>
+    </div>
+
+    <!-- 🔥 CONTENIDO -->
+    <div class="main">
+
+        <h2>📊 Panel Principal</h2>
+
+        <!-- 🔥 FILTRO -->
+        <div class="card">
+            <form method="POST">
+
+                <label>📅 Fecha:</label>
+                <input type="date" name="fecha" value="{{ fecha }}">
+
+                <label>📊 Vista:</label>
+                <select name="tipo">
+                    <option value="dia" {% if tipo == 'dia' %}selected{% endif %}>Día</option>
+                    <option value="mes" {% if tipo == 'mes' %}selected{% endif %}>Mes</option>
+                </select>
+
+                <button>Actualizar</button>
+
+            </form>
+        </div>
+
+        <!-- 🔥 MÉTRICAS -->
+        <div class="grid">
+
+            <div class="card green">
+                <div class="label">Capital en calle</div>
+                <div class="metric">{{ capital_total }}</div>
+            </div>
+
+            <div class="card blue">
+                <div class="label">Capital hoy</div>
+                <div class="metric">{{ capital_dia }}</div>
+            </div>
+
+            <div class="card orange">
+                <div class="label">Interés hoy</div>
+                <div class="metric">{{ interes_dia }}</div>
+            </div>
+
+        </div>
+
+        <!-- 🔥 RESUMEN -->
+        <div class="card">
+            <h3>📅 Fecha: {{ fecha }}</h3>
+
+            <hr>
+
+            <h4>📆 Mes actual</h4>
+            <p>Capital: {{ capital_mes }}</p>
+            <p>Interés: {{ interes_mes }}</p>
+
+            <hr>
+
+            <h4>📈 Acumulado</h4>
+            <p>Capital: {{ capital_acumulado }}</p>
+            <p>Interés: {{ interes_acumulado }}</p>
+        </div>
+
+        <!-- 🔥 GANANCIA -->
+        <div class="card">
+            <h3>👤 Ganancia por cliente</h3>
+
+            <table>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Capital</th>
+                    <th>Recuperado</th>
+                    <th>Interés</th>
+                    <th>Deuda</th>
+                </tr>
+
+                {% for c in clientes_ganancia %}
+                <tr>
+                    <td>{{ c.nombre }}</td>
+                    <td>{{ c.capital }}</td>
+                    <td>{{ c.recuperado }}</td>
+                    <td>{{ c.interes }}</td>
+                    <td>{{ c.deuda }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <!-- 🔥 POR VENCER -->
+        <div class="card">
+            <h3>⚠️ Por vencer</h3>
+
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Días</th>
+                    <th>Saldo</th>
+                </tr>
+
+                {% for p in por_vencer %}
+                <tr>
+                    <td>{{ p[0] }}</td>
+                    <td>{{ p[1] }}</td>
+                    <td>{{ p[2] }}</td>
+                    <td>{{ p[3] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <!-- 🔥 VENCIDOS -->
+        <div class="card">
+            <h3>❌ Vencidos</h3>
+
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Días atraso</th>
+                    <th>Saldo</th>
+                </tr>
+
+                {% for v in vencidos %}
+                <tr>
+                    <td>{{ v[0] }}</td>
+                    <td>{{ v[1] }}</td>
+                    <td>{{ v[2] }}</td>
+                    <td>{{ v[3] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+    </div>
+
 </div>
-
-<h2>📊 Panel Principal</h2>
-
-<!-- 🔥 FILTRO -->
-<div class="card">
-<form method="POST">
-
-    <label>📅 Fecha:</label>
-    <input type="date" name="fecha" value="{{ fecha }}">
-
-    <label>📊 Vista:</label>
-    <select name="tipo">
-        <option value="dia" {% if tipo == 'dia' %}selected{% endif %}>Día</option>
-        <option value="mes" {% if tipo == 'mes' %}selected{% endif %}>Mes</option>
-    </select>
-
-    <button>Actualizar</button>
-
-</form>
-</div>
-
-<!-- 🔥 RESUMEN -->
-<div class="card">
-    <h3>📅 Fecha: {{ fecha }}</h3>
-
-    <p>💰 <b>Capital total en calle:</b> {{ capital_total }}</p>
-
-    <hr>
-
-    <h4>📊 Hoy</h4>
-    <p>Capital: {{ capital_dia }}</p>
-    <p>Interés: {{ interes_dia }}</p>
-
-    <hr>
-
-    <h4>📆 Mes actual</h4>
-    <p>Capital recogido: {{ capital_mes }}</p>
-    <p>Interés ganado: {{ interes_mes }}</p>
-
-    <hr>
-
-    <h4>📈 Acumulado total</h4>
-    <p>Capital total recuperado: {{ capital_acumulado }}</p>
-    <p>Interés total ganado: {{ interes_acumulado }}</p>
-</div>
-
-<!-- 🔥 GANANCIA POR CLIENTE -->
-<div class="card">
-    <h3>👤 Ganancia por cliente</h3>
-
-    <table>
-        <tr>
-            <th>Cliente</th>
-            <th>Capital</th>
-            <th>Recuperado</th>
-            <th>Interés</th>
-            <th>Deuda</th>
-        </tr>
-
-        {% for c in clientes_ganancia %}
-        <tr>
-            <td>{{ c.nombre }}</td>
-            <td>{{ c.capital }}</td>
-            <td>{{ c.recuperado }}</td>
-            <td>{{ c.interes }}</td>
-            <td>{{ c.deuda }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-</div>
-
-<!-- 🔥 VENCIMIENTOS -->
-<div class="card">
-    <h3>⚠️ Por vencer</h3>
-
-    <table>
-        <tr>
-            <th>ID</th>
-            <th>Cliente</th>
-            <th>Días</th>
-            <th>Saldo</th>
-        </tr>
-
-        {% for p in por_vencer %}
-        <tr>
-            <td>{{ p[0] }}</td>
-            <td>{{ p[1] }}</td>
-            <td>{{ p[2] }}</td>
-            <td>{{ p[3] }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-</div>
-
-<div class="card">
-    <h3>❌ Vencidos</h3>
-
-    <table>
-        <tr>
-            <th>ID</th>
-            <th>Cliente</th>
-            <th>Días atraso</th>
-            <th>Saldo</th>
-        </tr>
-
-        {% for v in vencidos %}
-        <tr>
-            <td>{{ v[0] }}</td>
-            <td>{{ v[1] }}</td>
-            <td>{{ v[2] }}</td>
-            <td>{{ v[3] }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-</div>
-
-</div>
-
-<!-- 🔥 SCRIPT FINAL (SIN ERRORES) -->
 
 </body>
 </html>

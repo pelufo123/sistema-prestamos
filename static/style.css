@@ -1,184 +1,131 @@
+:root{
+    --bg-main: #0f172a;
+    --bg-soft: #111827;
+    --card: #1e293b;
+    --sidebar: #020617;
+
+    --primary: #3b82f6;
+    --success: #22c55e;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+
+    --text: #ffffff;
+    --text-soft: #94a3b8;
+}
+
 body{
-    font-family: 'Segoe UI', sans-serif;
-    background: #0f172a;
-    color: #fff;
     margin:0;
+    font-family: 'Segoe UI', sans-serif;
+    background: var(--bg-main);
+    color: var(--text);
 }
 
-/* CONTENEDOR */
-.container{
-    width:90%;
-    max-width:900px;
-    margin:auto;
+/* LAYOUT */
+.layout{
+    display:flex;
+}
+
+/* SIDEBAR */
+.sidebar{
+    width:220px;
+    height:100vh;
+    background:var(--sidebar);
     padding:20px;
+    position:fixed;
 }
 
-h2{
-    text-align:center;
+.sidebar h2{
+    color:white;
     margin-bottom:20px;
 }
 
-/* TARJETAS */
-.card{
-    background:#1e293b;
-    padding:15px;
-    border-radius:10px;
-    margin-bottom:15px;
-    box-shadow:0 0 10px rgba(0,0,0,0.3);
-}
-
-/* INPUTS */
-input, select{
-    width:100%;
-    padding:10px;
-    margin:5px 0;
-    border-radius:8px;
-    border:none;
-    outline:none;
-}
-
-/* BOTONES */
-button{
-    background:#3b82f6;
-    color:white;
-    border:none;
-    padding:10px;
-    border-radius:8px;
-    cursor:pointer;
-    width:100%;
-    transition:0.2s;
-}
-
-button:hover{
-    background:#2563eb;
-}
-
-/* BOTONES LINKS */
-.btn{
-    display:inline-block;
-    padding:6px 10px;
-    margin:3px;
-    border-radius:6px;
-    text-decoration:none;
-    color:white;
-    font-size:14px;
-}
-
-.btn-edit{ background:#22c55e; }
-.btn-del{ background:#ef4444; }
-.btn-his{ background:#f59e0b; }
-
-/* ALERTAS */
-.alert{
-    padding:10px;
-    border-radius:8px;
+.sidebar a{
+    display:block;
+    color:var(--text-soft);
     margin:10px 0;
+    text-decoration:none;
 }
 
-.alert-warning{
-    background:#f59e0b;
-    color:black;
+.sidebar a:hover{
+    color:white;
 }
 
-/* BADGES */
-.badge{
-    padding:5px 10px;
-    border-radius:6px;
-    font-size:12px;
+/* MAIN */
+.main{
+    margin-left:220px;
+    padding:20px;
+    width:100%;
 }
-
-.activo{background:#22c55e;}
-.vencido{background:#ef4444;}
-.pagado{background:#3b82f6;}
 
 /* GRID */
 .grid{
     display:grid;
-    grid-template-columns: repeat(3,1fr);
-    gap:10px;
+    grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+    gap:15px;
 }
 
-/* ITEMS */
-.item{
-    background:#020617;
-    padding:12px;
-    border-radius:10px;
-    margin-top:10px;
-    border-left:5px solid #3b82f6;
+/* CARDS */
+.card{
+    background:var(--card);
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.3);
     transition:0.3s;
 }
 
-.item:hover{
-    transform:scale(1.02);
+.card:hover{
+    transform:translateY(-3px);
 }
 
-/* TITULOS */
-h3{ color:#60a5fa; }
-h4{ color:#cbd5f5; }
+.card.green{ border-left:5px solid var(--success); }
+.card.blue{ border-left:5px solid var(--primary); }
+.card.orange{ border-left:5px solid var(--warning); }
+.card.red{ border-left:5px solid var(--danger); }
 
-hr{
-    border:1px solid #334155;
-    margin:10px 0;
+/* METRICAS */
+.label{
+    font-size:13px;
+    color:var(--text-soft);
 }
 
-/* TABLAS 🔥 */
+.metric{
+    font-size:22px;
+    font-weight:bold;
+}
+
+/* TABLA */
 table{
     width:100%;
     border-collapse:collapse;
     margin-top:10px;
-}
-
-th, td{
-    padding:10px;
-    text-align:left;
+    background:var(--bg-soft);
+    border-radius:10px;
+    overflow:hidden;
 }
 
 th{
     background:#020617;
+    color:var(--text-soft);
+    font-size:13px;
 }
 
-tr:nth-child(even){
-    background:#111827;
+td{
+    padding:12px;
 }
 
-/* LINKS 🔥 (QUITA AZUL) */
-a{
-    text-decoration:none;
-    color:#cbd5f5;
+tr:hover{
+    background:#1e293b;
 }
-
-a:visited{
-    color:#cbd5f5;
-}
-
-a:hover{
-    color:white;
-}
-
-/* ESTADOS HISTORIAL */
-.verde{ color:#22c55e; font-weight:bold; }
-.rojo{ color:#ef4444; font-weight:bold; }
-.azul{ color:#3b82f6; font-weight:bold; }
 
 /* RESPONSIVE */
 @media (max-width:768px){
-
-    .container{
-        width:95%;
-        padding:10px;
-    }
-
-    h2{
-        font-size:20px;
-    }
-
-    .grid{
-        grid-template-columns:1fr;
-    }
-
-    .btn{
-        display:block;
+    .sidebar{
+        position:relative;
         width:100%;
-        text-align:center;
+        height:auto;
+    }
+
+    .main{
+        margin-left:0;
     }
 }
