@@ -48,10 +48,12 @@ body{
     margin:12px 0;
     text-decoration:none;
     font-size:14px;
+    transition:0.2s;
 }
 
 .sidebar a:hover{
     color:white;
+    transform:translateX(5px);
 }
 
 /* TOPBAR */
@@ -75,6 +77,7 @@ body{
     margin-left:220px;
     margin-top:60px;
     padding:20px;
+    width:100%;
 }
 
 /* GRID */
@@ -91,8 +94,15 @@ body{
     border-radius:10px;
     margin-bottom:15px;
     box-shadow:0 2px 10px rgba(0,0,0,0.08);
+    transition: all 0.25s ease;
 }
 
+.card:hover{
+    transform: translateY(-5px);
+    box-shadow:0 8px 25px rgba(0,0,0,0.15);
+}
+
+/* COLORES DE CARDS */
 .card.green{ border-left:5px solid var(--success); }
 .card.blue{ border-left:5px solid var(--primary); }
 .card.orange{ border-left:5px solid var(--warning); }
@@ -127,10 +137,12 @@ button{
     border-radius:8px;
     cursor:pointer;
     width:100%;
+    transition: all 0.2s ease;
 }
 
 button:hover{
     background:#ea580c;
+    transform: scale(1.03);
 }
 
 /* TABLAS */
@@ -138,6 +150,7 @@ table{
     width:100%;
     border-collapse:collapse;
     background:white;
+    margin-top:10px;
 }
 
 th{
@@ -145,6 +158,7 @@ th{
     color:#6b7280;
     font-size:13px;
     text-transform:uppercase;
+    padding:10px;
 }
 
 td{
@@ -152,14 +166,27 @@ td{
     border-bottom:1px solid #eee;
 }
 
+tr{
+    transition:0.2s;
+}
+
 tr:hover{
     background:#f3f4f6;
+    transform: scale(1.01);
 }
 
 /* TITULOS */
-h2{ margin-bottom:20px; }
-h3{ color:#111827; }
-h4{ color:#374151; }
+h2{
+    margin-bottom:20px;
+}
+
+h3{
+    color:#111827;
+}
+
+h4{
+    color:#374151;
+}
 
 /* RESPONSIVE */
 @media (max-width:768px){
