@@ -342,11 +342,10 @@ def ganancia_por_cliente(conn):
 
     return resultado
 
-@app.route("/", methods=["GET","POST"])
+@app.route("/", methods=["GET", "POST"])
 def panel():
 
     conn = conectar()
-
     if conn is None:
         return "Error de conexión", 500
 
@@ -461,12 +460,10 @@ def panel():
         if dias < 0:
             vencidos.append((pid, nombre, abs(dias), formato(saldo)))
         elif dias <= 3:
-            por_vencer.append((pid, nombre, dias, formato(saldo))
-
-)
+            por_vencer.append((pid, nombre, dias, formato(saldo)))
 
     # =============================
-    # CLIENTES
+    # 👥 CLIENTES
     # =============================
     clientes_ganancia = ganancia_por_cliente(conn)
 
@@ -474,6 +471,7 @@ def panel():
     capital = capital_dia
     interes = interes_dia
 
+    cur.close()
     conn.close()
 
     return render_template(
