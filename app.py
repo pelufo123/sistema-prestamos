@@ -344,6 +344,7 @@ def ganancia_por_cliente(conn):
 
 @app.route("/", methods=["GET","POST"])
 def panel():
+
     conn = conectar()
 
     if conn is None:
@@ -351,6 +352,7 @@ def panel():
 
     cur = conn.cursor()
 
+    # 🔥 FILTRO
     tipo = request.form.get("tipo") or "dia"
     fecha_str = request.form.get("fecha")
 
@@ -360,9 +362,19 @@ def panel():
         fecha = datetime.now().date()
 
     # =============================
-    # HOY
+    # 💰 CAPITAL TOTAL EN CALLE
     # =============================
+    capital_total = 0
 
+    cur.execute("SELECT id FROM prestamos")
+    for (pid,) in cur.fetchall():
+        cap_rest, _, _, _, _ = calcular(pid, conn)
+        if cap_rest > 0:
+            capital_total += cap_rest
+
+    # =============================
+    # 📅 HOY
+    # =============================
     cur.execute("""
         SELECT monto, tipo FROM abonos
         WHERE DATE(fecha) = %s
@@ -380,9 +392,8 @@ def panel():
             interes_dia += m
 
     # =============================
-    # MES
+    # 📆 MES ACTUAL
     # =============================
-
     inicio_mes = fecha.replace(day=1)
 
     cur.execute("""
@@ -402,9 +413,8 @@ def panel():
             interes_mes += m
 
     # =============================
-    # ACUMULADO
+    # 📈 ACUMULADO
     # =============================
-
     cur.execute("""
         SELECT monto, tipo FROM abonos
         WHERE DATE(fecha) <= %s
@@ -422,9 +432,8 @@ def panel():
             interes_acumulado += m
 
     # =============================
-    # VENCIMIENTOS
+    # ⚠️ VENCIMIENTOS
     # =============================
-
     cur.execute("""
         SELECT p.id, p.vencimiento, c.nombre
         FROM prestamos p
@@ -452,22 +461,21 @@ def panel():
         if dias < 0:
             vencidos.append((pid, nombre, abs(dias), formato(saldo)))
         elif dias <= 3:
-            por_vencer.append((pid, nombre, dias, formato(saldo)))
+            por_vencer.append((pid, nombre, dias, formato(saldo))
+
+)
 
     # =============================
     # CLIENTES
     # =============================
-
     clientes_ganancia = ganancia_por_cliente(conn)
 
-    conn.close()
-# =============================
-# 🔧 VARIABLES FALTANTES (FIX)
-# =============================
-
+    # 🔧 VARIABLES NECESARIAS
     capital = capital_dia
     interes = interes_dia
-    capital_total = capital_total
+
+    conn.close()
+
     return render_template(
         "panel.html",
         fecha=fecha,
@@ -476,8 +484,8 @@ def panel():
 
         capital=formato(capital),
         interes=formato(interes),
-
         capital_total=formato(capital_total),
+
         capital_dia=formato(capital_dia),
         interes_dia=formato(interes_dia),
 
