@@ -460,9 +460,10 @@ def panel():
     # =============================
     clientes_ganancia = ganancia_por_cliente(conn)
 
-    # =============================
-    # 📋 PRÉSTAMOS (PARA ABONAR)
-    # =============================
+
+# =============================
+# 📋 PRÉSTAMOS (PARA ABONAR)
+# =============================
     cur.execute("""
     SELECT p.id, c.nombre, p.capital, p.interes
     FROM prestamos p
@@ -471,14 +472,14 @@ def panel():
 
     prestamos = []
 
-    for pid, nombre, monto, porcentaje in cur.fetchall():
-        interes_mensual = capital * (interes / 100)
+    for pid, nombre, capital, interes in cur.fetchall():
+      interes_mensual = capital * (interes / 100)
 
-        prestamos.append({
-            "id": pid,
-            "nombre": nombre,
-            "interes_mensual": interes_mensual
-        })
+    prestamos.append({
+        "id": pid,
+        "nombre": nombre,
+        "interes_mensual": interes_mensual
+    })
 
     capital = capital_dia
     interes = interes_dia
