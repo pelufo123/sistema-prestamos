@@ -487,29 +487,29 @@ def panel():
     conn.close()
 
     return render_template(
-        "panel.html",
-        fecha=fecha,
-        tipo=tipo,
-        clientes_ganancia=clientes_ganancia,
+    "panel.html",
+    fecha=fecha,
+    tipo=tipo,
+    clientes_ganancia=clientes_ganancia,
 
-        capital=formato(capital),
-        interes=formato(interes),
-        capital_total=formato(capital_total),
+    capital=formato(capital),
+    interes=formato(interes),
+    capital_total=formato(capital_total),
 
-        capital_dia=formato(capital_dia),
-        interes_dia=formato(interes_dia),
+    capital_dia=formato(capital_dia),
+    interes_dia=formato(interes_dia),
 
-        capital_mes=formato(capital_mes),
-        interes_mes=formato(interes_mes),
+    capital_mes=formato(capital_mes),
+    interes_mes=formato(interes_mes),
 
-        capital_acumulado=formato(capital_acumulado),
-        interes_acumulado=formato(interes_acumulado),
+    capital_acumulado=formato(capital_acumulado),
+    interes_acumulado=formato(interes_acumulado),
 
-        por_vencer=por_vencer,
-        vencidos=vencidos,
+    por_vencer=por_vencer,
+    vencidos=vencidos,
 
-        prestamos=prestamos
-    )
+    prestamos=prestamos   # 🔥 ESTA ES LA LÍNEA QUE TE FALTABA
+)
 # ------------------------------
 # 🔥 RUTAS NUEVAS (AÑADIDAS)
 # ------------------------------
