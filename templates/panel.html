@@ -182,6 +182,73 @@
     </div>
 
 </div>
+<h2>💰 Abonar intereses</h2>
+
+{% for p in prestamos %}
+<div style="border:1px solid #ccc; padding:10px; margin:10px; border-radius:8px;">
+    <b>{{ p.nombre }}</b><br>
+    Interés mensual: ${{ p.interes_mensual }}
+
+    <form class="formAbono">
+        <input type="hidden" name="prestamo_id" value="{{ p.id }}">
+        <input type="hidden" class="interes" name="interes_mensual" value="{{ p.interes_mensual }}">
+
+        <label>Meses:</label>
+        <select name="meses" class="meses">
+            <option value="1">1 mes</option>
+            <option value="2">2 meses</option>
+            <option value="3">3 meses</option>
+        </select>
+
+        <label>Monto:</label>
+        <input type="text" class="monto" readonly>
+
+        <button type="submit">Guardar</button>
+    </form>
+</div>
+{% endfor %}
+    <!-- 🔥 SCRIPT AQUÍ -->
+    <script>
+    document.querySelectorAll(".formAbono").forEach(form => {
+
+        let select = form.querySelector(".meses");
+        let montoInput = form.querySelector(".monto");
+        let interes = parseFloat(form.querySelector(".interes").value);
+
+        function calcular() {
+            let meses = parseInt(select.value);
+            let total = meses * interes;
+            montoInput.value = total.toLocaleString();
+        }
+
+        calcular();
+        select.addEventListener("change", calcular);
+
+        form.addEventListener("submit", function(e) {
+            e.preventDefault();
+
+            let formData = new FormData(form);
+
+            fetch("/guardar_abono", {
+                method: "POST",
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.ok) {
+                    alert("Abono guardado");
+                    location.reload();
+                } else {
+                    alert("Error al guardar");
+                }
+            });
+        });
+
+    });
+    </script>
+
+</body>
+</html>
 
 </body>
 </html>

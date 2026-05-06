@@ -351,7 +351,6 @@ def panel():
 
     cur = conn.cursor()
 
-    # 🔥 FILTRO
     tipo = request.form.get("tipo") or "dia"
     fecha_str = request.form.get("fecha")
 
@@ -361,7 +360,7 @@ def panel():
         fecha = datetime.now().date()
 
     # =============================
-    # 💰 CAPITAL TOTAL EN CALLE
+    # 💰 CAPITAL TOTAL
     # =============================
     capital_total = 0
 
@@ -379,19 +378,17 @@ def panel():
         WHERE DATE(fecha) = %s
     """, (fecha,))
 
-    rows = cur.fetchall()
-
     capital_dia = 0
     interes_dia = 0
 
-    for m, t in rows:
+    for m, t in cur.fetchall():
         if t == "capital":
             capital_dia += m
         else:
             interes_dia += m
 
     # =============================
-    # 📆 MES ACTUAL
+    # 📆 MES
     # =============================
     inicio_mes = fecha.replace(day=1)
 
@@ -400,12 +397,10 @@ def panel():
         WHERE DATE(fecha) >= %s AND DATE(fecha) <= %s
     """, (inicio_mes, fecha))
 
-    rows = cur.fetchall()
-
     capital_mes = 0
     interes_mes = 0
 
-    for m, t in rows:
+    for m, t in cur.fetchall():
         if t == "capital":
             capital_mes += m
         else:
@@ -419,12 +414,10 @@ def panel():
         WHERE DATE(fecha) <= %s
     """, (fecha,))
 
-    rows = cur.fetchall()
-
     capital_acumulado = 0
     interes_acumulado = 0
 
-    for m, t in rows:
+    for m, t in cur.fetchall():
         if t == "capital":
             capital_acumulado += m
         else:
@@ -467,7 +460,26 @@ def panel():
     # =============================
     clientes_ganancia = ganancia_por_cliente(conn)
 
-    # 🔧 VARIABLES NECESARIAS
+    # =============================
+    # 📋 PRÉSTAMOS (PARA ABONAR)
+    # =============================
+    cur.execute("""
+        SELECT p.id, c.nombre, p.monto, p.porcentaje
+        FROM prestamos p
+        JOIN clientes c ON p.cliente_id = c.id
+    """)
+
+    prestamos = []
+
+    for pid, nombre, monto, porcentaje in cur.fetchall():
+        interes_mensual = monto * (porcentaje / 100)
+
+        prestamos.append({
+            "id": pid,
+            "nombre": nombre,
+            "interes_mensual": interes_mensual
+        })
+
     capital = capital_dia
     interes = interes_dia
 
@@ -494,9 +506,10 @@ def panel():
         interes_acumulado=formato(interes_acumulado),
 
         por_vencer=por_vencer,
-        vencidos=vencidos
-    )
+        vencidos=vencidos,
 
+        prestamos=prestamos
+    )
 # ------------------------------
 # 🔥 RUTAS NUEVAS (AÑADIDAS)
 # ------------------------------
@@ -619,6 +632,32 @@ def editar_cliente(id):
     conn.close()
     return render_template("editar_cliente.html", cliente=cliente)
 
+@app.route("/guardar_abono", methods=["POST"])
+def guardar_abono():
+    try:
+        prestamo_id = request.form.get("prestamo_id")
+        meses = int(request.form.get("meses"))
+        interes_mensual = float(request.form.get("interes_mensual"))
+
+        monto = meses * interes_mensual
+
+        conn = conectar()
+        cur = conn.cursor()
+
+        cur.execute("""
+            INSERT INTO abonos (prestamo_id, monto, tipo, fecha)
+            VALUES (%s, %s, %s, NOW())
+        """, (prestamo_id, monto, "interes"))
+
+        conn.commit()
+        conn.close()
+
+        return {"ok": True}
+
+    except Exception as e:
+        print("ERROR GUARDAR ABONO:", e)
+        return {"ok": False}
+    
 # ------------------------------
 # 🗑 ELIMINAR CLIENTE
 # ------------------------------
