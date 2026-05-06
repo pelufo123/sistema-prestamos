@@ -9,14 +9,14 @@
 
 <div class="container">
 
-<!-- 🔥 BOTÓN SEGURO INICIO -->
+<!-- BOTÓN INICIO -->
 <div style="margin-bottom:15px;">
     <a href="{{ url_for('panel') }}" class="btn">🏠 Inicio</a>
 </div>
 
 <h2>💸 Préstamos</h2>
 
-<!-- 🔹 FORMULARIO -->
+<!-- FORMULARIO -->
 <div class="card">
 <form method="POST">
 
@@ -28,17 +28,19 @@
 
     <input name="capital" placeholder="Capital" required>
     <input name="interes" placeholder="Interés %" required>
-    <input name="dias" placeholder="Días" required>
 
-    <!-- 🔥 NUEVO: FECHA DEL PRÉSTAMO -->
-    <label>Fecha del préstamo:</label>
-    <input type="date" name="fecha">
+    <label>📅 Fecha inicio</label>
+    <input type="date" name="fecha" required>
+
+    <label>📅 Fecha vencimiento</label>
+    <input type="date" name="vencimiento" required>
 
     <button>Guardar</button>
+
 </form>
 </div>
 
-<!-- 🔹 LISTA GENERAL -->
+<!-- LISTA GENERAL -->
 <div class="card">
 <h3>📋 Préstamos activos</h3>
 
@@ -47,12 +49,7 @@
         <th>ID</th>
         <th>Cliente</th>
         <th>Total</th>
-        <th>Capital pendiente</th>
-
-        <!-- 🔥 NUEVAS COLUMNAS -->
-        <th>Meses atraso</th>
-        <th>Interés acumulado</th>
-        <th>Último pago</th>
+        <th>Saldo</th>
     </tr>
 
     {% for p in prestamos %}
@@ -61,19 +58,14 @@
         <td>{{ p.cliente }}</td>
         <td>{{ p.total }}</td>
         <td>{{ p.saldo }}</td>
-
-        <!-- 🔥 DATOS NUEVOS -->
-        <td>{{ p.meses }}</td>
-        <td>{{ p.interes }}</td>
-        <td>{{ p.ultimo_pago }}</td>
     </tr>
     {% endfor %}
 </table>
 </div>
 
-<!-- 🔥 FILTRO POR FECHA -->
+<!-- FILTRO -->
 <div class="card">
-<h3>📅 Ver préstamos por día</h3>
+<h3>📅 Ver préstamos por fecha</h3>
 
 <form method="GET">
     <input type="date" name="fecha" value="{{ fecha }}">
@@ -81,11 +73,11 @@
 </form>
 </div>
 
-<!-- 🔥 RESUMEN DEL DÍA -->
+<!-- RESUMEN -->
 <div class="card">
-<h3>📊 Resumen del día</h3>
+<h3>📊 Préstamos del día</h3>
 
-<p><b>Total préstamos hoy:</b> {{ prestamos_dia|length }}</p>
+<p><b>Total:</b> {{ cantidad_dia }}</p>
 
 <table>
     <tr>
@@ -98,11 +90,11 @@
 
     {% for p in prestamos_dia %}
     <tr>
-        <td>{{ p.id }}</td>
-        <td>{{ p.cliente }}</td>
-        <td>{{ p.capital }}</td>
-        <td>{{ p.total }}</td>
-        <td>{{ p.fecha }}</td>
+        <td>{{ p[0] }}</td>
+        <td>{{ p[1] }}</td>
+        <td>{{ p[2] }}</td>
+        <td>{{ p[3] }}</td>
+        <td>{{ p[4] }}</td>
     </tr>
     {% endfor %}
 </table>

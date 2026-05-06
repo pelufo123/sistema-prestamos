@@ -727,35 +727,32 @@ def prestamos():
     conn = conectar()
     cur = conn.cursor()
 
+    # 🔹 clientes
     cur.execute("SELECT * FROM clientes")
     clientes = cur.fetchall()
 
-    # 🔥 GUARDAR PRÉSTAMO
-    if request.method == "POST" and request.form.get("capital"):
+    # 🔥 GUARDAR PRÉSTAMO (SIN DÍAS)
+    if request.method == "POST":
 
         capital = float(request.form["capital"])
         interes = float(request.form["interes"])
-        dias = int(request.form["dias"])
+
+        fecha = datetime.strptime(request.form["fecha"], "%Y-%m-%d")
+        venc = datetime.strptime(request.form["vencimiento"], "%Y-%m-%d")
+
+        if venc <= fecha:
+            conn.close()
+            return "❌ La fecha de vencimiento debe ser mayor"
 
         total = capital + (capital * interes / 100)
 
-        fecha_input = request.form.get("fecha")
-
-        if fecha_input:
-            fecha = datetime.strptime(fecha_input, "%Y-%m-%d")
-        else:
-            fecha = datetime.now()
-
-        venc = fecha + timedelta(days=dias)
-
         cur.execute("""
-            INSERT INTO prestamos(cliente_id,capital,interes,dias,fecha,vencimiento,total)
-            VALUES (%s,%s,%s,%s,%s,%s,%s)
+            INSERT INTO prestamos(cliente_id, capital, interes, fecha, vencimiento, total)
+            VALUES (%s,%s,%s,%s,%s,%s)
         """, (
             request.form["cliente"],
             capital,
             interes,
-            dias,
             fecha.date(),
             venc.date(),
             total
@@ -764,20 +761,24 @@ def prestamos():
         conn.commit()
 
     # 🔍 FILTRO POR FECHA
-    fecha_filtro = request.form.get("fecha")
-    fecha_filtro = datetime.strptime(fecha_filtro, "%Y-%m-%d").date() if fecha_filtro else datetime.now().date()
+    fecha_filtro = request.args.get("fecha")
+
+    if fecha_filtro:
+        fecha_filtro = datetime.strptime(fecha_filtro, "%Y-%m-%d").date()
+    else:
+        fecha_filtro = datetime.now().date()
 
     cur.execute("""
         SELECT p.id, c.nombre, p.capital, p.total, p.fecha
         FROM prestamos p
         JOIN clientes c ON p.cliente_id = c.id
-        WHERE p.fecha=%s
+        WHERE p.fecha = %s
     """, (fecha_filtro,))
 
     prestamos_dia = cur.fetchall()
     cantidad_dia = len(prestamos_dia)
 
-    # 🔥 LISTADO GENERAL
+    # 🔥 LISTA GENERAL
     cur.execute("""
         SELECT p.id, c.nombre, p.total
         FROM prestamos p
@@ -799,12 +800,13 @@ def prestamos():
 
     conn.close()
 
-    return render_template("prestamos.html",
+    return render_template(
+        "prestamos.html",
         clientes=clientes,
         prestamos=prestamos_lista,
         prestamos_dia=prestamos_dia,
         cantidad_dia=cantidad_dia,
-        fecha_filtro=fecha_filtro
+        fecha=fecha_filtro
     )
 
 # ------------------------------
