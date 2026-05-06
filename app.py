@@ -508,7 +508,7 @@ def panel():
     por_vencer=por_vencer,
     vencidos=vencidos,
 
-    prestamos=prestamos   # 🔥 ESTA ES LA LÍNEA QUE TE FALTABA
+    prestamos=prestamos
 )
 # ------------------------------
 # 🔥 RUTAS NUEVAS (AÑADIDAS)
