@@ -16,7 +16,9 @@
 
 <h2>💸 Préstamos</h2>
 
-<!-- FORMULARIO -->
+<!-- =============================
+     FORMULARIO
+============================= -->
 <div class="card">
 <form method="POST">
 
@@ -36,11 +38,12 @@
     <input type="date" name="vencimiento" required>
 
     <button>Guardar</button>
-
 </form>
 </div>
 
-<!-- LISTA GENERAL -->
+<!-- =============================
+     LISTA GENERAL
+============================= -->
 <div class="card">
 <h3>📋 Préstamos activos</h3>
 
@@ -63,9 +66,11 @@
 </table>
 </div>
 
-<!-- FILTRO -->
+<!-- =============================
+     FILTRO
+============================= -->
 <div class="card">
-<h3>📅 Ver préstamos por fecha</h3>
+<h3>📅 Buscar por fecha</h3>
 
 <form method="GET">
     <input type="date" name="fecha" value="{{ fecha }}">
@@ -73,7 +78,9 @@
 </form>
 </div>
 
-<!-- RESUMEN -->
+<!-- =============================
+     RESULTADO DEL DÍA
+============================= -->
 <div class="card">
 <h3>📊 Préstamos del día</h3>
 

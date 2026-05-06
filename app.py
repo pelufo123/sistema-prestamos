@@ -731,36 +731,44 @@ def prestamos():
     cur.execute("SELECT * FROM clientes")
     clientes = cur.fetchall()
 
+    # =============================
     # 🔥 GUARDAR PRÉSTAMO (SIN DÍAS)
+    # =============================
     if request.method == "POST":
 
-        capital = float(request.form["capital"])
-        interes = float(request.form["interes"])
+        try:
+            capital = float(request.form["capital"])
+            interes = float(request.form["interes"])
 
-        fecha = datetime.strptime(request.form["fecha"], "%Y-%m-%d")
-        venc = datetime.strptime(request.form["vencimiento"], "%Y-%m-%d")
+            fecha = datetime.strptime(request.form["fecha"], "%Y-%m-%d")
+            venc = datetime.strptime(request.form["vencimiento"], "%Y-%m-%d")
 
-        if venc <= fecha:
-            conn.close()
-            return "❌ La fecha de vencimiento debe ser mayor"
+            if venc <= fecha:
+                conn.close()
+                return "❌ La fecha de vencimiento debe ser mayor"
 
-        total = capital + (capital * interes / 100)
+            total = capital + (capital * interes / 100)
 
-        cur.execute("""
-            INSERT INTO prestamos(cliente_id, capital, interes, fecha, vencimiento, total)
-            VALUES (%s,%s,%s,%s,%s,%s)
-        """, (
-            request.form["cliente"],
-            capital,
-            interes,
-            fecha.date(),
-            venc.date(),
-            total
-        ))
+            cur.execute("""
+                INSERT INTO prestamos (cliente_id, capital, interes, fecha, vencimiento, total)
+                VALUES (%s,%s,%s,%s,%s,%s)
+            """, (
+                request.form["cliente"],
+                capital,
+                interes,
+                fecha.date(),
+                venc.date(),
+                total
+            ))
 
-        conn.commit()
+            conn.commit()
 
+        except Exception as e:
+            print("ERROR:", e)
+
+    # =============================
     # 🔍 FILTRO POR FECHA
+    # =============================
     fecha_filtro = request.args.get("fecha")
 
     if fecha_filtro:
@@ -778,7 +786,9 @@ def prestamos():
     prestamos_dia = cur.fetchall()
     cantidad_dia = len(prestamos_dia)
 
-    # 🔥 LISTA GENERAL
+    # =============================
+    # 📋 LISTA GENERAL
+    # =============================
     cur.execute("""
         SELECT p.id, c.nombre, p.total
         FROM prestamos p
