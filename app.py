@@ -351,6 +351,7 @@ def panel():
 
     cur = conn.cursor()
 
+    # 🔥 FILTRO
     tipo = request.form.get("tipo") or "dia"
     fecha_str = request.form.get("fecha")
 
@@ -460,27 +461,29 @@ def panel():
     # =============================
     clientes_ganancia = ganancia_por_cliente(conn)
 
-
-# =============================
-# 📋 PRÉSTAMOS (PARA ABONAR)
-# =============================
+    # =============================
+    # 📋 PRÉSTAMOS (PARA ABONAR)
+    # =============================
     cur.execute("""
-    SELECT p.id, c.nombre, p.capital, p.interes
-    FROM prestamos p
-    JOIN clientes c ON p.cliente_id = c.id
+        SELECT p.id, c.nombre, p.capital, p.interes
+        FROM prestamos p
+        JOIN clientes c ON p.cliente_id = c.id
     """)
 
     prestamos = []
 
-    for pid, nombre, capital, interes in cur.fetchall():
-      interes_mensual = capital * (interes / 100)
+    rows = cur.fetchall()
 
-    prestamos.append({
-        "id": pid,
-        "nombre": nombre,
-        "interes_mensual": interes_mensual
-    })
+    for pid, nombre, capital, interes in rows:
+        interes_mensual = capital * (interes / 100)
 
+        prestamos.append({
+            "id": pid,
+            "nombre": nombre,
+            "interes_mensual": interes_mensual
+        })
+
+    # 🔧 VARIABLES NECESARIAS
     capital = capital_dia
     interes = interes_dia
 
@@ -488,29 +491,29 @@ def panel():
     conn.close()
 
     return render_template(
-    "panel.html",
-    fecha=fecha,
-    tipo=tipo,
-    clientes_ganancia=clientes_ganancia,
+        "panel.html",
+        fecha=fecha,
+        tipo=tipo,
+        clientes_ganancia=clientes_ganancia,
 
-    capital=formato(capital),
-    interes=formato(interes),
-    capital_total=formato(capital_total),
+        capital=formato(capital),
+        interes=formato(interes),
+        capital_total=formato(capital_total),
 
-    capital_dia=formato(capital_dia),
-    interes_dia=formato(interes_dia),
+        capital_dia=formato(capital_dia),
+        interes_dia=formato(interes_dia),
 
-    capital_mes=formato(capital_mes),
-    interes_mes=formato(interes_mes),
+        capital_mes=formato(capital_mes),
+        interes_mes=formato(interes_mes),
 
-    capital_acumulado=formato(capital_acumulado),
-    interes_acumulado=formato(interes_acumulado),
+        capital_acumulado=formato(capital_acumulado),
+        interes_acumulado=formato(interes_acumulado),
 
-    por_vencer=por_vencer,
-    vencidos=vencidos,
+        por_vencer=por_vencer,
+        vencidos=vencidos,
 
-    prestamos=prestamos
-)
+        prestamos=prestamos
+    )
 # ------------------------------
 # 🔥 RUTAS NUEVAS (AÑADIDAS)
 # ------------------------------
@@ -911,4 +914,4 @@ if __name__ == "__main__":
     init_db()
     crear_admin()
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port, debug=True)
