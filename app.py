@@ -922,6 +922,44 @@ def abonos():
     )
 
 # ------------------------------
+# 🔥 OBTENER INTERÉS AUTOMÁTICO
+# ------------------------------
+@app.route("/obtener_interes")
+def obtener_interes():
+    prestamo_id = request.args.get("prestamo_id")
+    mes = request.args.get("mes")
+
+    conn = conectar()
+    if not conn:
+        return {"interes": 0}
+
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            SELECT capital, interes
+            FROM prestamos
+            WHERE id = %s
+        """, (prestamo_id,))
+
+        data = cur.fetchone()
+
+        if data:
+            capital, interes = data
+            interes_mensual = capital * (interes / 100)
+        else:
+            interes_mensual = 0
+
+    except Exception as e:
+        print("ERROR obtener_interes:", e)
+        interes_mensual = 0
+
+    finally:
+        cur.close()
+        conn.close()
+
+    return {"interes": interes_mensual}
+# ------------------------------
 if __name__ == "__main__":
     init_db()
     crear_admin()
