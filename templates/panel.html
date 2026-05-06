@@ -4,6 +4,7 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Principal</title>
+    <h3>📅 Resumen del día {{ fecha }}</h3>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 
@@ -24,7 +25,7 @@
 
     <!-- TOPBAR -->
     <div class="topbar">
-        SoftPelufo
+        SoftwarePelufo
     </div>
 
     <!-- MAIN -->
@@ -33,22 +34,16 @@
         <h2>📊 Panel Principal</h2>
 
         <!-- FILTRO -->
-        <div class="card">
-            <form method="POST">
+       <div class="card">
+        <form method="POST">
 
-                <label>📅 Fecha</label>
-                <input type="date" name="fecha" value="{{ fecha }}">
+        <label>📅 Seleccionar fecha</label>
+        <input type="date" name="fecha" value="{{ fecha }}" onchange="this.form.submit()">
 
-                <label>📊 Vista</label>
-                <select name="tipo">
-                    <option value="dia" {% if tipo == 'dia' %}selected{% endif %}>Día</option>
-                    <option value="mes" {% if tipo == 'mes' %}selected{% endif %}>Mes</option>
-                </select>
+        <button>Actualizar</button>
 
-                <button>Actualizar</button>
-
-            </form>
-        </div>
+         </form>
+       </div>
 
         <!-- MÉTRICAS -->
         <div class="grid">
