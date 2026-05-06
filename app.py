@@ -464,15 +464,15 @@ def panel():
     # 📋 PRÉSTAMOS (PARA ABONAR)
     # =============================
     cur.execute("""
-        SELECT p.id, c.nombre, p.monto, p.porcentaje
-        FROM prestamos p
-        JOIN clientes c ON p.cliente_id = c.id
+    SELECT p.id, c.nombre, p.capital, p.interes
+    FROM prestamos p
+    JOIN clientes c ON p.cliente_id = c.id
     """)
 
     prestamos = []
 
     for pid, nombre, monto, porcentaje in cur.fetchall():
-        interes_mensual = monto * (porcentaje / 100)
+        interes_mensual = capital * (interes / 100)
 
         prestamos.append({
             "id": pid,
