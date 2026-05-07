@@ -820,11 +820,17 @@ def prestamos():
     )
 
 # ------------------------------
+# ------------------------------
 # 💸 ABONOS
 # ------------------------------
 @app.route("/abonos", methods=["GET","POST"])
 def abonos():
+
     conn = conectar()
+
+    if not conn:
+        return "Error conexión DB"
+
     cur = conn.cursor()
 
     # 🔹 obtener clientes
@@ -836,9 +842,13 @@ def abonos():
 
     cliente_id = request.form.get("cliente") or request.args.get("cliente")
 
+    # =============================
     # 🔍 CARGAR PRÉSTAMOS
+    # =============================
     if cliente_valido(cliente_id):
+
         try:
+
             cur.execute("""
                 SELECT p.id, c.nombre
                 FROM prestamos p
@@ -849,16 +859,33 @@ def abonos():
             resultados = cur.fetchall()
 
             for fila in resultados:
+
                 pid = fila[0]
                 nombre = fila[1]
 
                 cap_rest, int_rest, total, _, _ = calcular(pid, conn)
 
                 if total > 0:
+
+                    # 🔥 meses disponibles
                     try:
                         meses = meses_disponibles(pid, conn)
                     except:
                         meses = []
+
+                    # 🔥 obtener interés mensual
+                    cur.execute("""
+                        SELECT capital, interes
+                        FROM prestamos
+                        WHERE id=%s
+                    """, (pid,))
+
+                    data = cur.fetchone()
+
+                    capital_original = data[0]
+                    tasa = data[1]
+
+                    interes_mensual = capital_original * (tasa / 100)
 
                     prestamos.append({
                         "id": pid,
@@ -866,19 +893,26 @@ def abonos():
                         "capital": formato(cap_rest),
                         "interes": formato(int_rest),
                         "total": formato(total),
-                        "meses": meses
+                        "meses": meses,
+                        "interes_mensual": formato(interes_mensual),
+                        "interes_mensual_raw": interes_mensual
                     })
 
         except Exception as e:
             print("Error cargando préstamos:", e)
 
-    # 🔥 PROCESAR FORMULARIO
+    # =============================
+    # 🔥 GUARDAR ABONO
+    # =============================
     if request.method == "POST":
 
-        # si solo cambió cliente
+        # 🔹 si solo cambió cliente
         if not request.form.get("prestamo"):
+
             conn.close()
-            return render_template("abonos.html",
+
+            return render_template(
+                "abonos.html",
                 clientes=clientes,
                 prestamos=prestamos,
                 mensaje=mensaje,
@@ -886,75 +920,105 @@ def abonos():
             )
 
         try:
+
             pid = int(request.form.get("prestamo"))
+
             monto = float(request.form.get("monto") or 0)
+
             tipo = request.form.get("tipo")
+
             mes_pagado = int(request.form.get("mes") or 0)
 
             cap_rest, int_rest, _, _, _ = calcular(pid, conn)
 
+            # 🔥 VALIDACIONES
             if tipo == "capital" and monto > cap_rest:
+
                 mensaje = "❌ Excede capital"
 
             elif tipo == "interes" and monto > int_rest:
+
                 mensaje = "❌ Excede interés"
 
             else:
+
                 cur.execute("""
-                    INSERT INTO abonos(prestamo_id,monto,fecha,tipo,mes)
+                    INSERT INTO abonos
+                    (prestamo_id,monto,fecha,tipo,mes)
                     VALUES (%s,%s,%s,%s,%s)
-                """, (pid, monto, datetime.now(), tipo, mes_pagado))
+                """, (
+                    pid,
+                    monto,
+                    datetime.now(),
+                    tipo,
+                    mes_pagado
+                ))
 
                 conn.commit()
+
                 mensaje = "✅ Guardado"
 
         except Exception as e:
+
             print("Error abonos:", e)
+
             mensaje = "❌ Error en datos"
 
     conn.close()
 
-    return render_template("abonos.html",
+    return render_template(
+        "abonos.html",
         clientes=clientes,
         prestamos=prestamos,
         mensaje=mensaje,
         cliente_id=cliente_id
     )
 
+
 # ------------------------------
 # 🔥 OBTENER INTERÉS AUTOMÁTICO
 # ------------------------------
 @app.route("/obtener_interes")
 def obtener_interes():
+
     prestamo_id = request.args.get("prestamo_id")
-    mes = request.args.get("mes")
 
     conn = conectar()
+
     if not conn:
         return {"interes": 0}
 
     cur = conn.cursor()
 
     try:
+
         cur.execute("""
             SELECT capital, interes
             FROM prestamos
-            WHERE id = %s
+            WHERE id=%s
         """, (prestamo_id,))
 
         data = cur.fetchone()
 
         if data:
-            capital, interes = data
+
+            capital = data[0]
+            interes = data[1]
+
             interes_mensual = capital * (interes / 100)
+
         else:
+
             interes_mensual = 0
 
     except Exception as e:
+
         print("ERROR obtener_interes:", e)
+
         interes_mensual = 0
 
     finally:
+
         cur.close()
         conn.close()
 
