@@ -1,205 +1,242 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Principal</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
-
 <body>
 
-<div class="layout">
+<div class="container">
 
-    <!-- SIDEBAR -->
-    <div class="sidebar">
-        <h2>💰 Sistema</h2>
+<!-- 🏠 BOTÓN INICIO -->
+<div style="margin-bottom:15px;">
+    <a href="{{ url_for('panel') }}" class="btn">🏠 Inicio</a>
+</div>
 
-        <a href="{{ url_for('panel') }}">🏠 Dashboard</a>
-        <a href="{{ url_for('clientes') }}">👥 Clientes</a>
-        <a href="{{ url_for('prestamos') }}">💸 Préstamos</a>
-        <a href="{{ url_for('abonos') }}">💰 Abonos</a>
-        <a href="/exportar_excel">📥 Backup</a>
-    </div>
+<h2>Abonos</h2>
 
-    <!-- TOPBAR -->
-    <div class="topbar">
-        SoftwarePelufo
-    </div>
+<!-- 🔍 SELECCIÓN DE CLIENTE -->
+<div class="card">
+<form method="GET">
 
-    <!-- MAIN -->
-    <div class="main">
+    <select name="cliente" onchange="this.form.submit()">
+        <option value="">Seleccione cliente</option>
 
-        <h2>📊 Panel Principal</h2>
+        {% for c in clientes %}
+        <option value="{{ c[0] }}" {% if cliente_id == c[0]|string %}selected{% endif %}>
+            {{ c[1] }}
+        </option>
+        {% endfor %}
 
-        <!-- FILTRO -->
-        <div class="card">
-            <form method="POST">
+    </select>
 
-                <label>📅 Seleccionar fecha</label>
+</form>
+</div>
 
-                <input
-                    type="date"
-                    name="fecha"
-                    value="{{ fecha }}"
-                    onchange="this.form.submit()"
+<!-- 💳 PRÉSTAMOS -->
+{% if prestamos %}
+
+    {% for p in prestamos %}
+
+    <div class="card" style="margin-top:10px;">
+
+        <h4>{{ p.nombre }}</h4>
+
+        💰 Capital: <b>{{ p.capital }}</b><br>
+        📈 Interés: <b>{{ p.interes }}</b><br>
+        🧾 Total: <b>{{ p.total }}</b><br><br>
+
+        <!-- 🔥 FORM -->
+        <form method="POST" onsubmit="return guardarAbono(this)">
+
+            <!-- HIDDEN -->
+            <input type="hidden" name="cliente" value="{{ cliente_id }}">
+            <input type="hidden" name="prestamo" value="{{ p.id }}">
+            <input type="hidden" class="prestamo_id" value="{{ p.id }}">
+
+            <!-- TIPO -->
+            <label>Tipo:</label>
+
+            <select name="tipo" class="tipo" onchange="cambiarTipo(this)">
+                <option value="interes">Interés</option>
+                <option value="capital">Capital</option>
+            </select>
+
+            <br><br>
+
+            <!-- MESES -->
+            <div class="div_mes">
+
+                <label>Mes a pagar:</label>
+
+                <select
+                    name="mes"
+                    class="mes"
+                    onchange="cargarInteres(this)"
+                    required
                 >
 
-                <button>Actualizar</button>
+                    {% if p.meses %}
 
-            </form>
-        </div>
+                        {% for m in p.meses %}
+                        <option value="{{m}}">
+                            Mes {{m}}
+                        </option>
+                        {% endfor %}
 
-        <!-- MÉTRICAS -->
-        <div class="grid">
+                    {% else %}
 
-            <div class="card green">
-                <div class="label">Capital en calle</div>
-                <div class="metric">{{ capital_total }}</div>
-            </div>
+                        <option value="">
+                            Sin meses disponibles
+                        </option>
 
-            <div class="card blue">
-                <div class="label">Capital hoy</div>
-                <div class="metric">{{ capital_dia }}</div>
-            </div>
+                    {% endif %}
 
-            <div class="card orange">
-                <div class="label">Interés hoy</div>
-                <div class="metric">{{ interes_dia }}</div>
-            </div>
-
-        </div>
-
-        <!-- RESUMEN -->
-        <div class="card">
-
-            <h3>📆 Resumen del Mes</h3>
-
-            <div class="grid">
-
-                <div>
-                    <div class="label">Capital recogido</div>
-                    <div class="metric">{{ capital_mes }}</div>
-                </div>
-
-                <div>
-                    <div class="label">Interés generado</div>
-                    <div class="metric">{{ interes_mes }}</div>
-                </div>
+                </select>
 
             </div>
 
-            <hr>
+            <br>
 
-            <h3>📈 Acumulado Total</h3>
+            <!-- MONTO -->
+            <input
+                name="monto"
+                class="monto"
+                placeholder="Monto"
+                required
+            >
 
-            <div class="grid">
+            <br><br>
 
-                <div>
-                    <div class="label">Capital recuperado</div>
-                    <div class="metric">{{ capital_acumulado }}</div>
-                </div>
+            <button class="btn">
+                Guardar
+            </button>
 
-                <div>
-                    <div class="label">Interés ganado</div>
-                    <div class="metric">{{ interes_acumulado }}</div>
-                </div>
-
-            </div>
-
-        </div>
-
-        <!-- GANANCIA -->
-        <div class="card">
-
-            <h3>👤 Ganancia por cliente</h3>
-
-            <table>
-
-                <tr>
-                    <th>Cliente</th>
-                    <th>Capital</th>
-                    <th>Recuperado</th>
-                    <th>Interés</th>
-                    <th>Deuda</th>
-                </tr>
-
-                {% for c in clientes_ganancia %}
-                <tr>
-                    <td>{{ c.nombre }}</td>
-                    <td>{{ c.capital }}</td>
-                    <td>{{ c.recuperado }}</td>
-                    <td>{{ c.interes }}</td>
-                    <td>{{ c.deuda }}</td>
-                </tr>
-                {% endfor %}
-
-            </table>
-
-        </div>
-
-        <!-- VENCIMIENTOS -->
-        <div class="grid">
-
-            <!-- POR VENCER -->
-            <div class="card orange">
-
-                <h3>⚠️ Por vencer</h3>
-
-                <table>
-
-                    <tr>
-                        <th>ID</th>
-                        <th>Cliente</th>
-                        <th>Días</th>
-                        <th>Saldo</th>
-                    </tr>
-
-                    {% for p in por_vencer %}
-                    <tr>
-                        <td>{{ p[0] }}</td>
-                        <td>{{ p[1] }}</td>
-                        <td>{{ p[2] }}</td>
-                        <td>{{ p[3] }}</td>
-                    </tr>
-                    {% endfor %}
-
-                </table>
-
-            </div>
-
-            <!-- VENCIDOS -->
-            <div class="card red">
-
-                <h3>❌ Vencidos</h3>
-
-                <table>
-
-                    <tr>
-                        <th>ID</th>
-                        <th>Cliente</th>
-                        <th>Días atraso</th>
-                        <th>Saldo</th>
-                    </tr>
-
-                    {% for v in vencidos %}
-                    <tr>
-                        <td>{{ v[0] }}</td>
-                        <td>{{ v[1] }}</td>
-                        <td>{{ v[2] }}</td>
-                        <td>{{ v[3] }}</td>
-                    </tr>
-                    {% endfor %}
-
-                </table>
-
-            </div>
-
-        </div>
+        </form>
 
     </div>
 
+    {% endfor %}
+
+{% endif %}
+
+<!-- MENSAJE -->
+{% if mensaje %}
+<div class="alert alert-warning" style="margin-top:15px;">
+    {{ mensaje }}
 </div>
+{% endif %}
+
+<!-- VOLVER -->
+<div style="margin-top:20px;">
+    <a class="btn" href="/">
+        Volver
+    </a>
+</div>
+
+</div>
+
+<!-- 🔥 JAVASCRIPT -->
+<script>
+
+function cambiarTipo(select) {
+
+    let form = select.closest("form");
+
+    let tipo = select.value;
+
+    let divMes = form.querySelector(".div_mes");
+
+    let monto = form.querySelector(".monto");
+
+    // 🔥 CAPITAL
+    if (tipo === "capital") {
+
+        divMes.style.display = "none";
+
+        monto.value = "";
+
+    }
+
+    // 🔥 INTERÉS
+    else {
+
+        divMes.style.display = "block";
+
+        let selectMes = form.querySelector(".mes");
+
+        cargarInteres(selectMes);
+
+    }
+}
+
+function cargarInteres(select) {
+
+    let form = select.closest("form");
+
+    let mes = select.value;
+
+    let prestamo_id = form.querySelector(".prestamo_id").value;
+
+    let monto = form.querySelector(".monto");
+
+    fetch(`/obtener_interes?prestamo_id=${prestamo_id}&mes=${mes}`)
+
+    .then(response => response.json())
+
+    .then(data => {
+
+        monto.value = data.interes;
+
+    })
+
+    .catch(error => {
+
+        console.log("Error:", error);
+
+    });
+}
+
+function guardarAbono(formulario) {
+
+    let formData = new FormData(formulario);
+
+    fetch("/abonos", {
+        method: "POST",
+        body: formData
+    })
+
+    .then(response => response.text())
+
+    .then(data => {
+
+        // 🔥 ACTUALIZAR AUTOMÁTICO
+        location.reload();
+
+    })
+
+    .catch(error => {
+
+        console.log(error);
+
+        alert("Error guardando abono");
+
+    });
+
+    return false;
+}
+
+// 🔥 INICIAR
+document.addEventListener("DOMContentLoaded", function() {
+
+    document.querySelectorAll(".tipo").forEach(select => {
+
+        cambiarTipo(select);
+
+    });
+
+});
+</script>
 
 </body>
 </html>
