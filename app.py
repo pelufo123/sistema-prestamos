@@ -821,6 +821,7 @@ def prestamos():
 
 # ------------------------------
 # ------------------------------
+# ------------------------------
 # 💸 ABONOS
 # ------------------------------
 @app.route("/abonos", methods=["GET","POST"])
@@ -833,7 +834,7 @@ def abonos():
 
     cur = conn.cursor()
 
-    # 🔹 obtener clientes
+    # 🔹 CLIENTES
     cur.execute("SELECT * FROM clientes")
     clientes = cur.fetchall()
 
@@ -867,13 +868,12 @@ def abonos():
 
                 if total > 0:
 
-                    # 🔥 meses disponibles
                     try:
                         meses = meses_disponibles(pid, conn)
                     except:
                         meses = []
 
-                    # 🔥 obtener interés mensual
+                    # 🔥 interés mensual
                     cur.execute("""
                         SELECT capital, interes
                         FROM prestamos
@@ -902,11 +902,10 @@ def abonos():
             print("Error cargando préstamos:", e)
 
     # =============================
-    # 🔥 GUARDAR ABONO
+    # 💾 GUARDAR ABONO
     # =============================
     if request.method == "POST":
 
-        # 🔹 si solo cambió cliente
         if not request.form.get("prestamo"):
 
             conn.close()
