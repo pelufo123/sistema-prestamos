@@ -4,7 +4,6 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Principal</title>
-    <h3>📅 Resumen del día {{ fecha }}</h3>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 
@@ -34,16 +33,22 @@
         <h2>📊 Panel Principal</h2>
 
         <!-- FILTRO -->
-       <div class="card">
-        <form method="POST">
+        <div class="card">
+            <form method="POST">
 
-        <label>📅 Seleccionar fecha</label>
-        <input type="date" name="fecha" value="{{ fecha }}" onchange="this.form.submit()">
+                <label>📅 Seleccionar fecha</label>
 
-        <button>Actualizar</button>
+                <input
+                    type="date"
+                    name="fecha"
+                    value="{{ fecha }}"
+                    onchange="this.form.submit()"
+                >
 
-         </form>
-       </div>
+                <button>Actualizar</button>
+
+            </form>
+        </div>
 
         <!-- MÉTRICAS -->
         <div class="grid">
@@ -67,9 +72,11 @@
 
         <!-- RESUMEN -->
         <div class="card">
+
             <h3>📆 Resumen del Mes</h3>
 
             <div class="grid">
+
                 <div>
                     <div class="label">Capital recogido</div>
                     <div class="metric">{{ capital_mes }}</div>
@@ -79,6 +86,7 @@
                     <div class="label">Interés generado</div>
                     <div class="metric">{{ interes_mes }}</div>
                 </div>
+
             </div>
 
             <hr>
@@ -86,6 +94,7 @@
             <h3>📈 Acumulado Total</h3>
 
             <div class="grid">
+
                 <div>
                     <div class="label">Capital recuperado</div>
                     <div class="metric">{{ capital_acumulado }}</div>
@@ -95,14 +104,18 @@
                     <div class="label">Interés ganado</div>
                     <div class="metric">{{ interes_acumulado }}</div>
                 </div>
+
             </div>
+
         </div>
 
         <!-- GANANCIA -->
         <div class="card">
+
             <h3>👤 Ganancia por cliente</h3>
 
             <table>
+
                 <tr>
                     <th>Cliente</th>
                     <th>Capital</th>
@@ -120,7 +133,9 @@
                     <td>{{ c.deuda }}</td>
                 </tr>
                 {% endfor %}
+
             </table>
+
         </div>
 
         <!-- VENCIMIENTOS -->
@@ -128,9 +143,11 @@
 
             <!-- POR VENCER -->
             <div class="card orange">
+
                 <h3>⚠️ Por vencer</h3>
 
                 <table>
+
                     <tr>
                         <th>ID</th>
                         <th>Cliente</th>
@@ -146,14 +163,18 @@
                         <td>{{ p[3] }}</td>
                     </tr>
                     {% endfor %}
+
                 </table>
+
             </div>
 
             <!-- VENCIDOS -->
             <div class="card red">
+
                 <h3>❌ Vencidos</h3>
 
                 <table>
+
                     <tr>
                         <th>ID</th>
                         <th>Cliente</th>
@@ -169,7 +190,9 @@
                         <td>{{ v[3] }}</td>
                     </tr>
                     {% endfor %}
+
                 </table>
+
             </div>
 
         </div>
@@ -177,73 +200,6 @@
     </div>
 
 </div>
-<h2>💰 Abonar intereses</h2>
-
-{% for p in prestamos %}
-<div style="border:1px solid #ccc; padding:10px; margin:10px; border-radius:8px;">
-    <b>{{ p.nombre }}</b><br>
-    Interés mensual: ${{ p.interes_mensual }}
-
-    <form class="formAbono">
-        <input type="hidden" name="prestamo_id" value="{{ p.id }}">
-        <input type="hidden" class="interes" name="interes_mensual" value="{{ p.interes_mensual }}">
-
-        <label>Meses:</label>
-        <select name="meses" class="meses">
-            <option value="1">1 mes</option>
-            <option value="2">2 meses</option>
-            <option value="3">3 meses</option>
-        </select>
-
-        <label>Monto:</label>
-        <input type="text" class="monto" readonly>
-
-        <button type="submit">Guardar</button>
-    </form>
-</div>
-{% endfor %}
-    <!-- 🔥 SCRIPT AQUÍ -->
-    <script>
-    document.querySelectorAll(".formAbono").forEach(form => {
-
-        let select = form.querySelector(".meses");
-        let montoInput = form.querySelector(".monto");
-        let interes = parseFloat(form.querySelector(".interes").value);
-
-        function calcular() {
-            let meses = parseInt(select.value);
-            let total = meses * interes;
-            montoInput.value = total.toLocaleString();
-        }
-
-        calcular();
-        select.addEventListener("change", calcular);
-
-        form.addEventListener("submit", function(e) {
-            e.preventDefault();
-
-            let formData = new FormData(form);
-
-            fetch("/guardar_abono", {
-                method: "POST",
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.ok) {
-                    alert("Abono guardado");
-                    location.reload();
-                } else {
-                    alert("Error al guardar");
-                }
-            });
-        });
-
-    });
-    </script>
-
-</body>
-</html>
 
 </body>
 </html>
