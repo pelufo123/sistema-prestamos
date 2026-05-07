@@ -941,21 +941,27 @@ def abonos():
 
             else:
 
-                cur.execute("""
-                    INSERT INTO abonos
-                    (prestamo_id,monto,fecha,tipo,mes)
-                    VALUES (%s,%s,%s,%s,%s)
-                """, (
-                    pid,
-                    monto,
-                    datetime.now(),
-                    tipo,
-                    mes_pagado
-                ))
+             cur.execute("""
+              INSERT INTO abonos(prestamo_id,monto,fecha,tipo,mes)
+              VALUES (%s,%s,%s,%s,%s)
+               """, (
+               pid,
+               monto,
+               datetime.now(),
+               tipo,
+               mes_pagado
+              ))
 
-                conn.commit()
+            conn.commit()
 
-                mensaje = "✅ Guardado"
+            conn.close()
+
+            return redirect(
+                url_for(
+                    "abonos",
+                    cliente=cliente_id
+                )
+            )
 
         except Exception as e:
 
