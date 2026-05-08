@@ -823,7 +823,10 @@ def prestamos():
 # ------------------------------
 # 💸 ABONOS
 # ------------------------------
-@app.route("/abonos", methods=["GET","POST"])
+# ------------------------------
+# 💸 ABONOS
+# ------------------------------
+@app.route("/abonos", methods=["GET", "POST"])
 def abonos():
 
     conn = conectar()
@@ -833,7 +836,9 @@ def abonos():
 
     cur = conn.cursor()
 
-    # 🔹 CLIENTES
+    # =============================
+    # 👥 CLIENTES
+    # =============================
     cur.execute("SELECT * FROM clientes")
     clientes = cur.fetchall()
 
@@ -852,8 +857,9 @@ def abonos():
             cur.execute("""
                 SELECT p.id, c.nombre
                 FROM prestamos p
-                JOIN clientes c ON p.cliente_id = c.id
-                WHERE c.id=%s
+                JOIN clientes c
+                ON p.cliente_id = c.id
+                WHERE c.id = %s
             """, (cliente_id,))
 
             resultados = cur.fetchall()
@@ -867,16 +873,17 @@ def abonos():
 
                 if total > 0:
 
+                    # 🔥 meses pendientes
                     try:
                         meses = meses_disponibles(pid, conn)
                     except:
                         meses = []
 
-                    # 🔥 INTERÉS MENSUAL
+                    # 🔥 interés mensual
                     cur.execute("""
                         SELECT capital, interes
                         FROM prestamos
-                        WHERE id=%s
+                        WHERE id = %s
                     """, (pid,))
 
                     data = cur.fetchone()
@@ -893,12 +900,16 @@ def abonos():
                         interes_mensual = 0
 
                     prestamos.append({
+
                         "id": pid,
                         "nombre": nombre,
+
                         "capital": formato(cap_rest),
                         "interes": formato(int_rest),
                         "total": formato(total),
+
                         "meses": meses,
+
                         "interes_mensual": formato(interes_mensual),
                         "interes_mensual_raw": interes_mensual
                     })
@@ -912,7 +923,7 @@ def abonos():
     # =============================
     if request.method == "POST":
 
-        # 🔥 SI SOLO CAMBIÓ CLIENTE
+        # 🔥 si solo seleccionó cliente
         if not request.form.get("prestamo"):
 
             conn.close()
@@ -933,12 +944,16 @@ def abonos():
 
             tipo = request.form.get("tipo")
 
-            # 🔥 SI ES CAPITAL NO USA MES
+            # 🔥 capital no usa mes
             if tipo == "capital":
+
                 mes_pagado = 0
+
             else:
+
                 mes_pagado = int(request.form.get("mes") or 0)
 
+            # 🔥 cálculo actual
             cap_rest, int_rest, _, _, _ = calcular(pid, conn)
 
             # =============================
@@ -955,8 +970,14 @@ def abonos():
             else:
 
                 cur.execute("""
-                    INSERT INTO abonos(prestamo_id,monto,fecha,tipo,mes)
-                    VALUES (%s,%s,%s,%s,%s)
+                    INSERT INTO abonos (
+                        prestamo_id,
+                        monto,
+                        fecha,
+                        tipo,
+                        mes
+                    )
+                    VALUES (%s, %s, %s, %s, %s)
                 """, (
                     pid,
                     monto,
