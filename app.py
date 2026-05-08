@@ -873,7 +873,7 @@ def abonos():
                     except:
                         meses = []
 
-                    # 🔥 interés mensual
+                    # 🔥 INTERÉS MENSUAL
                     cur.execute("""
                         SELECT capital, interes
                         FROM prestamos
@@ -882,10 +882,16 @@ def abonos():
 
                     data = cur.fetchone()
 
-                    capital_original = data[0]
-                    tasa = data[1]
+                    if data:
 
-                    interes_mensual = capital_original * (tasa / 100)
+                        capital_original = data[0]
+                        tasa = data[1]
+
+                        interes_mensual = capital_original * (tasa / 100)
+
+                    else:
+
+                        interes_mensual = 0
 
                     prestamos.append({
                         "id": pid,
@@ -899,6 +905,7 @@ def abonos():
                     })
 
         except Exception as e:
+
             print("Error cargando préstamos:", e)
 
     # =============================
@@ -906,6 +913,7 @@ def abonos():
     # =============================
     if request.method == "POST":
 
+        # 🔥 SI SOLO CAMBIÓ CLIENTE
         if not request.form.get("prestamo"):
 
             conn.close()
@@ -926,11 +934,17 @@ def abonos():
 
             tipo = request.form.get("tipo")
 
-            mes_pagado = int(request.form.get("mes") or 0)
+            # 🔥 SI ES CAPITAL NO USA MES
+            if tipo == "capital":
+                mes_pagado = 0
+            else:
+                mes_pagado = int(request.form.get("mes") or 0)
 
             cap_rest, int_rest, _, _, _ = calcular(pid, conn)
 
+            # =============================
             # 🔥 VALIDACIONES
+            # =============================
             if tipo == "capital" and monto > cap_rest:
 
                 mensaje = "❌ Excede capital"
@@ -941,27 +955,27 @@ def abonos():
 
             else:
 
-             cur.execute("""
-              INSERT INTO abonos(prestamo_id,monto,fecha,tipo,mes)
-              VALUES (%s,%s,%s,%s,%s)
-               """, (
-               pid,
-               monto,
-               datetime.now(),
-               tipo,
-               mes_pagado
-              ))
+                cur.execute("""
+                    INSERT INTO abonos(prestamo_id,monto,fecha,tipo,mes)
+                    VALUES (%s,%s,%s,%s,%s)
+                """, (
+                    pid,
+                    monto,
+                    datetime.now(),
+                    tipo,
+                    mes_pagado
+                ))
 
-            conn.commit()
+                conn.commit()
 
-            conn.close()
+                conn.close()
 
-            return redirect(
-                url_for(
-                    "abonos",
-                    cliente=cliente_id
+                return redirect(
+                    url_for(
+                        "abonos",
+                        cliente=cliente_id
+                    )
                 )
-            )
 
         except Exception as e:
 
@@ -978,7 +992,6 @@ def abonos():
         mensaje=mensaje,
         cliente_id=cliente_id
     )
-
 
 # ------------------------------
 # 🔥 OBTENER INTERÉS AUTOMÁTICO
