@@ -78,7 +78,7 @@
                     value="{{ p.id }}"
                 >
 
-                <!-- TIPO -->
+                <!-- 🔥 TIPO -->
                 <label>Tipo:</label>
 
                 <select
@@ -116,7 +116,7 @@
                             {% for m in p.meses %}
 
                             <option value="{{m}}">
-                                Mes {{m}}
+                                Mes {{m}} - ${{ p.interes_mensual }}
                             </option>
 
                             {% endfor %}
@@ -225,7 +225,15 @@ function cargarInteres(select) {
 
     .then(data => {
 
-        monto.value = data.interes;
+        if (data.interes) {
+
+            monto.value = parseFloat(data.interes).toFixed(0);
+
+        } else {
+
+            monto.value = "";
+
+        }
 
     })
 
@@ -234,6 +242,7 @@ function cargarInteres(select) {
         console.log("Error:", error);
 
     });
+
 }
 
 // 🔥 INICIALIZAR
@@ -246,7 +255,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
 });
-    
+
 </script>
 
 </body>
