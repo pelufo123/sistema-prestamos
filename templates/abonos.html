@@ -8,14 +8,12 @@
 
 <div class="container">
 
-<!-- 🏠 BOTÓN INICIO -->
 <div style="margin-bottom:15px;">
     <a href="{{ url_for('panel') }}" class="btn">🏠 Inicio</a>
 </div>
 
 <h2>Abonos</h2>
 
-<!-- 🔍 SELECCIÓN DE CLIENTE -->
 <div class="card">
 
 <form method="GET">
@@ -43,7 +41,6 @@
 
 </div>
 
-<!-- 💳 PRÉSTAMOS -->
 {% if prestamos %}
 
     {% for p in prestamos %}
@@ -56,10 +53,9 @@
         📈 Interés: <b>{{ p.interes }}</b><br>
         🧾 Total: <b>{{ p.total }}</b><br><br>
 
-        <!-- 🔥 FORMULARIO -->
+        <!-- 🔥 FORMULARIO NORMAL -->
         <form method="POST">
 
-            <!-- HIDDEN -->
             <input
                 type="hidden"
                 name="cliente"
@@ -78,7 +74,6 @@
                 value="{{ p.id }}"
             >
 
-            <!-- 🔥 TIPO -->
             <label>Tipo:</label>
 
             <select
@@ -99,7 +94,6 @@
 
             <br><br>
 
-            <!-- 🔥 MESES -->
             <div class="div_mes">
 
                 <label>Mes a pagar:</label>
@@ -135,7 +129,6 @@
 
             <br>
 
-            <!-- 🔥 MONTO -->
             <input
                 name="monto"
                 class="monto"
@@ -157,7 +150,6 @@
 
 {% endif %}
 
-<!-- ⚠️ MENSAJE -->
 {% if mensaje %}
 
 <div class="alert alert-warning" style="margin-top:15px;">
@@ -166,7 +158,6 @@
 
 {% endif %}
 
-<!-- 🔙 VOLVER -->
 <div style="margin-top:20px;">
 
     <a class="btn" href="/">
@@ -177,7 +168,6 @@
 
 </div>
 
-<!-- 🔥 JAVASCRIPT -->
 <script>
 
 function cambiarTipo(select) {
@@ -190,7 +180,6 @@ function cambiarTipo(select) {
 
     let monto = form.querySelector(".monto");
 
-    // 🔥 CAPITAL
     if (tipo === "capital") {
 
         divMes.style.display = "none";
@@ -199,7 +188,6 @@ function cambiarTipo(select) {
 
     }
 
-    // 🔥 INTERÉS
     else {
 
         divMes.style.display = "block";
@@ -215,13 +203,11 @@ function cargarInteres(select) {
 
     let form = select.closest("form");
 
-    let mes = select.value;
-
     let prestamo_id = form.querySelector(".prestamo_id").value;
 
     let monto = form.querySelector(".monto");
 
-    fetch(`/obtener_interes?prestamo_id=${prestamo_id}&mes=${mes}`)
+    fetch(`/obtener_interes?prestamo_id=${prestamo_id}`)
 
     .then(response => response.json())
 
@@ -238,7 +224,6 @@ function cargarInteres(select) {
     });
 }
 
-// 🔥 INICIAR
 document.addEventListener("DOMContentLoaded", function() {
 
     document.querySelectorAll(".tipo").forEach(select => {
