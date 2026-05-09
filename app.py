@@ -14,17 +14,19 @@ def proteger_rutas():
 
     rutas_libres = [
         "login",
-        "static",
-        "obtener_interes"
+        "static"
     ]
 
-    # 🔥 evitar errores si endpoint es None
+    # 🔥 evitar errores endpoint None
     if request.endpoint is None:
         return
 
-    # 🔥 si no ha iniciado sesión
-    if request.endpoint not in rutas_libres and not session.get("usuario"):
+    # 🔥 permitir rutas libres
+    if request.endpoint in rutas_libres:
+        return
 
+    # 🔥 validar sesión
+    if not session.get("usuario"):
         return redirect(url_for("login"))
 # ------------------------------
 # 🔌 CONEXIÓN A BASE DE DATOS
