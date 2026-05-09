@@ -6,11 +6,25 @@ from datetime import datetime, timedelta
 app = Flask(__name__)
 app.secret_key = "clave_super_segura"
 
+# ------------------------------
+# 🔐 PROTEGER RUTAS
+# ------------------------------
 @app.before_request
 def proteger_rutas():
-    rutas_libres = ["login", "static"]
 
+    rutas_libres = [
+        "login",
+        "static",
+        "obtener_interes"
+    ]
+
+    # 🔥 evitar errores si endpoint es None
+    if request.endpoint is None:
+        return
+
+    # 🔥 si no ha iniciado sesión
     if request.endpoint not in rutas_libres and not session.get("usuario"):
+
         return redirect(url_for("login"))
 # ------------------------------
 # 🔌 CONEXIÓN A BASE DE DATOS
