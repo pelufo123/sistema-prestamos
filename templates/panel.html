@@ -11,6 +11,7 @@
 
     <h2>🏠 Panel Principal</h2>
 
+    <!-- 🔹 BOTONES -->
     <div class="card">
 
         <a class="btn" href="/clientes">
@@ -34,6 +35,110 @@
         <a class="btn" href="/logout">
             🚪 Cerrar sesión
         </a>
+
+    </div>
+
+    <br>
+
+    <!-- 💰 RESUMEN -->
+    <div class="card">
+
+        <h3>💰 Resumen</h3>
+
+        Capital en calle:
+        <b>${{ capital_total }}</b>
+
+        <br><br>
+
+        Capital recogido hoy:
+        <b>${{ capital_dia }}</b>
+
+        <br><br>
+
+        Interés recogido hoy:
+        <b>${{ interes_dia }}</b>
+
+        <br><br>
+
+        Capital recogido mes:
+        <b>${{ capital_mes }}</b>
+
+        <br><br>
+
+        Interés recogido mes:
+        <b>${{ interes_mes }}</b>
+
+        <br><br>
+
+        Capital acumulado:
+        <b>${{ capital_acumulado }}</b>
+
+        <br><br>
+
+        Interés acumulado:
+        <b>${{ interes_acumulado }}</b>
+
+    </div>
+
+    <br>
+
+    <!-- ⚠️ POR VENCER -->
+    <div class="card">
+
+        <h3>⚠️ Próximos a vencer</h3>
+
+        {% if por_vencer %}
+
+            {% for p in por_vencer %}
+
+                👤 {{ p[1] }}
+                <br>
+
+                ⏳ {{ p[2] }} días
+                <br>
+
+                💰 ${{ p[3] }}
+
+                <hr>
+
+            {% endfor %}
+
+        {% else %}
+
+            No hay préstamos próximos a vencer
+
+        {% endif %}
+
+    </div>
+
+    <br>
+
+    <!-- 🚨 VENCIDOS -->
+    <div class="card">
+
+        <h3>🚨 Vencidos</h3>
+
+        {% if vencidos %}
+
+            {% for v in vencidos %}
+
+                👤 {{ v[1] }}
+                <br>
+
+                ❌ {{ v[2] }} días vencido
+                <br>
+
+                💰 ${{ v[3] }}
+
+                <hr>
+
+            {% endfor %}
+
+        {% else %}
+
+            No hay préstamos vencidos
+
+        {% endif %}
 
     </div>
 
