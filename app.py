@@ -358,7 +358,24 @@ def ganancia_por_cliente(conn):
 
     return resultado
 
-@app.route("/", methods=["GET", "POST"])
+# ------------------------------
+# 🏠 PANEL PRINCIPAL
+# ------------------------------
+
+@app.route("/")
+def inicio():
+
+    return redirect(url_for("panel"))
+
+
+@app.route("/panel", methods=["GET", "POST"])
+def panel():
+
+    conn = conectar()
+
+    # TODO tu código actual del panel
+
+@app.route("/panel", methods=["GET", "POST"])
 def panel():
 
     conn = conectar()
