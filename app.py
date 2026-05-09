@@ -17,16 +17,16 @@ def proteger_rutas():
         "static"
     ]
 
-    # 🔥 evitar errores endpoint None
+    # 🔥 evitar errores
     if request.endpoint is None:
         return
 
-    # 🔥 permitir rutas libres
+    # 🔥 permitir login y archivos static
     if request.endpoint in rutas_libres:
         return
 
-    # 🔥 validar sesión
-    if not session.get("usuario"):
+    # 🔥 si NO hay sesión → login
+    if "usuario" not in session:
         return redirect(url_for("login"))
 # ------------------------------
 # 🔌 CONEXIÓN A BASE DE DATOS
@@ -588,38 +588,39 @@ def clientes():
 # ------------------------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
+
     conn = conectar()
 
     if not conn:
-        return "Error de conexión a la base de datos"
+        return "Error de conexión DB"
 
     cur = conn.cursor()
 
     if request.method == "POST":
-        try:
-            user = request.form["username"]
-            password = request.form["password"]
 
-            cur.execute(
-                "SELECT * FROM usuarios WHERE username=%s AND password=%s",
-                (user, password)
+        user = request.form["username"]
+        password = request.form["password"]
+
+        cur.execute("""
+            SELECT * FROM usuarios
+            WHERE username=%s AND password=%s
+        """, (user, password))
+
+        usuario = cur.fetchone()
+
+        if usuario:
+
+            session["usuario"] = user
+
+            return redirect(url_for("panel"))
+
+        else:
+
+            return render_template(
+                "login.html",
+                error="Credenciales incorrectas"
             )
-            usuario = cur.fetchone()
 
-            if usuario:
-                session["usuario"] = user
-                return redirect(url_for("panel"))
-            else:
-                return render_template("login.html", error="Credenciales incorrectas")
-
-        except Exception as e:
-            return f"Error en login: {e}"
-
-        finally:
-            conn.close()
-
-    # 🔹 GET (cuando entra por primera vez)
-    conn.close()
     return render_template("login.html")
 
 @app.route("/logout")
