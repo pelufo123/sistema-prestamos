@@ -918,3 +918,89 @@ td{
 .user-box{
     border:1px solid #e5e7eb;
 }
+
+/* ===================================== */
+/* 🔥 TEXO LIMPIO Y PROFESIONAL */
+/* ===================================== */
+
+/* 🔥 QUITAR SELECCIÓN AZUL */
+*{
+    -webkit-tap-highlight-color: transparent;
+}
+
+::selection{
+    background:transparent;
+}
+
+/* 🔥 TODO EN NEGRILLA */
+body,
+table,
+td,
+th,
+span,
+div,
+a,
+p,
+h1,
+h2,
+h3,
+h4,
+label{
+    font-weight:700 !important;
+}
+
+/* 🔥 MÉTRICAS */
+.metric{
+    font-size:46px !important;
+    font-weight:900 !important;
+    color:white !important;
+    background:none !important;
+    text-shadow:
+    0 2px 10px rgba(0,0,0,0.15);
+}
+
+/* 🔥 LABELS */
+.label{
+    font-size:16px !important;
+    font-weight:800 !important;
+    background:none !important;
+}
+
+/* 🔥 TABLAS */
+table{
+    background:white;
+}
+
+th{
+    font-size:14px;
+    font-weight:900 !important;
+    color:#374151;
+}
+
+td{
+    font-size:15px;
+    font-weight:700 !important;
+    color:#111827;
+}
+
+/* 🔥 TITULOS */
+h2{
+    font-size:42px;
+    font-weight:900 !important;
+}
+
+h3{
+    font-size:24px;
+    font-weight:900 !important;
+}
+
+/* 🔥 BADGES */
+.badge{
+    font-weight:900 !important;
+    font-size:13px;
+}
+
+/* 🔥 USER */
+.user-name{
+    font-weight:900 !important;
+}
