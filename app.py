@@ -359,26 +359,23 @@ def ganancia_por_cliente(conn):
     return resultado
 
 # ------------------------------
-# 🏠 PANEL PRINCIPAL
 # ------------------------------
-
+# 🏠 INICIO
+# ------------------------------
 @app.route("/")
 def inicio():
 
     return redirect(url_for("panel"))
 
 
+# ------------------------------
+# 📊 PANEL PRINCIPAL
+# ------------------------------
 @app.route("/panel", methods=["GET", "POST"])
 def panel():
 
     conn = conectar()
 
-    # TODO tu código actual del panel
-
-@app.route("/panel", methods=["GET", "POST"])
-def panel():
-
-    conn = conectar()
     if conn is None:
         return "Error de conexión", 500
 
