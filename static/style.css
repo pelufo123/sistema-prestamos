@@ -210,3 +210,151 @@ h4{
         grid-template-columns:1fr;
     }
 }
+
+ /* 🔥 SCROLL SUAVE */
+html{
+    scroll-behavior:smooth;
+}
+
+/* 🔥 ANIMACIONES */
+.card,
+table,
+button,
+.sidebar a{
+    animation:fadeUp 0.4s ease;
+}
+
+@keyframes fadeUp{
+    from{
+        opacity:0;
+        transform:translateY(10px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+/* 🔥 TOPBAR MÁS MODERNA */
+.topbar{
+    box-shadow:0 4px 15px rgba(0,0,0,0.15);
+    border-bottom-left-radius:12px;
+}
+
+/* 🔥 SIDEBAR MÁS PRO */
+.sidebar{
+    box-shadow:5px 0 20px rgba(0,0,0,0.2);
+}
+
+/* 🔥 LINKS SIDEBAR */
+.sidebar a{
+    padding:10px;
+    border-radius:8px;
+}
+
+.sidebar a:hover{
+    background:rgba(255,255,255,0.08);
+}
+
+/* 🔥 CARDS PREMIUM */
+.card{
+    position:relative;
+    overflow:hidden;
+}
+
+.card::before{
+    content:"";
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:4px;
+    background:linear-gradient(
+        90deg,
+        #f97316,
+        #fb923c
+    );
+}
+
+/* 🔥 METRICAS MÁS GRANDES */
+.metric{
+    font-size:32px;
+    letter-spacing:1px;
+}
+
+/* 🔥 TABLAS PREMIUM */
+table{
+    border-radius:10px;
+    overflow:hidden;
+}
+
+th{
+    background:#f3f4f6;
+    letter-spacing:1px;
+}
+
+/* 🔥 FILAS TABLA */
+tr:hover{
+    background:#fff7ed;
+}
+
+/* 🔥 INPUTS MODERNOS */
+input:focus,
+select:focus{
+    outline:none;
+    border:1px solid #f97316;
+    box-shadow:0 0 10px rgba(249,115,22,0.25);
+}
+
+/* 🔥 BOTONES MÁS PRO */
+button{
+    font-weight:bold;
+    letter-spacing:0.5px;
+    box-shadow:0 4px 12px rgba(249,115,22,0.3);
+}
+
+button:hover{
+    box-shadow:0 8px 20px rgba(249,115,22,0.4);
+}
+
+/* 🔥 EFECTO TARJETAS RESUMEN */
+.grid .card:hover{
+    transform:
+        translateY(-6px)
+        scale(1.02);
+}
+
+/* 🔥 SOMBRA TABLAS */
+table{
+    box-shadow:0 2px 12px rgba(0,0,0,0.06);
+}
+
+/* 🔥 TITULOS */
+h2{
+    font-size:28px;
+}
+
+h3{
+    margin-bottom:15px;
+}
+
+/* 🔥 BADGES */
+.badge{
+    padding:5px 10px;
+    border-radius:20px;
+    font-size:12px;
+    font-weight:bold;
+    color:white;
+}
+
+.badge.orange{
+    background:#f97316;
+}
+
+.badge.red{
+    background:#ef4444;
+}
+
+.badge.green{
+    background:#22c55e;
+}
