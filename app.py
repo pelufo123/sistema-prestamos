@@ -358,15 +358,6 @@ def ganancia_por_cliente(conn):
 
     return resultado
 
-
-# 🏠 INICIO
-# ------------------------------
-@app.route("/")
-def inicio():
-
-    return redirect(url_for("panel"))
-
-
 # ------------------------------
 # 📊 PANEL PRINCIPAL
 # ------------------------------
