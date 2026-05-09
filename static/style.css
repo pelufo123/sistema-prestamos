@@ -358,3 +358,78 @@ h3{
 .badge.green{
     background:#22c55e;
 }
+
+/* 🔥 USER BOX */
+.user-box{
+    margin-left:auto;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:rgba(255,255,255,0.15);
+    padding:8px 15px;
+    border-radius:12px;
+}
+
+.user-name{
+    font-size:14px;
+    font-weight:bold;
+}
+
+.user-role{
+    font-size:12px;
+    opacity:0.9;
+}
+
+.online{
+    width:12px;
+    height:12px;
+    border-radius:50%;
+    background:#22c55e;
+    box-shadow:0 0 10px #22c55e;
+    animation:pulse 1.5s infinite;
+}
+
+@keyframes pulse{
+    0%{
+        transform:scale(1);
+        opacity:1;
+    }
+
+    50%{
+        transform:scale(1.3);
+        opacity:0.7;
+    }
+
+    100%{
+        transform:scale(1);
+        opacity:1;
+    }
+}
+
+/* 🔥 TABLAS RESPONSIVE */
+table{
+    border-radius:12px;
+    overflow:hidden;
+}
+
+/* 🔥 SCROLL TABLAS */
+.card table{
+    min-width:100%;
+}
+
+/* 🔥 MOBILE */
+@media(max-width:768px){
+
+    .topbar{
+        padding:10px;
+    }
+
+    .user-box{
+        display:none;
+    }
+
+    .metric{
+        font-size:24px;
+    }
+
+}

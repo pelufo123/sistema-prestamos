@@ -1,144 +1,217 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+
     <link rel="stylesheet" href="/static/style.css">
-    <title>Panel Principal</title>
+
+    <!-- ICONOS -->
+    <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
+
 <body>
 
-<div class="container">
+<!-- 🔥 SIDEBAR -->
+<div class="sidebar">
 
-    <h2>🏠 Panel Principal</h2>
+    <h2>💰 Sistema</h2>
 
-    <!-- 🔹 BOTONES -->
-    <div class="card">
+    <a href="/panel">
+        <i class="fa-solid fa-chart-line"></i>
+        Dashboard
+    </a>
 
-        <a class="btn" href="/clientes">
-            👥 Clientes
-        </a>
+    <a href="/clientes">
+        <i class="fa-solid fa-users"></i>
+        Clientes
+    </a>
 
-        <br><br>
+    <a href="/prestamos">
+        <i class="fa-solid fa-hand-holding-dollar"></i>
+        Préstamos
+    </a>
 
-        <a class="btn" href="/prestamos">
-            💼 Préstamos
-        </a>
+    <a href="/abonos">
+        <i class="fa-solid fa-money-bill-wave"></i>
+        Abonos
+    </a>
 
-        <br><br>
+    <a href="/logout">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        Cerrar sesión
+    </a>
 
-        <a class="btn" href="/abonos">
-            💸 Abonos
-        </a>
+</div>
 
-        <br><br>
+<!-- 🔥 TOPBAR -->
+<div class="topbar">
 
-        <a class="btn" href="/logout">
-            🚪 Cerrar sesión
-        </a>
+    <div>
+        SoftwarePelufo
+    </div>
+
+    <div class="user-box">
+
+        <div class="online"></div>
+
+        <div>
+            <div class="user-name">
+                {{ session["usuario"] }}
+            </div>
+
+            <div class="user-role">
+                En línea
+            </div>
+        </div>
 
     </div>
 
-    <br>
+</div>
 
-    <!-- 💰 RESUMEN -->
-    <div class="card">
+<!-- 🔥 MAIN -->
+<div class="main">
 
-        <h3>💰 Resumen</h3>
+    <h2>🏠 Dashboard Principal</h2>
 
-        Capital en calle:
-        <b>${{ capital_total }}</b>
+    <!-- 🔥 MÉTRICAS -->
+    <div class="grid">
 
-        <br><br>
+        <div class="card blue">
+            <div class="label">Capital en calle</div>
+            <div class="metric">
+                ${{ capital_total }}
+            </div>
+        </div>
 
-        Capital recogido hoy:
-        <b>${{ capital_dia }}</b>
+        <div class="card green">
+            <div class="label">Capital recogido hoy</div>
+            <div class="metric">
+                ${{ capital_dia }}
+            </div>
+        </div>
 
-        <br><br>
+        <div class="card orange">
+            <div class="label">Interés recogido hoy</div>
+            <div class="metric">
+                ${{ interes_dia }}
+            </div>
+        </div>
 
-        Interés recogido hoy:
-        <b>${{ interes_dia }}</b>
-
-        <br><br>
-
-        Capital recogido mes:
-        <b>${{ capital_mes }}</b>
-
-        <br><br>
-
-        Interés recogido mes:
-        <b>${{ interes_mes }}</b>
-
-        <br><br>
-
-        Capital acumulado:
-        <b>${{ capital_acumulado }}</b>
-
-        <br><br>
-
-        Interés acumulado:
-        <b>${{ interes_acumulado }}</b>
+        <div class="card red">
+            <div class="label">Interés acumulado</div>
+            <div class="metric">
+                ${{ interes_acumulado }}
+            </div>
+        </div>
 
     </div>
 
-    <br>
+    <!-- 🔥 SEGUNDA FILA -->
+    <div class="grid">
 
-    <!-- ⚠️ POR VENCER -->
-    <div class="card">
+        <div class="card">
+            <div class="label">Capital mensual</div>
 
-        <h3>⚠️ Próximos a vencer</h3>
+            <div class="metric">
+                ${{ capital_mes }}
+            </div>
+        </div>
 
-        {% if por_vencer %}
+        <div class="card">
+            <div class="label">Interés mensual</div>
 
-            {% for p in por_vencer %}
+            <div class="metric">
+                ${{ interes_mes }}
+            </div>
+        </div>
 
-                👤 {{ p[1] }}
-                <br>
+        <div class="card">
+            <div class="label">Capital acumulado</div>
 
-                ⏳ {{ p[2] }} días
-                <br>
-
-                💰 ${{ p[3] }}
-
-                <hr>
-
-            {% endfor %}
-
-        {% else %}
-
-            No hay préstamos próximos a vencer
-
-        {% endif %}
+            <div class="metric">
+                ${{ capital_acumulado }}
+            </div>
+        </div>
 
     </div>
 
-    <br>
+    <!-- 🔥 TABLAS -->
+    <div class="grid">
 
-    <!-- 🚨 VENCIDOS -->
-    <div class="card">
+        <!-- 🔥 POR VENCER -->
+        <div class="card orange">
 
-        <h3>🚨 Vencidos</h3>
+            <h3>
+                ⚠️ Próximos a vencer
+            </h3>
 
-        {% if vencidos %}
+            <table>
 
-            {% for v in vencidos %}
+                <tr>
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Días</th>
+                    <th>Saldo</th>
+                </tr>
 
-                👤 {{ v[1] }}
-                <br>
+                {% for p in por_vencer %}
 
-                ❌ {{ v[2] }} días vencido
-                <br>
+                <tr>
+                    <td>{{ p[0] }}</td>
+                    <td>{{ p[1] }}</td>
+                    <td>
+                        <span class="badge orange">
+                            {{ p[2] }} días
+                        </span>
+                    </td>
+                    <td>${{ p[3] }}</td>
+                </tr>
 
-                💰 ${{ v[3] }}
+                {% endfor %}
 
-                <hr>
+            </table>
 
-            {% endfor %}
+        </div>
 
-        {% else %}
+        <!-- 🔥 VENCIDOS -->
+        <div class="card red">
 
-            No hay préstamos vencidos
+            <h3>
+                ❌ Vencidos
+            </h3>
 
-        {% endif %}
+            <table>
+
+                <tr>
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Días atraso</th>
+                    <th>Saldo</th>
+                </tr>
+
+                {% for v in vencidos %}
+
+                <tr>
+                    <td>{{ v[0] }}</td>
+                    <td>{{ v[1] }}</td>
+
+                    <td>
+                        <span class="badge red">
+                            {{ v[2] }} días
+                        </span>
+                    </td>
+
+                    <td>${{ v[3] }}</td>
+                </tr>
+
+                {% endfor %}
+
+            </table>
+
+        </div>
 
     </div>
 
