@@ -46,7 +46,7 @@ def conectar():
         print("❌ Error conexión:", e)
         return None
 
-
+#323 2879658
 # ------------------------------
 def init_db():
     conn = conectar()

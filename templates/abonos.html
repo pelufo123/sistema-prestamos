@@ -8,170 +8,171 @@
 
 <div class="container">
 
-    <!-- 🏠 BOTÓN INICIO -->
-    <div style="margin-bottom:15px;">
-        <a href="/inicio" class="btn">🏠 Inicio</a>
-    </div>
+<!-- 🏠 BOTÓN INICIO -->
+<div style="margin-bottom:15px;">
+    <a href="{{ url_for('panel') }}" class="btn">🏠 Inicio</a>
+</div>
 
-    <h2>Abonos</h2>
+<h2>Abonos</h2>
 
-    <!-- 🔍 SELECCIÓN DE CLIENTE -->
-    <div class="card">
+<!-- 🔍 CLIENTE -->
+<div class="card">
 
-        <form method="GET">
+<form method="GET">
 
-            <select name="cliente" onchange="this.form.submit()">
+    <select name="cliente" onchange="this.form.submit()">
 
-                <option value="">
-                    Seleccione cliente
+        <option value="">
+            Seleccione cliente
+        </option>
+
+        {% for c in clientes %}
+
+        <option
+            value="{{ c[0] }}"
+            {% if cliente_id == c[0]|string %}selected{% endif %}
+        >
+            {{ c[1] }}
+        </option>
+
+        {% endfor %}
+
+    </select>
+
+</form>
+
+</div>
+
+<!-- 💳 PRÉSTAMOS -->
+{% if prestamos %}
+
+    {% for p in prestamos %}
+
+    <div class="card" style="margin-top:10px;">
+
+        <h4>{{ p.nombre }}</h4>
+
+        💰 Capital: <b>{{ p.capital }}</b><br>
+        📈 Interés: <b>{{ p.interes }}</b><br>
+        🧾 Total: <b>{{ p.total }}</b><br><br>
+
+        <!-- 🔥 FORMULARIO NORMAL -->
+        <form method="POST">
+
+            <input
+                type="hidden"
+                name="cliente"
+                value="{{ cliente_id }}"
+            >
+
+            <input
+                type="hidden"
+                name="prestamo"
+                value="{{ p.id }}"
+            >
+
+            <input
+                type="hidden"
+                class="prestamo_id"
+                value="{{ p.id }}"
+            >
+
+            <!-- 🔥 TIPO -->
+            <label>Tipo:</label>
+
+            <select
+                name="tipo"
+                class="tipo"
+                onchange="cambiarTipo(this)"
+            >
+
+                <option value="interes">
+                    Interés
                 </option>
 
-                {% for c in clientes %}
-
-                <option
-                    value="{{ c[0] }}"
-                    {% if cliente_id == c[0]|string %}selected{% endif %}
-                >
-                    {{ c[1] }}
+                <option value="capital">
+                    Capital
                 </option>
-
-                {% endfor %}
 
             </select>
+
+            <br><br>
+
+            <!-- 🔥 MES -->
+            <div class="div_mes">
+
+                <label>Mes a pagar:</label>
+
+                <select
+                    name="mes"
+                    class="mes"
+                    onchange="cargarInteres(this)"
+                    required
+                >
+
+                    {% if p.meses %}
+
+                        {% for m in p.meses %}
+
+                        <option value="{{m}}">
+                            Mes {{m}}
+                        </option>
+
+                        {% endfor %}
+
+                    {% else %}
+
+                        <option value="">
+                            Sin meses disponibles
+                        </option>
+
+                    {% endif %}
+
+                </select>
+
+            </div>
+
+            <br>
+
+            <!-- 🔥 MONTO -->
+            <input
+                name="monto"
+                class="monto"
+                placeholder="Monto"
+                required
+            >
+
+            <br><br>
+
+            <button class="btn">
+                Guardar
+            </button>
 
         </form>
 
     </div>
 
-    <!-- 💳 PRÉSTAMOS -->
-    {% if prestamos %}
+    {% endfor %}
 
-        {% for p in prestamos %}
+{% endif %}
 
-        <div class="card" style="margin-top:10px;">
+<!-- ⚠️ MENSAJE -->
+{% if mensaje %}
 
-            <h4>{{ p.nombre }}</h4>
+<div class="alert alert-warning" style="margin-top:15px;">
+    {{ mensaje }}
+</div>
 
-            💰 Capital: <b>{{ p.capital }}</b><br>
-            📈 Interés: <b>{{ p.interes }}</b><br>
-            🧾 Total: <b>{{ p.total }}</b><br><br>
+{% endif %}
 
-            <!-- 🔥 FORMULARIO -->
-            <form method="POST">
+<!-- 🔙 VOLVER -->
+<div style="margin-top:20px;">
 
-                <!-- HIDDEN -->
-                <input
-                    type="hidden"
-                    name="cliente"
-                    value="{{ cliente_id }}"
-                >
+    <a class="btn" href="{{ url_for('panel') }}">
+        Volver
+    </a>
 
-                <input
-                    type="hidden"
-                    name="prestamo"
-                    value="{{ p.id }}"
-                >
-
-                <input
-                    type="hidden"
-                    class="prestamo_id"
-                    value="{{ p.id }}"
-                >
-
-                <!-- 🔥 TIPO -->
-                <label>Tipo:</label>
-
-                <select
-                    name="tipo"
-                    class="tipo"
-                    onchange="cambiarTipo(this)"
-                >
-
-                    <option value="interes">
-                        Interés
-                    </option>
-
-                    <option value="capital">
-                        Capital
-                    </option>
-
-                </select>
-
-                <br><br>
-
-                <!-- 🔥 MESES -->
-                <div class="div_mes">
-
-                    <label>Mes a pagar:</label>
-
-                    <select
-                        name="mes"
-                        class="mes"
-                        onchange="cargarInteres(this)"
-                        required
-                    >
-
-                        {% if p.meses %}
-
-                            {% for m in p.meses %}
-
-                            <option value="{{m}}">
-                                Mes {{m}} - ${{ p.interes_mensual }}
-                            </option>
-
-                            {% endfor %}
-
-                        {% else %}
-
-                            <option value="">
-                                Sin meses disponibles
-                            </option>
-
-                        {% endif %}
-
-                    </select>
-
-                </div>
-
-                <br>
-
-                <!-- 💰 MONTO -->
-                <input
-                    name="monto"
-                    class="monto"
-                    placeholder="Monto"
-                    required
-                >
-
-                <br><br>
-
-                <button class="btn">
-                    Guardar
-                </button>
-
-            </form>
-
-        </div>
-
-        {% endfor %}
-
-    {% endif %}
-
-    <!-- ⚠️ MENSAJE -->
-    {% if mensaje %}
-
-    <div class="alert alert-warning" style="margin-top:15px;">
-        {{ mensaje }}
-    </div>
-
-    {% endif %}
-
-    <!-- 🔙 VOLVER -->
-    <div style="margin-top:20px;">
-        <a class="btn" href="/">
-            Volver
-        </a>
-    </div>
+</div>
 
 </div>
 
@@ -188,24 +189,19 @@ function cambiarTipo(select) {
 
     let monto = form.querySelector(".monto");
 
-    // 🔥 SI ES CAPITAL
     if (tipo === "capital") {
 
         divMes.style.display = "none";
 
         monto.value = "";
 
-    }
-
-    // 🔥 SI ES INTERÉS
-    else {
+    } else {
 
         divMes.style.display = "block";
 
         let selectMes = form.querySelector(".mes");
 
         cargarInteres(selectMes);
-
     }
 }
 
@@ -213,36 +209,25 @@ function cargarInteres(select) {
 
     let form = select.closest("form");
 
-    let mes = select.value;
-
     let prestamo_id = form.querySelector(".prestamo_id").value;
 
     let monto = form.querySelector(".monto");
 
-    fetch(`/obtener_interes?prestamo_id=${prestamo_id}&mes=${mes}`)
+    fetch(`/obtener_interes?prestamo_id=${prestamo_id}`)
 
     .then(response => response.json())
 
     .then(data => {
 
-        if (data.interes) {
-
-            monto.value = parseFloat(data.interes).toFixed(0);
-
-        } else {
-
-            monto.value = "";
-
-        }
+        monto.value = data.interes;
 
     })
 
     .catch(error => {
 
-        console.log("Error:", error);
+        console.log(error);
 
     });
-
 }
 
 // 🔥 INICIALIZAR
