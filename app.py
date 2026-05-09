@@ -363,9 +363,13 @@ def ganancia_por_cliente(conn):
 # ------------------------------
 @app.route("/")
 def inicio():
+
+    # 🔥 si NO ha iniciado sesión
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+
+    # 🔥 si ya inició sesión
     return redirect(url_for("panel"))
-
-
 # ------------------------------
 # 📊 PANEL PRINCIPAL
 # ------------------------------
