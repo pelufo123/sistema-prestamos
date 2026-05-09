@@ -820,3 +820,101 @@ tr:hover{
     }
 
 }
+/* ===================================== */
+/* 🔥 AJUSTES VISUALES PREMIUM */
+/* ===================================== */
+
+/* 🔥 CARDS MÁS SUAVES */
+.card.blue{
+    background:linear-gradient(
+        135deg,
+        #4f86f7,
+        #6ea8fe
+    ) !important;
+}
+
+.card.green{
+    background:linear-gradient(
+        135deg,
+        #34b56f,
+        #4fd18b
+    ) !important;
+}
+
+.card.orange{
+    background:linear-gradient(
+        135deg,
+        #f28b44,
+        #f7a76c
+    ) !important;
+}
+
+.card.red{
+    background:linear-gradient(
+        135deg,
+        #e06a6a,
+        #ef8c8c
+    ) !important;
+}
+
+/* 🔥 TEXOS MÁS VISIBLES */
+.label{
+    font-size:15px !important;
+    font-weight:700 !important;
+    color:white !important;
+    opacity:1 !important;
+    letter-spacing:0.3px;
+}
+
+/* 🔥 NÚMEROS */
+.metric{
+    font-size:34px;
+    font-weight:800;
+    color:white;
+    margin-top:8px;
+}
+
+/* 🔥 TÍTULOS TABLAS */
+.table-header h3{
+    font-weight:800;
+    font-size:20px;
+}
+
+/* 🔥 TABLAS MÁS LIMPIAS */
+table{
+    background:white;
+}
+
+th{
+    font-weight:700;
+    font-size:13px;
+    background:#f8fafc;
+}
+
+td{
+    font-weight:500;
+}
+
+/* 🔥 SIDEBAR MÁS ELEGANTE */
+.sidebar{
+    background:linear-gradient(
+        180deg,
+        #273142,
+        #1e293b
+    ) !important;
+}
+
+/* 🔥 LINKS SIDEBAR */
+.sidebar a{
+    font-weight:600;
+}
+
+/* 🔥 TOPBAR MÁS SUAVE */
+.topbar{
+    background:#ffffff !important;
+}
+
+/* 🔥 USER BOX */
+.user-box{
+    border:1px solid #e5e7eb;
+}
