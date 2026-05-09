@@ -1,221 +1,44 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+{% extends "base.html" %}
 
-    <link rel="stylesheet" href="/static/style.css">
+{% block content %}
 
-    <!-- ICONOS -->
-    <link rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-</head>
+<h2>🏠 Dashboard Principal</h2>
 
-<body>
+<!-- MÉTRICAS -->
+<div class="grid">
 
-<!-- 🔥 SIDEBAR -->
-<div class="sidebar">
+    <div class="card blue">
+        <div class="label">Capital en calle</div>
 
-    <h2>💰 Sistema</h2>
-
-    <a href="/panel">
-        <i class="fa-solid fa-chart-line"></i>
-        Dashboard
-    </a>
-
-    <a href="/clientes">
-        <i class="fa-solid fa-users"></i>
-        Clientes
-    </a>
-
-    <a href="/prestamos">
-        <i class="fa-solid fa-hand-holding-dollar"></i>
-        Préstamos
-    </a>
-
-    <a href="/abonos">
-        <i class="fa-solid fa-money-bill-wave"></i>
-        Abonos
-    </a>
-
-    <a href="/logout">
-        <i class="fa-solid fa-right-from-bracket"></i>
-        Cerrar sesión
-    </a>
-
-</div>
-
-<!-- 🔥 TOPBAR -->
-<div class="topbar">
-
-    <div>
-        SoftwarePelufo
+        <div class="metric">
+            ${{ capital_total }}
+        </div>
     </div>
 
-    <div class="user-box">
+    <div class="card green">
+        <div class="label">Capital recogido hoy</div>
 
-        <div class="online"></div>
-
-        <div>
-            <div class="user-name">
-                {{ session["usuario"] }}
-            </div>
-
-            <div class="user-role">
-                En línea
-            </div>
+        <div class="metric">
+            ${{ capital_dia }}
         </div>
+    </div>
 
+    <div class="card orange">
+        <div class="label">Interés recogido hoy</div>
+
+        <div class="metric">
+            ${{ interes_dia }}
+        </div>
+    </div>
+
+    <div class="card red">
+        <div class="label">Interés acumulado</div>
+
+        <div class="metric">
+            ${{ interes_acumulado }}
+        </div>
     </div>
 
 </div>
 
-<!-- 🔥 MAIN -->
-<div class="main">
-
-    <h2>🏠 Dashboard Principal</h2>
-
-    <!-- 🔥 MÉTRICAS -->
-    <div class="grid">
-
-        <div class="card blue">
-            <div class="label">Capital en calle</div>
-            <div class="metric">
-                ${{ capital_total }}
-            </div>
-        </div>
-
-        <div class="card green">
-            <div class="label">Capital recogido hoy</div>
-            <div class="metric">
-                ${{ capital_dia }}
-            </div>
-        </div>
-
-        <div class="card orange">
-            <div class="label">Interés recogido hoy</div>
-            <div class="metric">
-                ${{ interes_dia }}
-            </div>
-        </div>
-
-        <div class="card red">
-            <div class="label">Interés acumulado</div>
-            <div class="metric">
-                ${{ interes_acumulado }}
-            </div>
-        </div>
-
-    </div>
-
-    <!-- 🔥 SEGUNDA FILA -->
-    <div class="grid">
-
-        <div class="card">
-            <div class="label">Capital mensual</div>
-
-            <div class="metric">
-                ${{ capital_mes }}
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="label">Interés mensual</div>
-
-            <div class="metric">
-                ${{ interes_mes }}
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="label">Capital acumulado</div>
-
-            <div class="metric">
-                ${{ capital_acumulado }}
-            </div>
-        </div>
-
-    </div>
-
-    <!-- 🔥 TABLAS -->
-    <div class="grid">
-
-        <!-- 🔥 POR VENCER -->
-        <div class="card orange">
-
-            <h3>
-                ⚠️ Próximos a vencer
-            </h3>
-
-            <table>
-
-                <tr>
-                    <th>ID</th>
-                    <th>Cliente</th>
-                    <th>Días</th>
-                    <th>Saldo</th>
-                </tr>
-
-                {% for p in por_vencer %}
-
-                <tr>
-                    <td>{{ p[0] }}</td>
-                    <td>{{ p[1] }}</td>
-                    <td>
-                        <span class="badge orange">
-                            {{ p[2] }} días
-                        </span>
-                    </td>
-                    <td>${{ p[3] }}</td>
-                </tr>
-
-                {% endfor %}
-
-            </table>
-
-        </div>
-
-        <!-- 🔥 VENCIDOS -->
-        <div class="card red">
-
-            <h3>
-                ❌ Vencidos
-            </h3>
-
-            <table>
-
-                <tr>
-                    <th>ID</th>
-                    <th>Cliente</th>
-                    <th>Días atraso</th>
-                    <th>Saldo</th>
-                </tr>
-
-                {% for v in vencidos %}
-
-                <tr>
-                    <td>{{ v[0] }}</td>
-                    <td>{{ v[1] }}</td>
-
-                    <td>
-                        <span class="badge red">
-                            {{ v[2] }} días
-                        </span>
-                    </td>
-
-                    <td>${{ v[3] }}</td>
-                </tr>
-
-                {% endfor %}
-
-            </table>
-
-        </div>
-
-    </div>
-
-</div>
-
-</body>
-</html>
+{% endblock %}

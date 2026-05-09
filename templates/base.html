@@ -1,21 +1,82 @@
 <!DOCTYPE html>
-<link rel="stylesheet" href="/static/style.css">
-<html>
+<html lang="es">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Sistema</title>
+
     <link rel="stylesheet" href="/static/style.css">
+
+    <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
+
 <body>
 
-<nav>
-    <a href="/">Inicio</a>
-    <a href="/clientes">Clientes</a>
-    <a href="/prestamos">Préstamos</a>
-    <a href="/abonos">Abonos</a>
-</nav>
+<!-- SIDEBAR -->
+<div class="sidebar">
 
-<div class="container">
-    {% block content %}{% endblock %}
+    <h2>💰 Sistema</h2>
+
+    <a href="/panel">
+        <i class="fa-solid fa-chart-line"></i>
+        Dashboard
+    </a>
+
+    <a href="/clientes">
+        <i class="fa-solid fa-users"></i>
+        Clientes
+    </a>
+
+    <a href="/prestamos">
+        <i class="fa-solid fa-hand-holding-dollar"></i>
+        Préstamos
+    </a>
+
+    <a href="/abonos">
+        <i class="fa-solid fa-money-bill-wave"></i>
+        Abonos
+    </a>
+
+    <a href="/logout">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        Cerrar sesión
+    </a>
+
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+
+    <div>
+        SoftwarePelufo
+    </div>
+
+    <div class="user-box">
+
+        <div class="online"></div>
+
+        <div>
+            <div class="user-name">
+                {{ session["usuario"] }}
+            </div>
+
+            <div class="user-role">
+                En línea
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+    {% block content %}
+    {% endblock %}
+
 </div>
 
 </body>

@@ -432,4 +432,94 @@ table{
         font-size:24px;
     }
 
+}/* 🔥 GRID MÁS LIMPIO */
+.grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px,1fr));
+    gap:20px;
+    width:100%;
+}
+
+/* 🔥 TABLAS */
+table{
+    width:100%;
+    table-layout:fixed;
+    border-collapse:collapse;
+    overflow:hidden;
+}
+
+/* 🔥 COLUMNAS */
+th, td{
+    padding:14px 10px;
+    text-align:center;
+    word-wrap:break-word;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+/* 🔥 CARDS GRANDES */
+.card{
+    width:100%;
+    overflow:hidden;
+}
+
+/* 🔥 CONTENEDOR TABLAS */
+.table-responsive{
+    width:100%;
+    overflow-x:auto;
+    border-radius:12px;
+}
+
+/* 🔥 VENCIDOS */
+.card.red table td:last-child{
+    font-weight:bold;
+    color:#ef4444;
+}
+
+/* 🔥 POR VENCER */
+.card.orange table td:last-child{
+    font-weight:bold;
+    color:#f97316;
+}
+
+/* 🔥 BADGES */
+.badge{
+    display:inline-block;
+    min-width:70px;
+    text-align:center;
+}
+
+/* 🔥 MAIN */
+.main{
+    margin-left:220px;
+    margin-top:60px;
+    padding:25px;
+    width:calc(100% - 220px);
+    box-sizing:border-box;
+}
+
+/* 🔥 TABLAS NO SE SALGAN */
+.card table{
+    max-width:100%;
+}
+
+/* 🔥 MOBILE */
+@media(max-width:768px){
+
+    .main{
+        margin-left:0;
+        width:100%;
+        padding:15px;
+    }
+
+    .grid{
+        grid-template-columns:1fr;
+    }
+
+    th, td{
+        font-size:12px;
+        padding:10px 6px;
+    }
+
 }
