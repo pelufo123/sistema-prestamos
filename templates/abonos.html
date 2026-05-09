@@ -15,7 +15,7 @@
 
 <h2>Abonos</h2>
 
-<!-- 🔍 CLIENTE -->
+<!-- 🔍 SELECCIÓN DE CLIENTE -->
 <div class="card">
 
 <form method="GET">
@@ -56,9 +56,10 @@
         📈 Interés: <b>{{ p.interes }}</b><br>
         🧾 Total: <b>{{ p.total }}</b><br><br>
 
-        <!-- 🔥 FORMULARIO NORMAL -->
+        <!-- 🔥 FORMULARIO -->
         <form method="POST">
 
+            <!-- HIDDEN -->
             <input
                 type="hidden"
                 name="cliente"
@@ -98,7 +99,7 @@
 
             <br><br>
 
-            <!-- 🔥 MES -->
+            <!-- 🔥 MESES -->
             <div class="div_mes">
 
                 <label>Mes a pagar:</label>
@@ -168,7 +169,7 @@
 <!-- 🔙 VOLVER -->
 <div style="margin-top:20px;">
 
-    <a class="btn" href="{{ url_for('panel') }}">
+    <a class="btn" href="/">
         Volver
     </a>
 
@@ -189,19 +190,24 @@ function cambiarTipo(select) {
 
     let monto = form.querySelector(".monto");
 
+    // 🔥 CAPITAL
     if (tipo === "capital") {
 
         divMes.style.display = "none";
 
         monto.value = "";
 
-    } else {
+    }
+
+    // 🔥 INTERÉS
+    else {
 
         divMes.style.display = "block";
 
         let selectMes = form.querySelector(".mes");
 
         cargarInteres(selectMes);
+
     }
 }
 
@@ -209,11 +215,13 @@ function cargarInteres(select) {
 
     let form = select.closest("form");
 
+    let mes = select.value;
+
     let prestamo_id = form.querySelector(".prestamo_id").value;
 
     let monto = form.querySelector(".monto");
 
-    fetch(`/obtener_interes?prestamo_id=${prestamo_id}`)
+    fetch(`/obtener_interes?prestamo_id=${prestamo_id}&mes=${mes}`)
 
     .then(response => response.json())
 
@@ -225,12 +233,12 @@ function cargarInteres(select) {
 
     .catch(error => {
 
-        console.log(error);
+        console.log("Error:", error);
 
     });
 }
 
-// 🔥 INICIALIZAR
+// 🔥 INICIAR
 document.addEventListener("DOMContentLoaded", function() {
 
     document.querySelectorAll(".tipo").forEach(select => {
