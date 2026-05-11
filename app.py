@@ -1117,6 +1117,9 @@ def prestamos():
 # ------------------------------
 # 💸 ABONOS
 # ------------------------------
+# ------------------------------
+# 💸 ABONOS
+# ------------------------------
 @app.route("/abonos", methods=["GET", "POST"])
 def abonos():
 
@@ -1146,7 +1149,7 @@ def abonos():
         try:
 
             cur.execute("""
-                SELECT p.id, c.nombre
+                SELECT p.id, c.nombre, p.fecha
                 FROM prestamos p
                 JOIN clientes c
                 ON p.cliente_id = c.id
@@ -1159,59 +1162,161 @@ def abonos():
 
                 pid = fila[0]
                 nombre = fila[1]
+                fecha_prestamo = fila[2]
 
+                # =============================
+                # CALCULAR SALDOS
+                # =============================
                 cap_rest, int_rest, total, _, _ = calcular(pid, conn)
 
-                if total > 0:
+                if total <= 0:
+                    continue
 
-                    # 🔥 meses pendientes
-                    try:
-                        meses = meses_disponibles(pid, conn)
-                    except:
-                        meses = []
+                # =============================
+                # INTERÉS MENSUAL
+                # =============================
+                cur.execute("""
+                    SELECT capital, interes
+                    FROM prestamos
+                    WHERE id=%s
+                """, (pid,))
 
-                    # 🔥 interés mensual
-                    cur.execute("""
-                        SELECT capital, interes
-                        FROM prestamos
-                        WHERE id = %s
-                    """, (pid,))
+                data = cur.fetchone()
 
-                    data = cur.fetchone()
+                if data:
 
-                    if data:
+                    capital_original = data[0]
+                    tasa = data[1]
 
-                        capital_original = data[0]
-                        tasa = data[1]
+                    interes_mensual = (
+                        capital_original *
+                        (tasa / 100)
+                    )
 
-                        interes_mensual = capital_original * (tasa / 100)
+                else:
 
-                    else:
+                    interes_mensual = 0
 
-                        interes_mensual = 0
+                # =============================
+                # MESES TRANSCURRIDOS
+                # =============================
+                meses_transcurridos = meses_atraso(
+                    fecha_prestamo
+                )
 
-                    prestamos.append({
+                if meses_transcurridos < 1:
+                    meses_transcurridos = 1
 
-        "id": pid,
-        "nombre": nombre,
+                # =============================
+                # MESES PAGADOS
+                # =============================
+                cur.execute("""
+                    SELECT mes
+                    FROM abonos
+                    WHERE prestamo_id=%s
+                    AND tipo='interes'
+                    ORDER BY mes ASC
+                """, (pid,))
 
-        "capital": formato(cap_rest),
-        "interes": formato(int_rest),
-        "total": formato(total),
+                meses_pagados_db = [
+                    x[0]
+                    for x in cur.fetchall()
+                ]
 
-        "meses": meses,
+                # =============================
+                # GENERAR LISTA MESES
+                # =============================
+                meses = []
 
-        "interes_mensual": formato(interes_mensual),
-        "interes_mensual_raw": interes_mensual,
+                for i in range(
+                    1,
+                    meses_transcurridos + 1
+                ):
 
-        # 🔥 NUEVO
-        "ultimo_mes_pagado":
-            meses[-1]["texto"] if meses else "Sin pagos",
+                    fecha_mes = (
+                        fecha_prestamo +
+                        relativedelta(
+                            months=i - 1
+                        )
+                    )
 
-        "cantidad_meses":
-            len(meses)
+                    texto_mes = (
+                        fecha_mes.strftime(
+                            "%B %Y"
+                        ).capitalize()
+                    )
 
-    })
+                    meses.append({
+
+                        "numero": i,
+                        "texto": texto_mes
+
+                    })
+
+                # =============================
+                # ÚLTIMO MES PAGADO
+                # =============================
+                if meses_pagados_db:
+
+                    ultimo_num = max(
+                        meses_pagados_db
+                    )
+
+                    fecha_ultimo = (
+                        fecha_prestamo +
+                        relativedelta(
+                            months=ultimo_num - 1
+                        )
+                    )
+
+                    ultimo_mes_pagado = (
+                        fecha_ultimo.strftime(
+                            "%B %Y"
+                        ).capitalize()
+                    )
+
+                else:
+
+                    ultimo_mes_pagado = "Sin pagos"
+
+                # =============================
+                # CANTIDAD MESES
+                # =============================
+                cantidad_meses = len(
+                    meses_pagados_db
+                )
+
+                # =============================
+                # AGREGAR
+                # =============================
+                prestamos.append({
+
+                    "id": pid,
+                    "nombre": nombre,
+
+                    "capital": formato(cap_rest),
+                    "interes": formato(int_rest),
+                    "total": formato(total),
+
+                    "capital_num": cap_rest,
+                    "interes_num": int_rest,
+                    "total_num": total,
+
+                    "meses": meses,
+
+                    "interes_mensual":
+                        formato(interes_mensual),
+
+                    "interes_mensual_raw":
+                        interes_mensual,
+
+                    "ultimo_mes_pagado":
+                        ultimo_mes_pagado,
+
+                    "cantidad_meses":
+                        cantidad_meses
+
+                })
 
         except Exception as e:
 
@@ -1222,7 +1327,6 @@ def abonos():
     # =============================
     if request.method == "POST":
 
-        # 🔥 si solo seleccionó cliente
         if not request.form.get("prestamo"):
 
             conn.close()
@@ -1237,37 +1341,49 @@ def abonos():
 
         try:
 
-            pid = int(request.form.get("prestamo"))
+            pid = int(
+                request.form.get("prestamo")
+            )
 
-            monto = float(request.form.get("monto") or 0)
+            monto = float(
+                request.form.get("monto")
+                .replace(".", "")
+                .replace(",", "")
+            )
 
             tipo = request.form.get("tipo")
 
-            # 🔥 capital no usa mes
+            # =============================
+            # MES
+            # =============================
             if tipo == "capital":
 
                 mes_pagado = 0
 
             else:
 
-                mes_pagado = int(request.form.get("mes") or 0)
+                mes_pagado = int(
+                    request.form.get("mes") or 0
+                )
 
-            # 🔥 cálculo actual
+            # =============================
+            # VALIDACIONES
+            # =============================
             cap_rest, int_rest, _, _, _ = calcular(pid, conn)
 
-            # =============================
-            # 🔥 VALIDACIONES
-            # =============================
             if tipo == "capital" and monto > cap_rest:
 
                 mensaje = "❌ Excede capital"
 
-            elif tipo == "interes" and monto > int_rest:
+            elif tipo == "interes" and monto <= 0:
 
-                mensaje = "❌ Excede interés"
+                mensaje = "❌ Valor inválido"
 
             else:
 
+                # =============================
+                # GUARDAR
+                # =============================
                 cur.execute("""
                     INSERT INTO abonos (
                         prestamo_id,
@@ -1276,13 +1392,21 @@ def abonos():
                         tipo,
                         mes
                     )
-                    VALUES (%s, %s, %s, %s, %s)
+                    VALUES (
+                        %s,
+                        %s,
+                        %s,
+                        %s,
+                        %s
+                    )
                 """, (
+
                     pid,
                     monto,
                     datetime.now(),
                     tipo,
                     mes_pagado
+
                 ))
 
                 conn.commit()
@@ -1305,16 +1429,15 @@ def abonos():
     conn.close()
 
     return render_template(
+
         "abonos.html",
+
         clientes=clientes,
         prestamos=prestamos,
         mensaje=mensaje,
         cliente_id=cliente_id
-    )
 
-# ------------------------------
-# 🔥 OBTENER INTERÉS AUTOMÁTICO
-# ------------------------------
+    )
 @app.route("/obtener_interes")
 def obtener_interes():
 
