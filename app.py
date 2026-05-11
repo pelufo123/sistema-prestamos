@@ -1276,7 +1276,6 @@ def abonos():
                 ):
 
                     # 🔥 SI YA ESTÁ PAGADO
-                    # NO MOSTRAR
                     if i in meses_pagados_db:
                         continue
 
@@ -1446,6 +1445,24 @@ def abonos():
                 # =====================================
                 if tipo == "interes":
 
+                    # 🔥 BUSCAR INTERÉS MENSUAL
+                    cur.execute("""
+                        SELECT capital, interes
+                        FROM prestamos
+                        WHERE id=%s
+                    """, (pid,))
+
+                    data = cur.fetchone()
+
+                    capital_original = float(data[0])
+                    tasa = float(data[1])
+
+                    interes_mensual = round(
+                        capital_original *
+                        (tasa / 100)
+                    )
+
+                    # 🔥 GUARDAR TODOS LOS MESES
                     for mes_actual in range(
                         1,
                         mes_pagado + 1
