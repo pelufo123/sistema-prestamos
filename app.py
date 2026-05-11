@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, j
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 app = Flask(__name__)
-app.secret_key = "clave_super_segura"
+app.secret_key = os.getenv("SECRET_KEY")
 
 # ------------------------------
 # 🔐 PROTEGER RUTAS
