@@ -1171,7 +1171,6 @@ def abonos():
                     conn
                 )
 
-                # 🔥 QUITAR DECIMALES
                 cap_rest = round(cap_rest)
                 int_rest = round(int_rest)
                 total = round(total)
@@ -1223,26 +1222,26 @@ def abonos():
                 # 📌 MESES PAGADOS
                 # =============================
                 cur.execute("""
-                SELECT DISTINCT mes
-                FROM abonos
-                WHERE prestamo_id=%s
-                AND tipo='interes'
-                AND mes IS NOT NULL
-                ORDER BY mes ASC
-            """, (pid,))
+                    SELECT DISTINCT mes
+                    FROM abonos
+                    WHERE prestamo_id=%s
+                    AND tipo='interes'
+                    AND mes IS NOT NULL
+                    ORDER BY mes ASC
+                """, (pid,))
 
-                meses_pagados_db = list(set([
+                meses_pagados_db = [
 
-    int(x[0])
+                    int(x[0])
 
-    for x in cur.fetchall()
+                    for x in cur.fetchall()
 
-    if x[0] is not None
+                    if x[0] is not None
 
-]))
+                ]
 
                 # =============================
-                # 🔥 ÚLTIMO MES PAGADO
+                # 📌 ÚLTIMO MES PAGADO
                 # =============================
                 ultimo_mes_pagado = "Sin pagos"
 
@@ -1267,7 +1266,7 @@ def abonos():
 
                 # =============================
                 # 📋 GENERAR MESES
-                # 🔥 NO MOSTRAR PAGADOS
+                # 🔥 OCULTAR PAGADOS
                 # =============================
                 meses = []
 
@@ -1276,18 +1275,8 @@ def abonos():
                     meses_totales + 1
                 ):
 
-                    # 🔥 SI YA FUE PAGADO NO MOSTRAR
-                    if i in meses_pagados_db:
-                        continue
-
-                    fecha_mes = (
-                        fecha_prestamo +
-                        relativedelta(
-                            months=i - 1
-                        )
-                    )
-
-                    # 🔥 SI YA PAGÓ ESE MES
+                    # 🔥 SI YA ESTÁ PAGADO
+                    # NO MOSTRAR
                     if i in meses_pagados_db:
                         continue
 
@@ -1327,33 +1316,31 @@ def abonos():
                     "nombre": nombre,
 
                     "capital":
-                        formato(round(cap_rest)),
+                        formato(cap_rest),
 
                     "interes":
-                        formato(round(int_rest)),
+                        formato(int_rest),
 
                     "total":
-                        formato(round(total)),
+                        formato(total),
 
                     "capital_num":
-                        round(cap_rest),
+                        cap_rest,
 
                     "interes_num":
-                        round(interes_mensual),
+                        interes_mensual,
 
                     "total_num":
-                        round(total),
+                        total,
 
                     "meses":
                         meses,
 
                     "interes_mensual":
-                        formato(
-                            round(interes_mensual)
-                        ),
+                        formato(interes_mensual),
 
                     "interes_mensual_raw":
-                        round(interes_mensual),
+                        interes_mensual,
 
                     "ultimo_mes_pagado":
                         ultimo_mes_pagado,
@@ -1425,43 +1412,6 @@ def abonos():
                     ) or 0
                 )
 
-                # =============================
-                # 🔥 VALIDAR DUPLICADO
-                # =============================
-                cur.execute("""
-                    SELECT id
-                    FROM abonos
-                    WHERE prestamo_id=%s
-                    AND tipo='interes'
-                    AND mes=%s
-                """, (
-
-                    pid,
-                    mes_pagado
-
-                ))
-
-                existe_mes = cur.fetchone()
-
-                if existe_mes:
-
-                    mensaje = (
-                        "❌ Ese mes ya fue abonado"
-                    )
-
-                    conn.close()
-
-                    return render_template(
-
-                        "abonos.html",
-
-                        clientes=clientes,
-                        prestamos=prestamos,
-                        mensaje=mensaje,
-                        cliente_id=cliente_id
-
-                    )
-
             # =============================
             # 💰 VALIDACIONES
             # =============================
@@ -1490,37 +1440,98 @@ def abonos():
 
             else:
 
-                # =============================
-                # 💾 INSERTAR
-                # =============================
-                cur.execute("""
-                    INSERT INTO abonos (
+                # =====================================
+                # 🔥 INTERÉS
+                # GUARDAR TODOS LOS MESES
+                # =====================================
+                if tipo == "interes":
 
-                        prestamo_id,
-                        monto,
-                        fecha,
+                    for mes_actual in range(
+                        1,
+                        mes_pagado + 1
+                    ):
+
+                        # 🔥 VALIDAR DUPLICADO
+                        cur.execute("""
+                            SELECT id
+                            FROM abonos
+                            WHERE prestamo_id=%s
+                            AND tipo='interes'
+                            AND mes=%s
+                        """, (
+
+                            pid,
+                            mes_actual
+
+                        ))
+
+                        existe = cur.fetchone()
+
+                        # 🔥 SI NO EXISTE
+                        if not existe:
+
+                            cur.execute("""
+                                INSERT INTO abonos (
+
+                                    prestamo_id,
+                                    monto,
+                                    fecha,
+                                    tipo,
+                                    mes
+
+                                )
+                                VALUES (
+
+                                    %s,
+                                    %s,
+                                    %s,
+                                    %s,
+                                    %s
+
+                                )
+                            """, (
+
+                                pid,
+                                interes_mensual,
+                                datetime.now(),
+                                "interes",
+                                mes_actual
+
+                            ))
+
+                else:
+
+                    # =====================================
+                    # 💰 ABONO CAPITAL
+                    # =====================================
+                    cur.execute("""
+                        INSERT INTO abonos (
+
+                            prestamo_id,
+                            monto,
+                            fecha,
+                            tipo,
+                            mes
+
+                        )
+                        VALUES (
+
+                            %s,
+                            %s,
+                            %s,
+                            %s,
+                            %s
+
+                        )
+                    """, (
+
+                        pid,
+                        round(monto),
+                        datetime.now(),
                         tipo,
-                        mes
+                        mes_pagado
 
-                    )
-                    VALUES (
-
-                        %s,
-                        %s,
-                        %s,
-                        %s,
-                        %s
-
-                    )
-                """, (
-
-                    pid,
-                    round(monto),
-                    datetime.now(),
-                    tipo,
-                    mes_pagado
-
-                ))
+                    ))
 
                 conn.commit()
 
