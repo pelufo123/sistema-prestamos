@@ -1,54 +1,183 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+
+    <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Historial</title>
+
     <link rel="stylesheet" href="/static/style.css">
+
+    <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
 </head>
+
 <body>
 
 <div class="container">
 
-    <h2>📊 Historial de {{ cliente[0] }}</h2>
+    <!-- BOTONES -->
+    <div style="display:flex; gap:10px; margin-bottom:20px;">
 
-    <div style="margin-bottom:15px;">
-        <a href="{{ url_for('panel') }}" class="btn">🏠 Inicio</a>
-        <a href="{{ url_for('clientes') }}" class="btn">⬅ Volver</a>
+        <a href="/panel" class="btn">
+            🏠 Inicio
+        </a>
+
+        <a href="/clientes" class="btn">
+            ⬅ Volver
+        </a>
+
     </div>
 
-    {% if not historial %}
-    <div class="alert alert-warning">
-        ⚠️ Este cliente no tiene historial todavía
-    </div>
-    {% endif %}
+    <!-- TITULO -->
+    <h1 style="margin-bottom:25px;">
 
+        📄 Historial de {{ cliente[0] }}
+
+    </h1>
+
+    <!-- HISTORIAL -->
     {% for item in historial %}
-    <div class="card">
 
-        <h3>📄 Préstamo #{{ item.prestamo[0] }}</h3>
-        <p><b>Fecha:</b> {{ item.prestamo[3] }}</p>
-        <p><b>Capital:</b> {{ item.prestamo[1] }}</p>
-        <p><b>Total:</b> {{ item.prestamo[2] }}</p>
+    <div class="card historial-card">
 
-        <h4>📥 Abonos</h4>
+        <!-- HEADER -->
+        <div class="prestamo-header">
 
-        <table>
-            <tr>
-                <th>Monto</th>
-                <th>Tipo</th>
-                <th>Fecha</th>
-            </tr>
+            <div>
 
-            {% for a in item.abonos %}
-            <tr>
-                <td>{{ "{:,.0f}".format(a[0]).replace(",", ".") }}</td>
-                <td>{{ a[1] }}</td>
-                <td>{{ a[2] }}</td>
-            </tr>
-            {% endfor %}
-        </table>
+                <h2>
+                    💰 Préstamo #{{ item.prestamo[0] }}
+                </h2>
+
+                <div class="prestamo-info-grid">
+
+                    <div class="info-box">
+
+                        <span class="label">
+                            📅 Fecha
+                        </span>
+
+                        <span class="value">
+                            {{ item.prestamo[3] }}
+                        </span>
+
+                    </div>
+
+                    <div class="info-box">
+
+                        <span class="label">
+                            💵 Capital prestado
+                        </span>
+
+                        <span class="value money">
+                            ${{ formato(item.prestamo[1]) }}
+                        </span>
+
+                    </div>
+
+                    <div class="info-box">
+
+                        <span class="label">
+                            🧾 Total préstamo
+                        </span>
+
+                        <span class="value money green">
+                            ${{ formato(item.prestamo[2]) }}
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- TABLA -->
+        <div class="tabla-box">
+
+            <h3 style="margin-bottom:15px;">
+                💳 Historial de pagos
+            </h3>
+
+            {% if item.abonos %}
+
+            <div class="table-responsive">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>MONTO</th>
+                            <th>TIPO</th>
+                            <th>FECHA</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for a in item.abonos %}
+
+                        <tr>
+
+                            <td class="money">
+                                ${{ formato(a[0]) }}
+                            </td>
+
+                            <td>
+
+                                {% if a[1] == "capital" %}
+
+                                    <span class="badge green">
+                                        Capital
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge orange">
+                                        Interés
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+                                {{ a[2] }}
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% else %}
+
+            <div class="empty-box">
+
+                No tiene abonos registrados
+
+            </div>
+
+            {% endif %}
+
+        </div>
 
     </div>
+
     {% endfor %}
 
 </div>

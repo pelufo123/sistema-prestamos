@@ -745,27 +745,37 @@ def eliminar_cliente(id):
 # ------------------------------
 @app.route("/historial/<int:id>")
 def historial(id):
+
     conn = conectar()
     cur = conn.cursor()
 
-    cur.execute("SELECT nombre FROM clientes WHERE id=%s", (id,))
+    cur.execute(
+        "SELECT nombre FROM clientes WHERE id=%s",
+        (id,)
+    )
+
     cliente = cur.fetchone()
 
     cur.execute("""
         SELECT id, capital, total, fecha
         FROM prestamos
         WHERE cliente_id=%s
+        ORDER BY id DESC
     """, (id,))
+
     prestamos = cur.fetchall()
 
     historial = []
 
     for p in prestamos:
+
         cur.execute("""
             SELECT monto, tipo, fecha
             FROM abonos
             WHERE prestamo_id=%s
+            ORDER BY fecha DESC
         """, (p[0],))
+
         abonos = cur.fetchall()
 
         historial.append({
@@ -775,9 +785,11 @@ def historial(id):
 
     conn.close()
 
-    return render_template("historial.html",
+    return render_template(
+        "historial.html",
         cliente=cliente,
-        historial=historial
+        historial=historial,
+        formato=formato
     )
 
 # ------------------------------
