@@ -195,12 +195,6 @@
                 value="{{ p.id }}"
             >
 
-            <input
-                type="hidden"
-                class="prestamo_id"
-                value="{{ p.id }}"
-            >
-
             <!-- INTERÉS MENSUAL -->
 
             <input
@@ -389,6 +383,7 @@ function cambiarTipo(select){
         alerta.style.display =
         "none";
 
+        // 🔥 LIMPIAR CAMPO
         monto.value = "";
 
     }
@@ -405,6 +400,7 @@ function cambiarTipo(select){
 
         actualizarResumen(selectMes);
 
+        // 🔥 RECARGAR SOLO EL INTERÉS
         cargarInteres(selectMes);
 
     }
@@ -487,9 +483,11 @@ function actualizarResumen(select){
         meses = 1;
     }
 
+    // 🔥 EL INTERÉS PENDIENTE SIEMPRE ES EL MISMO
     let nuevoInteres =
     interesMensual;
 
+    // 🔥 SOLO CAMBIA TOTAL
     let nuevoTotal =
     totalBase +
     (interesMensual * (meses - 1));
@@ -517,8 +515,16 @@ function cargarInteres(select){
     let form =
     select.closest("form");
 
+    let tipo =
+    form.querySelector(".tipo").value;
+
     let monto =
     form.querySelector(".monto");
+
+    // 🔥 SI ES CAPITAL NO HACER NADA
+    if(tipo === "capital"){
+        return;
+    }
 
     let interesMensual =
     parseFloat(
@@ -530,10 +536,12 @@ function cargarInteres(select){
     let meses =
     parseInt(select.value);
 
+    // 🔥 SI NO HAY MES
     if(isNaN(meses)){
         meses = 1;
     }
 
+    // 🔥 SIEMPRE REINICIAR
     let total =
     interesMensual * meses;
 
