@@ -1114,12 +1114,6 @@ def prestamos():
 # ------------------------------
 # 💸 ABONOS
 # ------------------------------
-# ------------------------------
-# 💸 ABONOS
-# ------------------------------
-# ------------------------------
-# 💸 ABONOS
-# ------------------------------
 @app.route("/abonos", methods=["GET", "POST"])
 def abonos():
 
@@ -1207,6 +1201,9 @@ def abonos():
                 if meses_transcurridos < 1:
                     meses_transcurridos = 1
 
+                # 🔥 PERMITIR ADELANTAR
+                meses_totales = meses_transcurridos + 24
+
                 # =============================
                 # MESES PAGADOS
                 # =============================
@@ -1230,7 +1227,7 @@ def abonos():
 
                 for i in range(
                     1,
-                    meses_transcurridos + 1
+                    meses_totales + 1
                 ):
 
                     fecha_mes = (
