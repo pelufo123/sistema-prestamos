@@ -1,6 +1,6 @@
 import os
 import psycopg2
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 app = Flask(__name__)
@@ -1321,47 +1321,29 @@ def obtener_interes():
     prestamo_id = request.args.get("prestamo_id")
 
     conn = conectar()
-
-    if not conn:
-        return {"interes": 0}
-
     cur = conn.cursor()
 
-    try:
+    cur.execute("""
+        SELECT capital, interes
+        FROM prestamos
+        WHERE id=%s
+    """, (prestamo_id,))
 
-        cur.execute("""
-            SELECT capital, interes
-            FROM prestamos
-            WHERE id=%s
-        """, (prestamo_id,))
+    row = cur.fetchone()
 
-        data = cur.fetchone()
+    if not row:
+        return jsonify({"interes": 0})
 
-        if data:
+    capital, interes = row
 
-            capital = data[0]
-            interes = data[1]
+    interes_mensual = int(capital * (interes / 100))
 
-            cap_rest, _, _, _, _ = calcular(prestamo_id, conn)
+    cur.close()
+    conn.close()
 
-            interes_mensual = cap_rest * (interes / 100)
-
-        else:
-
-            interes_mensual = 0
-
-    except Exception as e:
-
-        print("ERROR obtener_interes:", e)
-
-        interes_mensual = 0
-
-    finally:
-
-        cur.close()
-        conn.close()
-
-    return {"interes": interes_mensual}
+    return jsonify({
+        "interes": interes_mensual
+    })
 # ------------------------------
 if __name__ == "__main__":
     init_db()

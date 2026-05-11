@@ -16,7 +16,9 @@
 
     <form method="GET">
 
-        <label>Seleccionar cliente</label>
+        <label>
+            Seleccionar cliente
+        </label>
 
         <select
             name="cliente"
@@ -54,51 +56,66 @@
 
     {% for p in prestamos %}
 
-    <div class="card">
+    <div class="card" style="margin-top:20px;">
 
-        <h3>
-            👤 {{ p.nombre }}
-        </h3>
+        <!-- ===================================== -->
+        <!-- CLIENTE -->
+        <!-- ===================================== -->
+
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:20px;
+            flex-wrap:wrap;
+        ">
+
+            <div>
+
+                <h3 style="margin:0;">
+                    👤 {{ p.nombre }}
+                </h3>
+
+                <div style="
+                    margin-top:8px;
+                    color:#666;
+                    font-size:14px;
+                ">
+
+                    📌 Último interés pagado:
+                    <b>
+                        {{ p.ultimo_mes_pagado }}
+                    </b>
+
+                </div>
+
+                <div style="
+                    margin-top:5px;
+                    color:#666;
+                    font-size:14px;
+                ">
+
+                    📆 Meses abonados:
+                    <b>
+                        {{ p.cantidad_meses }}
+                    </b>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- ===================================== -->
+        <!-- MÉTRICAS -->
+        <!-- ===================================== -->
 
         <div class="grid-metricas">
-    <div style="
-        margin-top:15px;
-        background:#f4f7ff;
-        padding:15px;
-        border-radius:12px;
-    ">
 
-        <div style="margin-bottom:8px;">
-
-            <b>
-                📌 Último mes seleccionado:
-            </b>
-
-            <span class="ultimo_mes_texto">
-
-                {{ p.ultimo_mes_pagado }}
-
-        </span>
-
-    </div>
-
-    <div>
-
-        <b>
-            📆 Meses de interés registrados:
-        </b>
-
-        {{ p.cantidad_meses }}
-
-    </div>
-
-</div>
-
-<br>
             <div>
 
                 <div class="label">
-                    Capital
+                    Capital pendiente
                 </div>
 
                 <div class="metric">
@@ -113,7 +130,10 @@
                     Interés pendiente
                 </div>
 
-                <div class="metric">
+                <div
+                    class="metric interes_pendiente"
+                    data-valor="{{ p.interes_num }}"
+                >
                     ${{ p.interes }}
                 </div>
 
@@ -125,7 +145,10 @@
                     Total deuda
                 </div>
 
-                <div class="metric">
+                <div
+                    class="metric total_deuda"
+                    data-total="{{ p.total_num }}"
+                >
                     ${{ p.total }}
                 </div>
 
@@ -134,6 +157,10 @@
         </div>
 
         <br>
+
+        <!-- ===================================== -->
+        <!-- FORMULARIO -->
+        <!-- ===================================== -->
 
         <form method="POST">
 
@@ -194,14 +221,19 @@
                 <select
                     name="mes"
                     class="mes"
-                    onchange="mostrarAlerta(this)"
+                    onchange="
+                        mostrarAlerta(this);
+                        actualizarResumen(this);
+                    "
                 >
 
                     {% if p.meses %}
 
                         {% for m in p.meses %}
 
-                        <option value="{{ m.numero }}">
+                        <option
+                            value="{{ m.numero }}"
+                        >
 
                             {{ m.texto }}
 
@@ -290,14 +322,27 @@
 <script>
 
 /* ===================================== */
+/* FORMATO PESOS */
+/* ===================================== */
+
+function formatoPesos(numero){
+
+    return Number(numero)
+    .toLocaleString("es-CO");
+
+}
+
+/* ===================================== */
 /* CAMBIAR TIPO */
 /* ===================================== */
 
 function cambiarTipo(select){
 
-    let form = select.closest("form");
+    let form =
+    select.closest("form");
 
-    let tipo = select.value;
+    let tipo =
+    select.value;
 
     let divMes =
     form.querySelector(".div_mes");
@@ -316,7 +361,9 @@ function cambiarTipo(select){
 
         monto.value = "";
 
-    }else{
+    }
+
+    else{
 
         divMes.style.display = "block";
 
@@ -325,13 +372,16 @@ function cambiarTipo(select){
 
         mostrarAlerta(selectMes);
 
+        actualizarResumen(selectMes);
+
         cargarInteres(selectMes);
 
     }
+
 }
 
 /* ===================================== */
-/* ALERTA MESES ADELANTADOS */
+/* ALERTA DE ADELANTO */
 /* ===================================== */
 
 function mostrarAlerta(select){
@@ -343,25 +393,81 @@ function mostrarAlerta(select){
     form.querySelector(".alerta_mes");
 
     let texto =
-    select.options[select.selectedIndex].text;
+    select.options[
+        select.selectedIndex
+    ].text;
 
     let numero =
     parseInt(select.value);
 
     if(numero > 1){
 
-        alerta.style.display = "block";
+        alerta.style.display =
+        "block";
 
         alerta.innerHTML =
         "⚠️ El cliente quedará adelantado hasta <b>" +
         texto +
         "</b> en pagos de interés.";
 
-    }else{
+    }
 
-        alerta.style.display = "none";
+    else{
+
+        alerta.style.display =
+        "none";
 
     }
+
+}
+
+/* ===================================== */
+/* ACTUALIZAR RESUMEN */
+/* ===================================== */
+
+function actualizarResumen(select){
+
+    let form =
+    select.closest("form");
+
+    let card =
+    form.closest(".card");
+
+    let interesDiv =
+    card.querySelector(".interes_pendiente");
+
+    let totalDiv =
+    card.querySelector(".total_deuda");
+
+    let interesBase =
+    parseInt(
+        interesDiv.dataset.valor
+    );
+
+    let totalBase =
+    parseInt(
+        totalDiv.dataset.total
+    );
+
+    let meses =
+    parseInt(select.value);
+
+    if(isNaN(meses)){
+        meses = 1;
+    }
+
+    let nuevoInteres =
+    interesBase * meses;
+
+    let nuevoTotal =
+    totalBase + (interesBase * (meses - 1));
+
+    interesDiv.innerHTML =
+    "$" + formatoPesos(nuevoInteres);
+
+    totalDiv.innerHTML =
+    "$" + formatoPesos(nuevoTotal);
+
 }
 
 /* ===================================== */
@@ -370,7 +476,8 @@ function mostrarAlerta(select){
 
 function cargarInteres(select){
 
-    let form = select.closest("form");
+    let form =
+    select.closest("form");
 
     let prestamo_id =
     form.querySelector(".prestamo_id").value;
@@ -378,28 +485,40 @@ function cargarInteres(select){
     let monto =
     form.querySelector(".monto");
 
+    let meses =
+    parseInt(select.value);
+
+    if(isNaN(meses)){
+        meses = 1;
+    }
+
     fetch(`/obtener_interes?prestamo_id=${prestamo_id}`)
 
     .then(response => response.json())
 
     .then(data => {
 
+        let total =
+        Number(data.interes) * meses;
+
         monto.value =
-        Number(data.interes)
-        .toLocaleString("es-CO");
+        formatoPesos(total);
 
     })
 
     .catch(error => {
 
-        console.log("Error:", error);
+        console.log(
+            "Error:",
+            error
+        );
 
     });
 
 }
 
 /* ===================================== */
-/* FORMATO DINERO */
+/* FORMATO MILES */
 /* ===================================== */
 
 function formatearMiles(input){
@@ -408,34 +527,45 @@ function formatearMiles(input){
     input.value.replace(/\D/g, "");
 
     valor =
-    valor.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    valor.replace(
+        /\B(?=(\d{3})+(?!\d))/g,
+        "."
+    );
 
     input.value = valor;
+
 }
 
 function limpiarNumero(valor){
 
     return valor.replace(/\./g, "");
+
 }
 
 /* ===================================== */
 /* INICIO */
 /* ===================================== */
 
-document.addEventListener("DOMContentLoaded", function(){
+document.addEventListener(
+"DOMContentLoaded",
+function(){
 
     const inputs =
     document.querySelectorAll(".money");
 
     inputs.forEach(input => {
 
-        input.addEventListener("input", function(){
+        input.addEventListener(
+        "input",
+        function(){
 
             formatearMiles(this);
 
         });
 
-        input.form.addEventListener("submit", function(){
+        input.form.addEventListener(
+        "submit",
+        function(){
 
             inputs.forEach(i => {
 
@@ -448,7 +578,8 @@ document.addEventListener("DOMContentLoaded", function(){
 
     });
 
-    document.querySelectorAll(".tipo").forEach(select => {
+    document.querySelectorAll(".tipo")
+    .forEach(select => {
 
         cambiarTipo(select);
 
