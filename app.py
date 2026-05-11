@@ -307,10 +307,16 @@ def calcular(pid, conn):
     )
 
 def meses_disponibles(pid, conn):
+
     cur = conn.cursor()
 
-    # 📅 obtener fecha del préstamo
-    cur.execute("SELECT fecha FROM prestamos WHERE id=%s", (pid,))
+    # 🔥 obtener fecha préstamo
+    cur.execute("""
+        SELECT fecha
+        FROM prestamos
+        WHERE id=%s
+    """, (pid,))
+
     data = cur.fetchone()
 
     if not data:
@@ -318,82 +324,54 @@ def meses_disponibles(pid, conn):
 
     fecha = data[0]
 
-    if isinstance(fecha, str):
-        fecha = datetime.strptime(fecha, "%Y-%m-%d")
-
     hoy = datetime.now()
 
-    # 🔢 meses transcurridos
-    total_meses = (hoy.year - fecha.year) * 12 + (hoy.month - fecha.month)
+    # 🔥 permitir hasta 24 meses adelantados
+    total_meses = 24
 
-    if total_meses < 1:
-        return []
-
-    # 📌 meses ya pagados
+    # 🔥 meses ya pagados
     cur.execute("""
-        SELECT mes FROM abonos
-        WHERE prestamo_id=%s AND tipo='interes'
+        SELECT mes
+        FROM abonos
+        WHERE prestamo_id=%s
+        AND tipo='interes'
     """, (pid,))
 
     pagados = [m[0] for m in cur.fetchall()]
 
-    # 🔥 generar meses válidos
     meses = []
+
+    nombres = [
+        "Enero",
+        "Febrero",
+        "Marzo",
+        "Abril",
+        "Mayo",
+        "Junio",
+        "Julio",
+        "Agosto",
+        "Septiembre",
+        "Octubre",
+        "Noviembre",
+        "Diciembre"
+    ]
+
     for i in range(1, total_meses + 1):
+
         if i not in pagados:
-            meses.append(i)
+
+            fecha_mes = fecha + timedelta(days=i * 30)
+
+            nombre_mes = nombres[fecha_mes.month - 1]
+
+            texto = f"{nombre_mes} {fecha_mes.year}"
+
+            meses.append({
+                "numero": i,
+                "texto": texto
+            })
 
     return meses
-
-# ------------------------------
-# 👤 GANANCIA POR CLIENTE
-# ------------------------------
-def ganancia_por_cliente(conn):
-    cur = conn.cursor()
-
-    cur.execute("""
-        SELECT c.id, c.nombre
-        FROM clientes c
-    """)
-
-    resultado = []
-
-    for cid, nombre in cur.fetchall():
-
-        cur.execute("""
-            SELECT SUM(capital)
-            FROM prestamos
-            WHERE cliente_id=%s
-        """, (cid,))
-        capital = cur.fetchone()[0] or 0
-
-        cur.execute("""
-            SELECT SUM(a.monto)
-            FROM abonos a
-            JOIN prestamos p ON a.prestamo_id = p.id
-            WHERE p.cliente_id=%s AND a.tipo='interes'
-        """, (cid,))
-        interes = cur.fetchone()[0] or 0
-
-        cur.execute("""
-            SELECT SUM(a.monto)
-            FROM abonos a
-            JOIN prestamos p ON a.prestamo_id = p.id
-            WHERE p.cliente_id=%s AND a.tipo='capital'
-        """, (cid,))
-        recuperado = cur.fetchone()[0] or 0
-
-        deuda = capital - recuperado
-
-        resultado.append({
-            "nombre": nombre,
-            "capital": capital,
-            "recuperado": recuperado,
-            "interes": interes,
-            "deuda": deuda
-        })
-
-    return resultado
 
 # ------------------------------
 # 🏠 INICIO
@@ -407,6 +385,71 @@ def inicio():
 
     # 🔥 si ya inició sesión
     return redirect(url_for("panel"))
+# =============================
+# 👥 GANANCIA POR CLIENTE
+# =============================
+def ganancia_por_cliente(conn):
+
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT id, nombre
+        FROM clientes
+    """)
+
+    resultado = []
+
+    clientes = cur.fetchall()
+
+    for cliente in clientes:
+
+        cid = cliente[0]
+        nombre = cliente[1]
+
+        # 🔥 TOTAL PRESTADO
+        cur.execute("""
+            SELECT SUM(capital)
+            FROM prestamos
+            WHERE cliente_id=%s
+        """, (cid,))
+
+        capital = cur.fetchone()[0] or 0
+
+        # 🔥 TOTAL CAPITAL RECUPERADO
+        cur.execute("""
+            SELECT SUM(a.monto)
+            FROM abonos a
+            JOIN prestamos p
+            ON a.prestamo_id = p.id
+            WHERE p.cliente_id=%s
+            AND a.tipo='capital'
+        """, (cid,))
+
+        recuperado = cur.fetchone()[0] or 0
+
+        # 🔥 TOTAL INTERÉS GANADO
+        cur.execute("""
+            SELECT SUM(a.monto)
+            FROM abonos a
+            JOIN prestamos p
+            ON a.prestamo_id = p.id
+            WHERE p.cliente_id=%s
+            AND a.tipo='interes'
+        """, (cid,))
+
+        interes = cur.fetchone()[0] or 0
+
+        deuda = capital - recuperado
+
+        resultado.append({
+            "nombre": nombre,
+            "capital": capital,
+            "recuperado": recuperado,
+            "interes": interes,
+            "deuda": deuda
+        })
+
+    return resultado
 # ------------------------------
 # 📊 PANEL PRINCIPAL
 # ------------------------------
