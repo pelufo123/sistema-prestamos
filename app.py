@@ -420,86 +420,121 @@ def panel():
 
     cur = conn.cursor()
 
-    # 🔥 FILTRO
+    # =============================
+    # 🔥 FILTRO FECHA
+    # =============================
     tipo = request.form.get("tipo") or "dia"
+
     fecha_str = request.form.get("fecha")
 
     if fecha_str:
-        fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
+
+        fecha = datetime.strptime(
+            fecha_str,
+            "%Y-%m-%d"
+        ).date()
+
     else:
+
         fecha = datetime.now().date()
 
     # =============================
-    # 💰 CAPITAL TOTAL
+    # 💰 CAPITAL EN CALLE
     # =============================
     capital_total = 0
 
     cur.execute("SELECT id FROM prestamos")
+
     for (pid,) in cur.fetchall():
+
         cap_rest, _, _, _, _ = calcular(pid, conn)
+
         if cap_rest > 0:
+
             capital_total += cap_rest
 
     # =============================
-    # 📅 HOY
+    # 📅 CAPITAL E INTERÉS DEL DÍA
     # =============================
     cur.execute("""
-        SELECT monto, tipo FROM abonos
+        SELECT monto, tipo
+        FROM abonos
         WHERE DATE(fecha) = %s
     """, (fecha,))
 
     capital_dia = 0
     interes_dia = 0
 
-    for m, t in cur.fetchall():
-        if t == "capital":
-            capital_dia += m
+    for monto, tipo_pago in cur.fetchall():
+
+        if tipo_pago == "capital":
+
+            capital_dia += monto
+
         else:
-            interes_dia += m
+
+            interes_dia += monto
 
     # =============================
-    # 📆 MES
+    # 📆 CAPITAL E INTERÉS MES
     # =============================
     inicio_mes = fecha.replace(day=1)
 
     cur.execute("""
-        SELECT monto, tipo FROM abonos
-        WHERE DATE(fecha) >= %s AND DATE(fecha) <= %s
+        SELECT monto, tipo
+        FROM abonos
+        WHERE DATE(fecha) >= %s
+        AND DATE(fecha) <= %s
     """, (inicio_mes, fecha))
 
     capital_mes = 0
     interes_mes = 0
 
-    for m, t in cur.fetchall():
-        if t == "capital":
-            capital_mes += m
+    for monto, tipo_pago in cur.fetchall():
+
+        if tipo_pago == "capital":
+
+            capital_mes += monto
+
         else:
-            interes_mes += m
+
+            interes_mes += monto
 
     # =============================
-    # 📈 ACUMULADO
+    # 📈 ACUMULADO TOTAL
     # =============================
     cur.execute("""
-        SELECT monto, tipo FROM abonos
+        SELECT monto, tipo
+        FROM abonos
         WHERE DATE(fecha) <= %s
     """, (fecha,))
 
     capital_acumulado = 0
     interes_acumulado = 0
 
-    for m, t in cur.fetchall():
-        if t == "capital":
-            capital_acumulado += m
+    for monto, tipo_pago in cur.fetchall():
+
+        if tipo_pago == "capital":
+
+            capital_acumulado += monto
+
         else:
-            interes_acumulado += m
+
+            interes_acumulado += monto
 
     # =============================
-    # ⚠️ VENCIMIENTOS
+    # ⚠️ PRÓXIMOS Y VENCIDOS
     # =============================
     cur.execute("""
-        SELECT p.id, p.vencimiento, c.nombre
+        SELECT
+            p.id,
+            p.fecha,
+            c.nombre
+
         FROM prestamos p
-        JOIN clientes c ON p.cliente_id = c.id
+
+        JOIN clientes c
+        ON p.cliente_id = c.id
     """)
 
     por_vencer = []
@@ -507,36 +542,70 @@ def panel():
 
     hoy = datetime.now().date()
 
-    for pid, venc, nombre in cur.fetchall():
+    for pid, fecha_inicio, nombre in cur.fetchall():
 
-        cap_rest, _, _, _, _ = calcular(pid, conn)
-        saldo = cap_rest + interes_hoy(pid, conn)
+        # 🔥 saldo real actualizado
+        cap_rest, int_rest, _, _, _ = calcular(pid, conn)
 
+        saldo = cap_rest + int_rest
+
+        # 🔥 si ya terminó
         if saldo <= 0:
             continue
 
-        if isinstance(venc, str):
-            venc = datetime.strptime(venc, "%Y-%m-%d").date()
+        # 🔥 vencimiento automático 30 días
+        fecha_vencimiento = fecha_inicio + timedelta(days=30)
 
-        dias = (venc - hoy).days
+        # 🔥 días restantes
+        dias_restantes = (
+            fecha_vencimiento - hoy
+        ).days
 
-        if dias < 0:
-            vencidos.append((pid, nombre, abs(dias), formato(saldo)))
-        elif dias <= 3:
-            por_vencer.append((pid, nombre, dias, formato(saldo)))
+        # =============================
+        # 🔴 VENCIDOS
+        # =============================
+        if dias_restantes < 0:
+
+            dias_atraso = abs(dias_restantes)
+
+            vencidos.append((
+                pid,
+                nombre,
+                dias_atraso,
+                formato(saldo)
+            ))
+
+        # =============================
+        # 🟠 PRÓXIMOS A VENCER
+        # =============================
+        elif dias_restantes <= 5:
+
+            por_vencer.append((
+                pid,
+                nombre,
+                dias_restantes,
+                formato(saldo)
+            ))
 
     # =============================
-    # 👥 CLIENTES
+    # 👥 GANANCIA CLIENTES
     # =============================
     clientes_ganancia = ganancia_por_cliente(conn)
 
     # =============================
-    # 📋 PRÉSTAMOS (PARA ABONAR)
+    # 📋 PRÉSTAMOS ACTIVOS
     # =============================
     cur.execute("""
-        SELECT p.id, c.nombre, p.capital, p.interes
+        SELECT
+            p.id,
+            c.nombre,
+            p.capital,
+            p.interes
+
         FROM prestamos p
-        JOIN clientes c ON p.cliente_id = c.id
+
+        JOIN clientes c
+        ON p.cliente_id = c.id
     """)
 
     prestamos = []
@@ -544,15 +613,24 @@ def panel():
     rows = cur.fetchall()
 
     for pid, nombre, capital, interes in rows:
-        interes_mensual = capital * (interes / 100)
+
+        interes_mensual = capital * (
+            interes / 100
+        )
 
         prestamos.append({
+
             "id": pid,
+
             "nombre": nombre,
+
             "interes_mensual": interes_mensual
+
         })
 
-    # 🔧 VARIABLES NECESARIAS
+    # =============================
+    # 🔧 VARIABLES
+    # =============================
     capital = capital_dia
     interes = interes_dia
 
@@ -560,25 +638,35 @@ def panel():
     conn.close()
 
     return render_template(
+
         "panel.html",
+
         fecha=fecha,
+
         tipo=tipo,
+
         clientes_ganancia=clientes_ganancia,
 
         capital=formato(capital),
+
         interes=formato(interes),
+
         capital_total=formato(capital_total),
 
         capital_dia=formato(capital_dia),
+
         interes_dia=formato(interes_dia),
 
         capital_mes=formato(capital_mes),
+
         interes_mes=formato(interes_mes),
 
         capital_acumulado=formato(capital_acumulado),
+
         interes_acumulado=formato(interes_acumulado),
 
         por_vencer=por_vencer,
+
         vencidos=vencidos,
 
         prestamos=prestamos
