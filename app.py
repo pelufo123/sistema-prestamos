@@ -1171,6 +1171,11 @@ def abonos():
                     conn
                 )
 
+                # 🔥 QUITAR DECIMALES
+                cap_rest = round(cap_rest)
+                int_rest = round(int_rest)
+                total = round(total)
+
                 if total <= 0:
                     continue
 
@@ -1187,10 +1192,10 @@ def abonos():
 
                 if data:
 
-                    capital_original = data[0]
-                    tasa = data[1]
+                    capital_original = float(data[0])
+                    tasa = float(data[1])
 
-                    interes_mensual = (
+                    interes_mensual = round(
                         capital_original *
                         (tasa / 100)
                     )
@@ -1222,12 +1227,13 @@ def abonos():
                     FROM abonos
                     WHERE prestamo_id=%s
                     AND tipo='interes'
+                    AND mes IS NOT NULL
                     ORDER BY mes ASC
                 """, (pid,))
 
                 meses_pagados_db = [
 
-                    x[0]
+                    int(x[0])
 
                     for x in cur.fetchall()
 
@@ -1236,8 +1242,32 @@ def abonos():
                 ]
 
                 # =============================
-                # 📋 GENERAR LISTA
-                # SOLO MESES NO PAGADOS
+                # 🔥 ÚLTIMO MES PAGADO
+                # =============================
+                ultimo_mes_pagado = "Sin pagos"
+
+                if meses_pagados_db:
+
+                    ultimo_num = max(
+                        meses_pagados_db
+                    )
+
+                    fecha_ultimo = (
+                        fecha_prestamo +
+                        relativedelta(
+                            months=ultimo_num - 1
+                        )
+                    )
+
+                    ultimo_mes_pagado = (
+                        fecha_ultimo.strftime(
+                            "%B %Y"
+                        ).capitalize()
+                    )
+
+                # =============================
+                # 📋 GENERAR MESES
+                # 🔥 NO MOSTRAR PAGADOS
                 # =============================
                 meses = []
 
@@ -1246,8 +1276,7 @@ def abonos():
                     meses_totales + 1
                 ):
 
-                    # 🔥 SI YA ESTÁ PAGADO
-                    # NO MOSTRAR
+                    # 🔥 SI YA PAGÓ ESE MES
                     if i in meses_pagados_db:
                         continue
 
@@ -1272,35 +1301,7 @@ def abonos():
                     })
 
                 # =============================
-                # 📌 ÚLTIMO MES PAGADO
-                # =============================
-                if meses_pagados_db:
-
-                    ultimo_num = max(
-                        meses_pagados_db
-                    )
-
-                    fecha_ultimo = (
-                        fecha_prestamo +
-                        relativedelta(
-                            months=ultimo_num - 1
-                        )
-                    )
-
-                    ultimo_mes_pagado = (
-                        fecha_ultimo.strftime(
-                            "%B %Y"
-                        ).capitalize()
-                    )
-
-                else:
-
-                    ultimo_mes_pagado = (
-                        "Sin pagos"
-                    )
-
-                # =============================
-                # 📆 CANTIDAD MESES
+                # 📆 CANTIDAD MESES PAGADOS
                 # =============================
                 cantidad_meses = len(
                     meses_pagados_db
@@ -1315,33 +1316,33 @@ def abonos():
                     "nombre": nombre,
 
                     "capital":
-                        formato(cap_rest),
+                        formato(round(cap_rest)),
 
                     "interes":
-                        formato(int_rest),
+                        formato(round(int_rest)),
 
                     "total":
-                        formato(total),
+                        formato(round(total)),
 
                     "capital_num":
-                        cap_rest,
+                        round(cap_rest),
 
                     "interes_num":
-                        int_rest,
+                        round(interes_mensual),
 
                     "total_num":
-                        total,
+                        round(total),
 
                     "meses":
                         meses,
 
                     "interes_mensual":
                         formato(
-                            interes_mensual
+                            round(interes_mensual)
                         ),
 
                     "interes_mensual_raw":
-                        interes_mensual,
+                        round(interes_mensual),
 
                     "ultimo_mes_pagado":
                         ultimo_mes_pagado,
@@ -1413,8 +1414,9 @@ def abonos():
                     ) or 0
                 )
 
-                # 🔥 VALIDAR
-                # NO DUPLICAR MES
+                # =============================
+                # 🔥 VALIDAR DUPLICADO
+                # =============================
                 cur.execute("""
                     SELECT id
                     FROM abonos
@@ -1433,8 +1435,7 @@ def abonos():
                 if existe_mes:
 
                     mensaje = (
-                        "❌ Ese mes ya "
-                        "fue abonado"
+                        "❌ Ese mes ya fue abonado"
                     )
 
                     conn.close()
@@ -1503,7 +1504,7 @@ def abonos():
                 """, (
 
                     pid,
-                    monto,
+                    round(monto),
                     datetime.now(),
                     tipo,
                     mes_pagado
