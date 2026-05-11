@@ -2,7 +2,7 @@ import os
 import psycopg2
 from flask import Flask, render_template, request, redirect, url_for, session
 from datetime import datetime, timedelta
-
+from dateutil.relativedelta import relativedelta
 app = Flask(__name__)
 app.secret_key = "clave_super_segura"
 
@@ -657,18 +657,105 @@ def panel():
 
     for pid, nombre, capital, interes in rows:
 
-        interes_mensual = capital * (
-            interes / 100
-        )
+        # =========================
+        # CÁLCULO
+        # =========================
+        capital_restante, interes_restante, saldo_total, _, _ = calcular(pid, conn)
 
+        # =========================
+        # FECHA DEL PRÉSTAMOS
+        # =========================
+        cur.execute("""
+            SELECT fecha
+            FROM prestamos
+            WHERE id=%s
+        """, (pid,))
+
+        fecha_prestamo = cur.fetchone()[0]
+
+        # =========================
+        # MESES PAGADOS
+        # =========================
+        cur.execute("""
+            SELECT mes
+            FROM abonos
+            WHERE prestamo_id=%s
+            AND tipo='interes'
+            ORDER BY mes ASC
+        """, (pid,))
+
+        meses_pagados = [x[0] for x in cur.fetchall()]
+
+        # =========================
+        # GENERAR 24 MESES
+        # =========================
+        meses = []
+
+        fecha_base = fecha_prestamo
+
+        for i in range(24):
+
+            mes_num = i + 1
+
+            nueva_fecha = fecha_base + relativedelta(months=i)
+
+            texto = nueva_fecha.strftime("%B %Y").capitalize()
+
+            meses.append({
+                "numero": mes_num,
+                "texto": texto
+            })
+
+        # =========================
+        # SIGUIENTE MES PENDIENTE
+        # =========================
+        siguiente_mes = 1
+
+        while siguiente_mes in meses_pagados:
+            siguiente_mes += 1
+
+        # =========================
+        # TEXTO DEL SIGUIENTE MES
+        # =========================
+        siguiente_mes_texto = ""
+
+        for m in meses:
+            if m["numero"] == siguiente_mes:
+                siguiente_mes_texto = m["texto"]
+
+        # =========================
+        # ÚLTIMO MES PAGADO
+        # =========================
+        ultimo_pagado = ""
+
+        if meses_pagados:
+
+            ultimo_num = max(meses_pagados)
+
+            for m in meses:
+                if m["numero"] == ultimo_num:
+                    ultimo_pagado = m["texto"]
+
+        # =========================
+        # GUARDAR
+        # =========================
         prestamos.append({
 
             "id": pid,
-
             "nombre": nombre,
 
-            "interes_mensual": interes_mensual
+            "capital": formato(capital_restante),
+            "interes": formato(interes_restante),
+            "total": formato(saldo_total),
 
+            "interes_num": interes_restante,
+
+            "meses": meses,
+
+            "siguiente_mes": siguiente_mes,
+            "siguiente_mes_texto": siguiente_mes_texto,
+
+            "ultimo_pagado": ultimo_pagado
         })
 
     # =============================
@@ -1105,18 +1192,26 @@ def abonos():
 
                     prestamos.append({
 
-                        "id": pid,
-                        "nombre": nombre,
+        "id": pid,
+        "nombre": nombre,
 
-                        "capital": formato(cap_rest),
-                        "interes": formato(int_rest),
-                        "total": formato(total),
+        "capital": formato(cap_rest),
+        "interes": formato(int_rest),
+        "total": formato(total),
 
-                        "meses": meses,
+        "meses": meses,
 
-                        "interes_mensual": formato(interes_mensual),
-                        "interes_mensual_raw": interes_mensual
-                    })
+        "interes_mensual": formato(interes_mensual),
+        "interes_mensual_raw": interes_mensual,
+
+        # 🔥 NUEVO
+        "ultimo_mes_pagado":
+            meses[-1]["texto"] if meses else "Sin pagos",
+
+        "cantidad_meses":
+            len(meses)
+
+    })
 
         except Exception as e:
 
