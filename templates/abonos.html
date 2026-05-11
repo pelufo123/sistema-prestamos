@@ -59,20 +59,24 @@
     <div class="card" style="margin-top:20px;">
 
         <!-- ===================================== -->
-        <!-- CLIENTE -->
+        <!-- HEADER -->
         <!-- ===================================== -->
 
         <div style="
             display:flex;
             justify-content:space-between;
             align-items:center;
-            margin-bottom:20px;
             flex-wrap:wrap;
+            gap:15px;
+            margin-bottom:20px;
         ">
 
             <div>
 
-                <h3 style="margin:0;">
+                <h3 style="
+                    margin:0;
+                    font-size:24px;
+                ">
                     👤 {{ p.nombre }}
                 </h3>
 
@@ -112,7 +116,12 @@
 
         <div class="grid-metricas">
 
-            <div>
+            <!-- CAPITAL -->
+
+            <div class="card" style="
+                background:#f8fbff;
+                border-left:5px solid #3498db;
+            ">
 
                 <div class="label">
                     Capital pendiente
@@ -124,7 +133,12 @@
 
             </div>
 
-            <div>
+            <!-- INTERÉS -->
+
+            <div class="card" style="
+                background:#fffaf2;
+                border-left:5px solid #f39c12;
+            ">
 
                 <div class="label">
                     Interés pendiente
@@ -132,14 +146,19 @@
 
                 <div
                     class="metric interes_pendiente"
-                    data-valor="{{ p.interes_num }}"
+                    data-valor="{{ p.interes_mensual_raw }}"
                 >
                     ${{ p.interes }}
                 </div>
 
             </div>
 
-            <div>
+            <!-- TOTAL -->
+
+            <div class="card" style="
+                background:#f7fff8;
+                border-left:5px solid #2ecc71;
+            ">
 
                 <div class="label">
                     Total deuda
@@ -180,6 +199,14 @@
                 type="hidden"
                 class="prestamo_id"
                 value="{{ p.id }}"
+            >
+
+            <!-- INTERÉS MENSUAL -->
+
+            <input
+                type="hidden"
+                class="interes_mensual"
+                value="{{ p.interes_mensual_raw }}"
             >
 
             <!-- ===================================== -->
@@ -224,6 +251,7 @@
                     onchange="
                         mostrarAlerta(this);
                         actualizarResumen(this);
+                        cargarInteres(this);
                     "
                 >
 
@@ -355,9 +383,11 @@ function cambiarTipo(select){
 
     if(tipo === "capital"){
 
-        divMes.style.display = "none";
+        divMes.style.display =
+        "none";
 
-        alerta.style.display = "none";
+        alerta.style.display =
+        "none";
 
         monto.value = "";
 
@@ -365,7 +395,8 @@ function cambiarTipo(select){
 
     else{
 
-        divMes.style.display = "block";
+        divMes.style.display =
+        "block";
 
         let selectMes =
         form.querySelector(".mes");
@@ -381,7 +412,7 @@ function cambiarTipo(select){
 }
 
 /* ===================================== */
-/* ALERTA DE ADELANTO */
+/* ALERTA */
 /* ===================================== */
 
 function mostrarAlerta(select){
@@ -439,13 +470,13 @@ function actualizarResumen(select){
     let totalDiv =
     card.querySelector(".total_deuda");
 
-    let interesBase =
-    parseInt(
+    let interesMensual =
+    parseFloat(
         interesDiv.dataset.valor
     );
 
     let totalBase =
-    parseInt(
+    parseFloat(
         totalDiv.dataset.total
     );
 
@@ -457,16 +488,23 @@ function actualizarResumen(select){
     }
 
     let nuevoInteres =
-    interesBase * meses;
+    interesMensual;
 
     let nuevoTotal =
-    totalBase + (interesBase * (meses - 1));
+    totalBase +
+    (interesMensual * (meses - 1));
 
     interesDiv.innerHTML =
-    "$" + formatoPesos(nuevoInteres);
+    "$" +
+    formatoPesos(
+        nuevoInteres
+    );
 
     totalDiv.innerHTML =
-    "$" + formatoPesos(nuevoTotal);
+    "$" +
+    formatoPesos(
+        nuevoTotal
+    );
 
 }
 
@@ -479,11 +517,15 @@ function cargarInteres(select){
     let form =
     select.closest("form");
 
-    let prestamo_id =
-    form.querySelector(".prestamo_id").value;
-
     let monto =
     form.querySelector(".monto");
+
+    let interesMensual =
+    parseFloat(
+        form.querySelector(
+            ".interes_mensual"
+        ).value
+    );
 
     let meses =
     parseInt(select.value);
@@ -492,28 +534,11 @@ function cargarInteres(select){
         meses = 1;
     }
 
-    fetch(`/obtener_interes?prestamo_id=${prestamo_id}`)
+    let total =
+    interesMensual * meses;
 
-    .then(response => response.json())
-
-    .then(data => {
-
-        let total =
-        Number(data.interes) * meses;
-
-        monto.value =
-        formatoPesos(total);
-
-    })
-
-    .catch(error => {
-
-        console.log(
-            "Error:",
-            error
-        );
-
-    });
+    monto.value =
+    formatoPesos(total);
 
 }
 

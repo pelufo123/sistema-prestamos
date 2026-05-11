@@ -1111,7 +1111,6 @@ def prestamos():
     )
 
 
-# ------------------------------
 # 💸 ABONOS
 # ------------------------------
 @app.route("/abonos", methods=["GET", "POST"])
@@ -1435,36 +1434,92 @@ def abonos():
         cliente_id=cliente_id
 
     )
+# ------------------------------
+# 🔥 OBTENER INTERÉS AUTOMÁTICO
+# ------------------------------
 @app.route("/obtener_interes")
 def obtener_interes():
 
     prestamo_id = request.args.get("prestamo_id")
+    mes = request.args.get("mes")
 
     conn = conectar()
-    cur = conn.cursor()
 
-    cur.execute("""
-        SELECT capital, interes
-        FROM prestamos
-        WHERE id=%s
-    """, (prestamo_id,))
-
-    row = cur.fetchone()
-
-    if not row:
+    if not conn:
         return jsonify({"interes": 0})
 
-    capital, interes = row
+    cur = conn.cursor()
 
-    interes_mensual = int(capital * (interes / 100))
+    try:
 
-    cur.close()
-    conn.close()
+        # =============================
+        # VALIDAR SI YA PAGÓ ESE MES
+        # =============================
+        if mes:
+
+            cur.execute("""
+                SELECT COUNT(*)
+                FROM abonos
+                WHERE prestamo_id=%s
+                AND tipo='interes'
+                AND mes=%s
+            """, (
+
+                prestamo_id,
+                mes
+
+            ))
+
+            ya_pagado = cur.fetchone()[0]
+
+            if ya_pagado > 0:
+
+                return jsonify({
+                    "interes": 0
+                })
+
+        # =============================
+        # OBTENER DATOS
+        # =============================
+        cur.execute("""
+            SELECT capital, interes
+            FROM prestamos
+            WHERE id=%s
+        """, (prestamo_id,))
+
+        data = cur.fetchone()
+
+        if data:
+
+            capital = float(data[0])
+            interes = float(data[1])
+
+            interes_mensual = (
+                capital *
+                (interes / 100)
+            )
+
+        else:
+
+            interes_mensual = 0
+
+    except Exception as e:
+
+        print("ERROR obtener_interes:", e)
+
+        interes_mensual = 0
+
+    finally:
+
+        cur.close()
+        conn.close()
 
     return jsonify({
-        "interes": interes_mensual
+
+        "interes":
+        round(interes_mensual, 2)
+
     })
-# ------------------------------
 if __name__ == "__main__":
     init_db()
     crear_admin()
