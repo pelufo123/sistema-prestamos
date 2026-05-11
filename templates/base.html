@@ -79,5 +79,50 @@
 
 </div>
 
+
+<script>
+
+function formatearMiles(input){
+
+    // 🔥 quitar todo lo que NO sea número
+    let valor = input.value.replace(/\D/g, "");
+
+    // 🔥 colocar puntos automáticamente
+    valor = valor.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+    input.value = valor;
+}
+
+// 🔥 convertir a número real para enviar al backend
+function limpiarNumero(valor){
+    return valor.replace(/\./g, "");
+}
+
+// 🔥 TODOS los inputs con class="money"
+document.addEventListener("DOMContentLoaded", function(){
+
+    const inputs = document.querySelectorAll(".money");
+
+    inputs.forEach(input => {
+
+        input.addEventListener("input", function(){
+            formatearMiles(this);
+        });
+
+        // 🔥 antes de enviar formulario
+        input.form?.addEventListener("submit", function(){
+
+            inputs.forEach(i => {
+                i.value = limpiarNumero(i.value);
+            });
+
+        });
+
+    });
+
+});
+
+</script>
+
 </body>
 </html>

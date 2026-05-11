@@ -1,61 +1,108 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
+```html
+<!-- templates/abonos.html -->
 
-<div class="container">
+{% extends "base.html" %}
 
-<div style="margin-bottom:15px;">
-<button type="button" class="btn" onclick="window.location.href='/';">
-    🏠 Inicio
-</button>
-</div>
+{% block content %}
 
-<h2>Abonos</h2>
+<h2 class="titulo-panel">
+    💸 Abonos
+</h2>
+
+<!-- ===================================== -->
+<!-- SELECCIONAR CLIENTE -->
+<!-- ===================================== -->
 
 <div class="card">
 
-<form method="GET">
+    <form method="GET">
 
-    <select name="cliente" onchange="this.form.submit()">
+        <label>Seleccionar cliente</label>
 
-        <option value="">
-            Seleccione cliente
-        </option>
-
-        {% for c in clientes %}
-
-        <option
-            value="{{ c[0] }}"
-            {% if cliente_id == c[0]|string %}selected{% endif %}
+        <select
+            name="cliente"
+            onchange="this.form.submit()"
         >
-            {{ c[1] }}
-        </option>
 
-        {% endfor %}
+            <option value="">
+                Seleccione cliente
+            </option>
 
-    </select>
+            {% for c in clientes %}
 
-</form>
+            <option
+                value="{{ c[0] }}"
+                {% if cliente_id == c[0]|string %}selected{% endif %}
+            >
+
+                {{ c[1] }}
+
+            </option>
+
+            {% endfor %}
+
+        </select>
+
+    </form>
 
 </div>
+
+<!-- ===================================== -->
+<!-- PRÉSTAMOS -->
+<!-- ===================================== -->
 
 {% if prestamos %}
 
     {% for p in prestamos %}
 
-    <div class="card" style="margin-top:10px;">
+    <div class="card">
 
-        <h4>{{ p.nombre }}</h4>
+        <h3>
+            👤 {{ p.nombre }}
+        </h3>
 
-        💰 Capital: <b>{{ p.capital }}</b><br>
-        📈 Interés: <b>{{ p.interes }}</b><br>
-        🧾 Total: <b>{{ p.total }}</b><br><br>
+        <div class="grid-metricas">
 
-        <!-- 🔥 FORMULARIO NORMAL -->
+            <div>
+
+                <div class="label">
+                    Capital
+                </div>
+
+                <div class="metric">
+                    ${{ p.capital }}
+                </div>
+
+            </div>
+
+            <div>
+
+                <div class="label">
+                    Interés
+                </div>
+
+                <div class="metric">
+                    ${{ p.interes }}
+                </div>
+
+            </div>
+
+            <div>
+
+                <div class="label">
+                    Total
+                </div>
+
+                <div class="metric">
+                    ${{ p.total }}
+                </div>
+
+            </div>
+
+        </div>
+
+        <br>
+
         <form method="POST">
 
             <input
@@ -76,7 +123,7 @@
                 value="{{ p.id }}"
             >
 
-            <label>Tipo:</label>
+            <label>Tipo de abono</label>
 
             <select
                 name="tipo"
@@ -98,13 +145,12 @@
 
             <div class="div_mes">
 
-                <label>Mes a pagar:</label>
+                <label>Mes a pagar</label>
 
                 <select
                     name="mes"
                     class="mes"
                     onchange="cargarInteres(this)"
-                    required
                 >
 
                     {% if p.meses %}
@@ -131,17 +177,20 @@
 
             <br>
 
+            <label>Monto</label>
+
             <input
+                type="text"
                 name="monto"
-                class="monto"
-                placeholder="Monto"
+                class="monto money"
+                placeholder="50.000"
                 required
             >
 
             <br><br>
 
-            <button class="btn">
-                Guardar
+            <button>
+                💾 Guardar abono
             </button>
 
         </form>
@@ -152,27 +201,27 @@
 
 {% endif %}
 
+<!-- ===================================== -->
+<!-- MENSAJES -->
+<!-- ===================================== -->
+
 {% if mensaje %}
 
-<div class="alert alert-warning" style="margin-top:15px;">
+<div class="card red">
+
     {{ mensaje }}
+
 </div>
 
 {% endif %}
 
-<div style="margin-top:20px;">
-
-    <a class="btn" href="/">
-        Volver
-    </a>
-
-</div>
-
-</div>
+<!-- ===================================== -->
+<!-- SCRIPTS -->
+<!-- ===================================== -->
 
 <script>
 
-function cambiarTipo(select) {
+function cambiarTipo(select){
 
     let form = select.closest("form");
 
@@ -182,15 +231,13 @@ function cambiarTipo(select) {
 
     let monto = form.querySelector(".monto");
 
-    if (tipo === "capital") {
+    if(tipo === "capital"){
 
         divMes.style.display = "none";
 
         monto.value = "";
 
-    }
-
-    else {
+    }else{
 
         divMes.style.display = "block";
 
@@ -201,13 +248,15 @@ function cambiarTipo(select) {
     }
 }
 
-function cargarInteres(select) {
+function cargarInteres(select){
 
     let form = select.closest("form");
 
-    let prestamo_id = form.querySelector(".prestamo_id").value;
+    let prestamo_id =
+    form.querySelector(".prestamo_id").value;
 
-    let monto = form.querySelector(".monto");
+    let monto =
+    form.querySelector(".monto");
 
     fetch(`/obtener_interes?prestamo_id=${prestamo_id}`)
 
@@ -215,7 +264,9 @@ function cargarInteres(select) {
 
     .then(data => {
 
-        monto.value = data.interes;
+        monto.value =
+        Number(data.interes)
+        .toLocaleString("es-CO");
 
     })
 
@@ -224,9 +275,51 @@ function cargarInteres(select) {
         console.log("Error:", error);
 
     });
+
 }
 
-document.addEventListener("DOMContentLoaded", function() {
+/* ===================================== */
+/* FORMATO DINERO */
+/* ===================================== */
+
+function formatearMiles(input){
+
+    let valor = input.value.replace(/\D/g, "");
+
+    valor = valor.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+    input.value = valor;
+}
+
+function limpiarNumero(valor){
+
+    return valor.replace(/\./g, "");
+}
+
+document.addEventListener("DOMContentLoaded", function(){
+
+    const inputs =
+    document.querySelectorAll(".money");
+
+    inputs.forEach(input => {
+
+        input.addEventListener("input", function(){
+
+            formatearMiles(this);
+
+        });
+
+        input.form.addEventListener("submit", function(){
+
+            inputs.forEach(i => {
+
+                i.value = limpiarNumero(i.value);
+
+            });
+
+        });
+
+    });
 
     document.querySelectorAll(".tipo").forEach(select => {
 
@@ -238,5 +331,5 @@ document.addEventListener("DOMContentLoaded", function() {
 
 </script>
 
-</body>
-</html>
+{% endblock %}
+```

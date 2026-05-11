@@ -1,115 +1,302 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Préstamos</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
+```html
+<!-- templates/prestamos.html -->
 
-<div class="container">
+{% extends "base.html" %}
 
-<!-- BOTÓN INICIO -->
-<div style="margin-bottom:15px;">
-    <a href="{{ url_for('panel') }}" class="btn">🏠 Inicio</a>
-</div>
+{% block content %}
 
-<h2>💸 Préstamos</h2>
+<h2 class="titulo-panel">
+    💸 Préstamos
+</h2>
 
-<!-- =============================
-     FORMULARIO
-============================= -->
+<!-- ===================================== -->
+<!-- FORMULARIO -->
+<!-- ===================================== -->
+
 <div class="card">
-<form method="POST">
 
-    <select name="cliente">
-        {% for c in clientes %}
-        <option value="{{ c[0] }}">{{ c[1] }}</option>
-        {% endfor %}
-    </select>
+    <form method="POST">
 
-    <input name="capital" placeholder="Capital" required>
-    <input name="interes" placeholder="Interés %" required>
+        <div class="grid-metricas">
 
-    <label>📅 Fecha inicio</label>
-    <input type="date" name="fecha" required>
+            <div>
 
-    <label>📅 Fecha vencimiento</label>
-    <input type="date" name="vencimiento" required>
+                <label>Cliente</label>
 
-    <button>Guardar</button>
-</form>
+                <select name="cliente" required>
+
+                    {% for c in clientes %}
+
+                    <option value="{{ c[0] }}">
+                        {{ c[1] }}
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+            <div>
+
+                <label>Capital</label>
+
+                <input
+                    type="text"
+                    name="capital"
+                    class="money"
+                    placeholder="100.000"
+                    required
+                >
+
+            </div>
+
+            <div>
+
+                <label>Interés %</label>
+
+                <input
+                    type="number"
+                    step="0.1"
+                    name="interes"
+                    placeholder="20"
+                    required
+                >
+
+            </div>
+
+            <div>
+
+                <label>📅 Fecha inicio</label>
+
+                <input
+                    type="date"
+                    name="fecha"
+                    required
+                >
+
+            </div>
+
+            <div>
+
+                <label>📅 Fecha vencimiento</label>
+
+                <input
+                    type="date"
+                    name="vencimiento"
+                    required
+                >
+
+            </div>
+
+        </div>
+
+        <br>
+
+        <button>
+            💾 Guardar préstamo
+        </button>
+
+    </form>
+
 </div>
 
-<!-- =============================
-     LISTA GENERAL
-============================= -->
+<!-- ===================================== -->
+<!-- PRÉSTAMOS ACTIVOS -->
+<!-- ===================================== -->
+
 <div class="card">
-<h3>📋 Préstamos activos</h3>
 
-<table>
-    <tr>
-        <th>ID</th>
-        <th>Cliente</th>
-        <th>Total</th>
-        <th>Saldo</th>
-    </tr>
+    <div class="table-header">
 
-    {% for p in prestamos %}
-    <tr>
-        <td>{{ p.id }}</td>
-        <td>{{ p.cliente }}</td>
-        <td>{{ p.total }}</td>
-        <td>{{ p.saldo }}</td>
-    </tr>
-    {% endfor %}
-</table>
+        <h3>
+            📋 Préstamos activos
+        </h3>
+
+    </div>
+
+    <div class="table-responsive">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Total</th>
+                    <th>Saldo</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for p in prestamos %}
+
+                <tr>
+
+                    <td>{{ p.id }}</td>
+
+                    <td>{{ p.cliente }}</td>
+
+                    <td>${{ p.total }}</td>
+
+                    <td>${{ p.saldo }}</td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
 </div>
 
-<!-- =============================
-     FILTRO
-============================= -->
+<!-- ===================================== -->
+<!-- FILTRO -->
+<!-- ===================================== -->
+
 <div class="card">
-<h3>📅 Buscar por fecha</h3>
 
-<form method="GET">
-    <input type="date" name="fecha" value="{{ fecha }}">
-    <button>Buscar</button>
-</form>
+    <h3>
+        📅 Buscar préstamos por fecha
+    </h3>
+
+    <form method="GET">
+
+        <input
+            type="date"
+            name="fecha"
+            value="{{ fecha }}"
+        >
+
+        <br><br>
+
+        <button>
+            🔍 Buscar
+        </button>
+
+    </form>
+
 </div>
 
-<!-- =============================
-     RESULTADO DEL DÍA
-============================= -->
+<!-- ===================================== -->
+<!-- PRÉSTAMOS DEL DÍA -->
+<!-- ===================================== -->
+
 <div class="card">
-<h3>📊 Préstamos del día</h3>
 
-<p><b>Total:</b> {{ cantidad_dia }}</p>
+    <h3>
+        📊 Préstamos del día
+    </h3>
 
-<table>
-    <tr>
-        <th>ID</th>
-        <th>Cliente</th>
-        <th>Capital</th>
-        <th>Total</th>
-        <th>Fecha</th>
-    </tr>
+    <p>
 
-    {% for p in prestamos_dia %}
-    <tr>
-        <td>{{ p[0] }}</td>
-        <td>{{ p[1] }}</td>
-        <td>{{ p[2] }}</td>
-        <td>{{ p[3] }}</td>
-        <td>{{ p[4] }}</td>
-    </tr>
-    {% endfor %}
-</table>
+        <b>Total:</b>
+
+        {{ cantidad_dia }}
+
+    </p>
+
+    <div class="table-responsive">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Capital</th>
+                    <th>Total</th>
+                    <th>Fecha</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for p in prestamos_dia %}
+
+                <tr>
+
+                    <td>{{ p[0] }}</td>
+
+                    <td>{{ p[1] }}</td>
+
+                    <td>${{ p[2] }}</td>
+
+                    <td>${{ p[3] }}</td>
+
+                    <td>{{ p[4] }}</td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
 </div>
 
-<a class="btn" href="/">⬅ Volver</a>
+<!-- ===================================== -->
+<!-- SCRIPT FORMATO DINERO -->
+<!-- ===================================== -->
 
-</div>
+<script>
 
-</body>
-</html>
+function formatearMiles(input){
+
+    let valor = input.value.replace(/\D/g, "");
+
+    valor = valor.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+    input.value = valor;
+}
+
+function limpiarNumero(valor){
+
+    return valor.replace(/\./g, "");
+}
+
+document.addEventListener("DOMContentLoaded", function(){
+
+    const inputs = document.querySelectorAll(".money");
+
+    inputs.forEach(input => {
+
+        input.addEventListener("input", function(){
+
+            formatearMiles(this);
+
+        });
+
+        input.form.addEventListener("submit", function(){
+
+            inputs.forEach(i => {
+
+                i.value = limpiarNumero(i.value);
+
+            });
+
+        });
+
+    });
+
+});
+
+</script>
+
+{% endblock %}
+```
