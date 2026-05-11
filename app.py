@@ -1223,23 +1223,23 @@ def abonos():
                 # 📌 MESES PAGADOS
                 # =============================
                 cur.execute("""
-                    SELECT mes
-                    FROM abonos
-                    WHERE prestamo_id=%s
-                    AND tipo='interes'
-                    AND mes IS NOT NULL
-                    ORDER BY mes ASC
-                """, (pid,))
+                SELECT DISTINCT mes
+                FROM abonos
+                WHERE prestamo_id=%s
+                AND tipo='interes'
+                AND mes IS NOT NULL
+                ORDER BY mes ASC
+            """, (pid,))
 
-                meses_pagados_db = [
+                meses_pagados_db = list(set([
 
-                    int(x[0])
+    int(x[0])
 
-                    for x in cur.fetchall()
+    for x in cur.fetchall()
 
-                    if x[0] is not None
+    if x[0] is not None
 
-                ]
+]))
 
                 # =============================
                 # 🔥 ÚLTIMO MES PAGADO
@@ -1275,6 +1275,17 @@ def abonos():
                     1,
                     meses_totales + 1
                 ):
+
+                    # 🔥 SI YA FUE PAGADO NO MOSTRAR
+                    if i in meses_pagados_db:
+                        continue
+
+                    fecha_mes = (
+                        fecha_prestamo +
+                        relativedelta(
+                            months=i - 1
+                        )
+                    )
 
                     # 🔥 SI YA PAGÓ ESE MES
                     if i in meses_pagados_db:
