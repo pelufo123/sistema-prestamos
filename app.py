@@ -222,52 +222,89 @@ def interes_hoy(pid, conn):
 # ------------------------------
 # ------------------------------
 # 🧠 CÁLCULO
-# ------------------------------
 def calcular(pid, conn):
+
     cur = conn.cursor()
 
-    cur.execute("SELECT capital, interes, fecha FROM prestamos WHERE id=%s", (pid,))
+    cur.execute("""
+        SELECT capital, interes, fecha
+        FROM prestamos
+        WHERE id=%s
+    """, (pid,))
+
     data = cur.fetchone()
 
     if not data:
         return 0, 0, 0, 0, 0
 
-    capital, interes, fecha = data
+    capital_original, interes, fecha = data
 
-    # 📅 meses transcurridos
-    meses = meses_atraso(fecha)
+    # =====================================
+    # 💸 CAPITAL ABONADO
+    # =====================================
 
-    # 💰 interés total generado
-    interes_total = capital * (interes / 100) * meses
-
-    # 💸 interés pagado
     cur.execute("""
         SELECT SUM(monto)
         FROM abonos
-        WHERE prestamo_id=%s AND tipo='interes'
+        WHERE prestamo_id=%s
+        AND tipo='capital'
     """, (pid,))
-    abonado_interes = cur.fetchone()[0] or 0
 
-    interes_restante = interes_total - abonado_interes
-    if interes_restante < 0:
-        interes_restante = 0
-
-    # 💸 capital pagado
-    cur.execute("""
-        SELECT SUM(monto)
-        FROM abonos
-        WHERE prestamo_id=%s AND tipo='capital'
-    """, (pid,))
     abonado_capital = cur.fetchone()[0] or 0
 
-    capital_restante = capital - abonado_capital
+    capital_restante = capital_original - abonado_capital
+
     if capital_restante < 0:
         capital_restante = 0
 
-    # 🔥 TOTAL REAL
+    # =====================================
+    # 📆 MESES TRANSCURRIDOS
+    # =====================================
+
+    meses = meses_atraso(fecha)
+
+    if meses < 0:
+        meses = 0
+
+    # =====================================
+    # 🔥 INTERÉS SOBRE CAPITAL RESTANTE
+    # =====================================
+
+    interes_mensual_actual = capital_restante * (interes / 100)
+
+    interes_total = interes_mensual_actual * meses
+
+    # =====================================
+    # 💰 INTERÉS PAGADO
+    # =====================================
+
+    cur.execute("""
+        SELECT SUM(monto)
+        FROM abonos
+        WHERE prestamo_id=%s
+        AND tipo='interes'
+    """, (pid,))
+
+    abonado_interes = cur.fetchone()[0] or 0
+
+    interes_restante = interes_total - abonado_interes
+
+    if interes_restante < 0:
+        interes_restante = 0
+
+    # =====================================
+    # 💵 TOTAL
+    # =====================================
+
     saldo_total = capital_restante + interes_restante
 
-    return capital_restante, interes_restante, saldo_total, abonado_capital, abonado_interes
+    return (
+        capital_restante,
+        interes_restante,
+        saldo_total,
+        abonado_capital,
+        abonado_interes
+    )
 
 def meses_disponibles(pid, conn):
     cur = conn.cursor()
@@ -1067,7 +1104,9 @@ def obtener_interes():
             capital = data[0]
             interes = data[1]
 
-            interes_mensual = capital * (interes / 100)
+            cap_rest, _, _, _, _ = calcular(prestamo_id, conn)
+
+            interes_mensual = cap_rest * (interes / 100)
 
         else:
 
