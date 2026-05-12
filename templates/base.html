@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="viewport"
+    content="width=device-width, initial-scale=1.0">
 
     <title>Sistema</title>
 
@@ -10,11 +13,14 @@
 
     <link rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
 </head>
 
 <body>
 
+<!-- ========================= -->
 <!-- SIDEBAR -->
+<!-- ========================= -->
 <div class="sidebar">
 
     <h2>💰 Sistema</h2>
@@ -39,6 +45,12 @@
         Abonos
     </a>
 
+    <!-- 🔥 NUEVO BOTÓN CAJA -->
+    <a href="/caja">
+        <i class="fa-solid fa-cash-register"></i>
+        Caja
+    </a>
+
     <a href="/logout">
         <i class="fa-solid fa-right-from-bracket"></i>
         Cerrar sesión
@@ -46,7 +58,9 @@
 
 </div>
 
+<!-- ========================= -->
 <!-- TOPBAR -->
+<!-- ========================= -->
 <div class="topbar">
 
     <div>
@@ -58,6 +72,7 @@
         <div class="online"></div>
 
         <div>
+
             <div class="user-name">
                 {{ session["usuario"] }}
             </div>
@@ -65,13 +80,16 @@
             <div class="user-role">
                 En línea
             </div>
+
         </div>
 
     </div>
 
 </div>
 
+<!-- ========================= -->
 <!-- MAIN -->
+<!-- ========================= -->
 <div class="main">
 
     {% block content %}
@@ -79,7 +97,9 @@
 
 </div>
 
-
+<!-- ========================= -->
+<!-- SCRIPT FORMATO DINERO -->
+<!-- ========================= -->
 <script>
 
 function formatearMiles(input){
@@ -93,12 +113,13 @@ function formatearMiles(input){
     input.value = valor;
 }
 
-// 🔥 convertir a número real para enviar al backend
+// 🔥 convertir a número real
 function limpiarNumero(valor){
+
     return valor.replace(/\./g, "");
+
 }
 
-// 🔥 TODOS los inputs con class="money"
 document.addEventListener("DOMContentLoaded", function(){
 
     const inputs = document.querySelectorAll(".money");
@@ -106,14 +127,18 @@ document.addEventListener("DOMContentLoaded", function(){
     inputs.forEach(input => {
 
         input.addEventListener("input", function(){
+
             formatearMiles(this);
+
         });
 
-        // 🔥 antes de enviar formulario
+        // 🔥 antes de enviar
         input.form?.addEventListener("submit", function(){
 
             inputs.forEach(i => {
+
                 i.value = limpiarNumero(i.value);
+
             });
 
         });

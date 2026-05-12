@@ -1161,6 +1161,7 @@ def historial(id):
 # ------------------------------
 @app.route("/prestamos", methods=["GET","POST"])
 def prestamos():
+
     conn = conectar()
     cur = conn.cursor()
 
@@ -1169,38 +1170,85 @@ def prestamos():
     clientes = cur.fetchall()
 
     # =============================
-    # 🔥 GUARDAR PRÉSTAMO (SIN DÍAS)
+    # 🔥 GUARDAR PRÉSTAMO
     # =============================
     if request.method == "POST":
 
         try:
+
             capital = float(request.form["capital"])
             interes = float(request.form["interes"])
 
-            fecha = datetime.strptime(request.form["fecha"], "%Y-%m-%d")
-            venc = datetime.strptime(request.form["vencimiento"], "%Y-%m-%d")
+            fecha = datetime.strptime(
+                request.form["fecha"],
+                "%Y-%m-%d"
+            )
+
+            venc = datetime.strptime(
+                request.form["vencimiento"],
+                "%Y-%m-%d"
+            )
 
             if venc <= fecha:
+
                 conn.close()
+
                 return "❌ La fecha de vencimiento debe ser mayor"
 
-            total = capital + (capital * interes / 100)
+            total = capital + (
+                capital * interes / 100
+            )
 
+            # =====================================
+            # 💾 GUARDAR PRÉSTAMO
+            # =====================================
             cur.execute("""
-                INSERT INTO prestamos (cliente_id, capital, interes, fecha, vencimiento, total)
+                INSERT INTO prestamos (
+
+                    cliente_id,
+                    capital,
+                    interes,
+                    fecha,
+                    vencimiento,
+                    total
+
+                )
                 VALUES (%s,%s,%s,%s,%s,%s)
             """, (
+
                 request.form["cliente"],
                 capital,
                 interes,
                 fecha.date(),
                 venc.date(),
                 total
+
+            ))
+
+            # =====================================
+            # 🏦 EGRESO EN CAJA
+            # =====================================
+            cur.execute("""
+                INSERT INTO caja (
+
+                    tipo,
+                    monto,
+                    descripcion
+
+                )
+                VALUES (%s,%s,%s)
+            """, (
+
+                "egreso",
+                capital,
+                "Préstamo entregado"
+
             ))
 
             conn.commit()
 
         except Exception as e:
+
             print("ERROR:", e)
 
     # =============================
@@ -1209,51 +1257,98 @@ def prestamos():
     fecha_filtro = request.args.get("fecha")
 
     if fecha_filtro:
-        fecha_filtro = datetime.strptime(fecha_filtro, "%Y-%m-%d").date()
+
+        fecha_filtro = datetime.strptime(
+            fecha_filtro,
+            "%Y-%m-%d"
+        ).date()
+
     else:
+
         fecha_filtro = datetime.now().date()
 
+    # =============================
+    # 📋 PRÉSTAMOS DEL DÍA
+    # =============================
     cur.execute("""
-        SELECT p.id, c.nombre, p.capital, p.total, p.fecha
+        SELECT
+
+            p.id,
+            c.nombre,
+            p.capital,
+            p.total,
+            p.fecha
+
         FROM prestamos p
-        JOIN clientes c ON p.cliente_id = c.id
+
+        JOIN clientes c
+        ON p.cliente_id = c.id
+
         WHERE p.fecha = %s
     """, (fecha_filtro,))
 
     prestamos_dia = cur.fetchall()
+
     cantidad_dia = len(prestamos_dia)
 
     # =============================
     # 📋 LISTA GENERAL
     # =============================
     cur.execute("""
-        SELECT p.id, c.nombre, p.total
+        SELECT
+
+            p.id,
+            c.nombre,
+            p.total
+
         FROM prestamos p
-        JOIN clientes c ON p.cliente_id = c.id
+
+        JOIN clientes c
+        ON p.cliente_id = c.id
     """)
 
     prestamos_lista = []
 
     for p in cur.fetchall():
-        cap_rest, _, _, _, _ = calcular(p[0], conn)
-        saldo = cap_rest + interes_hoy(p[0], conn)
+
+        cap_rest, _, _, _, _ = calcular(
+            p[0],
+            conn
+        )
+
+        saldo = (
+            cap_rest +
+            interes_hoy(p[0], conn)
+        )
 
         prestamos_lista.append({
+
             "id": p[0],
+
             "cliente": p[1],
+
             "total": formato(p[2]),
+
             "saldo": formato(saldo)
+
         })
 
     conn.close()
 
     return render_template(
+
         "prestamos.html",
+
         clientes=clientes,
+
         prestamos=prestamos_lista,
+
         prestamos_dia=prestamos_dia,
+
         cantidad_dia=cantidad_dia,
+
         fecha=fecha_filtro
+
     )
 
 
@@ -1586,8 +1681,7 @@ def abonos():
             else:
 
                 # =====================================
-                # 🔥 INTERÉS
-                # GUARDAR TODOS LOS MESES
+                # 🔥 ABONO INTERÉS
                 # =====================================
                 if tipo == "interes":
 
@@ -1607,6 +1701,8 @@ def abonos():
                         capital_original *
                         (tasa / 100)
                     )
+
+                    total_ingreso = 0
 
                     # 🔥 GUARDAR TODOS LOS MESES
                     for mes_actual in range(
@@ -1662,6 +1758,30 @@ def abonos():
 
                             ))
 
+                            total_ingreso += interes_mensual
+
+                    # =====================================
+                    # 🏦 INGRESO EN CAJA
+                    # =====================================
+                    if total_ingreso > 0:
+
+                        cur.execute("""
+                            INSERT INTO caja (
+
+                                tipo,
+                                monto,
+                                descripcion
+
+                            )
+                            VALUES (%s,%s,%s)
+                        """, (
+
+                            "ingreso",
+                            total_ingreso,
+                            "Abono interes"
+
+                        ))
+
                 else:
 
                     # =====================================
@@ -1693,6 +1813,26 @@ def abonos():
                         datetime.now(),
                         tipo,
                         mes_pagado
+
+                    ))
+
+                    # =====================================
+                    # 🏦 INGRESO EN CAJA
+                    # =====================================
+                    cur.execute("""
+                        INSERT INTO caja (
+
+                            tipo,
+                            monto,
+                            descripcion
+
+                        )
+                        VALUES (%s,%s,%s)
+                    """, (
+
+                        "ingreso",
+                        round(monto),
+                        "Abono capital"
 
                     ))
 
@@ -1730,6 +1870,8 @@ def abonos():
         cliente_id=cliente_id
 
     )
+
+
 # ------------------------------
 # 🔥 OBTENER INTERÉS AUTOMÁTICO
 # ------------------------------
