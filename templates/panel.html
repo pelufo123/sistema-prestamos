@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="viewport"
+    content="width=device-width, initial-scale=1.0">
 
     <title>Dashboard</title>
 
@@ -41,6 +44,12 @@
         Abonos
     </a>
 
+    <!-- 🔥 NUEVO BOTÓN CAJA -->
+    <a href="/caja">
+        <i class="fa-solid fa-cash-register"></i>
+        Caja
+    </a>
+
     <a href="/logout">
         <i class="fa-solid fa-right-from-bracket"></i>
         Cerrar sesión
@@ -60,6 +69,7 @@
         <div class="online"></div>
 
         <div>
+
             <div class="user-name">
                 {{ session["usuario"] }}
             </div>
@@ -67,6 +77,7 @@
             <div class="user-role">
                 En línea
             </div>
+
         </div>
 
     </div>
@@ -84,6 +95,7 @@
     <div class="grid-metricas">
 
         <div class="card blue">
+
             <div class="label">
                 Capital en calle
             </div>
@@ -91,9 +103,11 @@
             <div class="metric">
                 ${{ capital_total }}
             </div>
+
         </div>
 
         <div class="card green">
+
             <div class="label">
                 Capital recogido hoy
             </div>
@@ -101,9 +115,11 @@
             <div class="metric">
                 ${{ capital_dia }}
             </div>
+
         </div>
 
         <div class="card orange">
+
             <div class="label">
                 Interés recogido hoy
             </div>
@@ -111,9 +127,11 @@
             <div class="metric">
                 ${{ interes_dia }}
             </div>
+
         </div>
 
         <div class="card red">
+
             <div class="label">
                 Interés acumulado
             </div>
@@ -121,6 +139,7 @@
             <div class="metric">
                 ${{ interes_acumulado }}
             </div>
+
         </div>
 
     </div>
@@ -129,6 +148,7 @@
     <div class="grid-metricas">
 
         <div class="card">
+
             <div class="label">
                 Capital mensual
             </div>
@@ -136,9 +156,11 @@
             <div class="metric" style="color:black !important;">
                 ${{ capital_mes }}
             </div>
+
         </div>
 
         <div class="card">
+
             <div class="label">
                 Interés mensual
             </div>
@@ -146,9 +168,11 @@
             <div class="metric" style="color:black !important;">
                 ${{ interes_mes }}
             </div>
+
         </div>
 
         <div class="card">
+
             <div class="label">
                 Capital acumulado
             </div>
@@ -156,6 +180,7 @@
             <div class="metric" style="color:black !important;">
                 ${{ capital_acumulado }}
             </div>
+
         </div>
 
     </div>
@@ -185,12 +210,14 @@
                 <table>
 
                     <thead>
+
                         <tr>
                             <th>ID</th>
                             <th>Cliente</th>
                             <th>Días</th>
                             <th>Saldo</th>
                         </tr>
+
                     </thead>
 
                     <tbody>
@@ -206,9 +233,11 @@
                             </td>
 
                             <td>
+
                                 <span class="badge orange">
                                     {{ p[2] }} días
                                 </span>
+
                             </td>
 
                             <td>
@@ -257,12 +286,14 @@
                 <table>
 
                     <thead>
+
                         <tr>
                             <th>ID</th>
                             <th>Cliente</th>
                             <th>Atraso</th>
                             <th>Saldo</th>
                         </tr>
+
                     </thead>
 
                     <tbody>
