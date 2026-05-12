@@ -1,71 +1,198 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
     <title>Clientes</title>
+
     <link rel="stylesheet" href="/static/style.css">
+
+    <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
 </head>
+
 <body>
- 
+
 <div class="container">
-   
-    <h2>👥 Clientes</h2>
+
+    <!-- 🔥 TÍTULO -->
+    <h2 class="titulo-panel">
+        👥 Clientes
+    </h2>
 
     <!-- 🔥 NAVEGACIÓN -->
-    <div style="margin-bottom:15px;">
-        <a href="{{ url_for('panel') }}" class="btn">🏠 Panel</a>
-        <a href="{{ url_for('prestamos') }}" class="btn">💰 Préstamos</a>
-        <a href="{{ url_for('abonos') }}" class="btn">💳 Abonos</a>
+    <div class="top-actions">
+
+        <a href="{{ url_for('panel') }}" class="btn">
+            🏠 Panel
+        </a>
+
+        <a href="{{ url_for('prestamos') }}" class="btn">
+            💰 Préstamos
+        </a>
+
+        <a href="{{ url_for('abonos') }}" class="btn">
+            💳 Abonos
+        </a>
+
+        <a href="{{ url_for('caja') }}" class="btn">
+            🏦 Caja
+        </a>
+
     </div>
 
-    <!-- FORMULARIO -->
+    <!-- 🔥 FORMULARIO -->
     <div class="card">
-        <form method="POST">
-            <input name="nombre" placeholder="Nombre" required>
-            <input name="telefono" placeholder="Teléfono">
-            <input name="direccion" placeholder="Dirección">
-            <button>Guardar</button>
+
+        <h3 style="margin-bottom:15px;">
+            ➕ Nuevo Cliente
+        </h3>
+
+        <form method="POST" class="form-grid">
+
+            <input
+                type="text"
+                name="nombre"
+                placeholder="Nombre completo"
+                required
+            >
+
+            <input
+                type="text"
+                name="telefono"
+                placeholder="Teléfono"
+            >
+
+            <input
+                type="text"
+                name="direccion"
+                placeholder="Dirección"
+            >
+
+            <button type="submit">
+                Guardar Cliente
+            </button>
+
         </form>
+
     </div>
 
-    <!-- LISTA -->
+    <!-- 🔥 TABLA -->
     <div class="card">
-        <table>
-            <tr>
-                <th>Nombre</th>
-                <th>Teléfono</th>
-                <th>Dirección</th>
-                <th>Responsable de registro</th>
-                <th>Capital prestado</th>
-                <th>Usuario</th>
-            </tr>
 
-            {% for c in clientes %}
-            <tr>
-                <td>{{ c[1] }}</td>
-                <td>{{ c[2] }}</td>
-                <td>{{ c[3] }}</td>
-                <td>{{ c[4] }}</td>
-                <td>{{ formato(resumen[loop.index0]) }}</td>
-                <td>
-                    <a href="/editar_cliente/{{c[0]}}" class="btn btn-edit">✏️</a>
+        <div class="table-responsive">
 
-                    <!-- 🔥 CONFIRMACIÓN ANTES DE ELIMINAR -->
-                    <a href="/eliminar_cliente/{{c[0]}}"
-                       class="btn btn-del"
-                       onclick="return confirm('⚠️ ¿Seguro que deseas eliminar este cliente? Se borrarán también sus préstamos y abonos.')">
-                       🗑️
-                    </a>
+            <table>
 
-                    <a href="/historial/{{c[0]}}" class="btn btn-his">📄</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
+                <thead>
+
+                    <tr>
+
+                        <th>Nombre</th>
+
+                        <th>Teléfono</th>
+
+                        <th>Dirección</th>
+
+                        <th>Registrado por</th>
+
+                        <th>Capital Prestado</th>
+
+                        <th>Acciones</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for c in clientes %}
+
+                    <tr>
+
+                        <td>
+                            {{ c[1] }}
+                        </td>
+
+                        <td>
+                            {{ c[2] }}
+                        </td>
+
+                        <td>
+                            {{ c[3] }}
+                        </td>
+
+                        <td>
+                            {{ c[4] }}
+                        </td>
+
+                        <td>
+                            ${{ formato(resumen[loop.index0]) }}
+                        </td>
+
+                        <td class="acciones">
+
+                            <!-- 🔥 EDITAR -->
+                            <a
+                                href="/editar_cliente/{{c[0]}}"
+                                class="btn btn-edit"
+                                title="Editar"
+                            >
+                                ✏️
+                            </a>
+
+                            <!-- 🔥 ELIMINAR -->
+                            <a
+                                href="/eliminar_cliente/{{c[0]}}"
+                                class="btn btn-del"
+                                title="Eliminar"
+
+                                onclick="return confirm(
+                                '⚠️ ¿Seguro que deseas eliminar este cliente? También se eliminarán préstamos y abonos.'
+                                )"
+                            >
+                                🗑️
+                            </a>
+
+                            <!-- 🔥 HISTORIAL -->
+                            <a
+                                href="/historial/{{c[0]}}"
+                                class="btn btn-his"
+                                title="Historial"
+                            >
+                                📄
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
     </div>
 
-    <a class="btn" href="{{ url_for('panel') }}">⬅ Volver</a>
+    <!-- 🔥 BOTÓN VOLVER -->
+    <div style="margin-top:20px;">
+
+        <a
+            class="btn"
+            href="{{ url_for('panel') }}"
+        >
+            ⬅ Volver al Panel
+        </a>
+
+    </div>
 
 </div>
 

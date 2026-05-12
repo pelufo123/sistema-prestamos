@@ -714,3 +714,87 @@ table,
         justify-content: center;
     }
 }
+
+/* =========================================
+📱 RESPONSIVE CLIENTES MOBILE
+========================================= */
+
+@media (max-width: 768px){
+
+    .table-responsive{
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    table{
+        min-width: 700px;
+    }
+
+    td, th{
+        font-size: 12px;
+        padding: 8px;
+        white-space: nowrap;
+    }
+
+    /* 🔥 botones acciones */
+    .acciones{
+        display: flex;
+        gap: 6px;
+    }
+
+    .acciones a{
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+
+    /* 🔥 sidebar */
+    .sidebar{
+        width: 70px;
+        overflow: hidden;
+    }
+
+    .sidebar h2{
+        font-size: 14px;
+        text-align: center;
+    }
+
+    .sidebar a{
+        font-size: 0;
+        justify-content: center;
+        padding: 14px 0;
+    }
+
+    .sidebar a i{
+        font-size: 18px;
+        margin: 0;
+    }
+
+    .main{
+        margin-left: 70px;
+        padding: 10px;
+    }
+
+    /* 🔥 cards */
+    .grid-metricas{
+        grid-template-columns: 1fr;
+    }
+
+    .tables-grid{
+        grid-template-columns: 1fr;
+    }
+
+    /* 🔥 formularios */
+    form{
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    input,
+    select,
+    button{
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+}
