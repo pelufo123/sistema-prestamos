@@ -2,63 +2,265 @@
 
 {% block content %}
 
-<h2>Caja</h2>
+<h2 class="titulo-panel">
+    💰 Caja
+</h2>
 
-<form method="POST">
+<!-- ================================= -->
+<!-- 💾 FORMULARIO -->
+<!-- ================================= -->
+<div class="card">
 
-    <select name="tipo">
-        <option value="ingreso">Ingreso</option>
-        <option value="egreso">Egreso</option>
-    </select>
+    <form method="POST">
 
-    <input type="number" name="monto" placeholder="Monto">
+        <div class="grid-form">
 
-    <input type="text" name="descripcion" placeholder="Descripción">
+            <!-- TIPO -->
+            <div>
 
-    <button type="submit">
-        Guardar
-    </button>
+                <label>
+                    Tipo
+                </label>
 
-</form>
+                <select
+                    name="tipo"
+                    class="input"
+                    required
+                >
 
-<hr>
+                    <option value="ingreso">
+                        Ingreso
+                    </option>
 
-<form method="GET">
+                    <option value="egreso">
+                        Egreso
+                    </option>
 
-    <input type="month" name="mes" value="{{ mes }}">
+                </select>
 
-    <button type="submit">
-        Filtrar
-    </button>
+            </div>
 
-</form>
+            <!-- MONTO -->
+            <div>
 
-<hr>
+                <label>
+                    Monto
+                </label>
 
-<h3>Ingresos: ${{ formato(ingresos) }}</h3>
-<h3>Egresos: ${{ formato(egresos) }}</h3>
-<h2>Disponible: ${{ formato(disponible) }}</h2>
+                <input
+                    type="text"
+                    name="monto"
+                    class="input money"
+                    placeholder="Ej: 500.000"
+                    required
+                >
 
-<hr>
+            </div>
 
-<table border="1">
+        </div>
 
-<tr>
-    <th>Tipo</th>
-    <th>Monto</th>
-    <th>Descripción</th>
-    <th>Fecha</th>
-</tr>
+        <!-- DESCRIPCIÓN -->
+        <div style="margin-top:15px;">
 
-{% for m in movimientos %}
-<tr>
-    <td>{{ m[0] }}</td>
-    <td>${{ formato(m[1]) }}</td>
-    <td>{{ m[2] }}</td>
-    <td>{{ m[3] }}</td>
-</tr>
-{% endfor %}
+            <label>
+                Descripción
+            </label>
 
-</table>
+            <input
+                type="text"
+                name="descripcion"
+                class="input"
+                placeholder="Descripción del movimiento"
+                required
+            >
+
+        </div>
+
+        <br>
+
+        <button
+            type="submit"
+            class="btn"
+        >
+            Guardar movimiento
+        </button>
+
+    </form>
+
+</div>
+
+<br>
+
+<!-- ================================= -->
+<!-- 🔍 FILTRO -->
+<!-- ================================= -->
+<div class="card">
+
+    <form method="GET">
+
+        <div class="grid-form">
+
+            <div>
+
+                <label>
+                    Filtrar por mes
+                </label>
+
+                <input
+                    type="month"
+                    name="mes"
+                    value="{{ mes }}"
+                    class="input"
+                >
+
+            </div>
+
+            <div style="display:flex;align-items:end;">
+
+                <button
+                    type="submit"
+                    class="btn"
+                >
+                    Filtrar
+                </button>
+
+            </div>
+
+        </div>
+
+    </form>
+
+</div>
+
+<br>
+
+<!-- ================================= -->
+<!-- 📊 RESUMEN -->
+<!-- ================================= -->
+<div class="grid-metricas">
+
+    <div class="card green">
+
+        <div class="label">
+            Ingresos
+        </div>
+
+        <div class="metric">
+            ${{ formato(ingresos) }}
+        </div>
+
+    </div>
+
+    <div class="card red">
+
+        <div class="label">
+            Egresos
+        </div>
+
+        <div class="metric">
+            ${{ formato(egresos) }}
+        </div>
+
+    </div>
+
+    <div class="card blue">
+
+        <div class="label">
+            Disponible en caja
+        </div>
+
+        <div class="metric">
+            ${{ formato(disponible) }}
+        </div>
+
+    </div>
+
+</div>
+
+<br>
+
+<!-- ================================= -->
+<!-- 📋 TABLA -->
+<!-- ================================= -->
+<div class="card">
+
+    <div class="table-responsive">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>Tipo</th>
+                    <th>Monto</th>
+                    <th>Descripción</th>
+                    <th>Fecha</th>
+                    <th>Acciones</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for mov in movimientos %}
+
+                <tr>
+
+                    <td>
+
+                        {% if mov[1] == "ingreso" %}
+
+                            <span class="badge green">
+                                Ingreso
+                            </span>
+
+                        {% else %}
+
+                            <span class="badge red">
+                                Egreso
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+                        ${{ formato(mov[2]) }}
+                    </td>
+
+                    <td>
+                        {{ mov[3] }}
+                    </td>
+
+                    <td>
+                        {{ mov[4] }}
+                    </td>
+
+                    <td>
+
+                        <a
+                            href="/editar_caja/{{ mov[0] }}"
+                            class="btn-editar"
+                        >
+
+                            <i class="fa-solid fa-pen"></i>
+
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
 
 {% endblock %}

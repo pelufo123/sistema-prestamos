@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2 class="titulo-panel">
+    ✏️ Editar movimiento
+</h2>
+
+<div class="card">
+
+    <form method="POST">
+
+        <label>Tipo</label>
+
+        <select name="tipo" class="input">
+
+            <option value="ingreso"
+            {% if movimiento[1] == "ingreso" %}
+            selected
+            {% endif %}>
+                Ingreso
+            </option>
+
+            <option value="egreso"
+            {% if movimiento[1] == "egreso" %}
+            selected
+            {% endif %}>
+                Egreso
+            </option>
+
+        </select>
+
+        <label>Monto</label>
+
+        <input
+            type="text"
+            name="monto"
+            class="input money"
+            value="{{ formato(movimiento[2]) }}"
+            required
+        >
+
+        <label>Descripción</label>
+
+        <textarea
+            name="descripcion"
+            class="input"
+            required>{{ movimiento[3] }}</textarea>
+
+        <br><br>
+
+        <button class="btn">
+            Guardar cambios
+        </button>
+
+    </form>
+
+</div>
+
+{% endblock %}

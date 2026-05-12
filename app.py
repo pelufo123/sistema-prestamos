@@ -865,13 +865,19 @@ def caja():
     conn = conectar()
     cur = conn.cursor()
 
-    # =========================
-    # GUARDAR MOVIMIENTO
-    # =========================
+    # ====================================
+    # 💾 GUARDAR NUEVO MOVIMIENTO
+    # ====================================
     if request.method == "POST":
 
         tipo = request.form["tipo"]
-        monto = float(request.form["monto"])
+
+        monto = float(
+            request.form["monto"]
+            .replace(".", "")
+            .replace(",", "")
+        )
+
         descripcion = request.form["descripcion"]
 
         cur.execute("""
@@ -889,32 +895,50 @@ def caja():
 
         conn.commit()
 
-    # =========================
-    # FILTRO MES
-    # =========================
+    # ====================================
+    # 📅 FILTRO POR MES
+    # ====================================
     mes = request.args.get("mes")
 
     if mes:
-        fecha = datetime.strptime(mes, "%Y-%m")
+
+        fecha = datetime.strptime(
+            mes,
+            "%Y-%m"
+        )
+
     else:
+
         fecha = datetime.now()
 
     inicio_mes = fecha.replace(day=1)
 
+    # 🔥 siguiente mes
     if fecha.month == 12:
+
         siguiente = fecha.replace(
             year=fecha.year + 1,
             month=1,
             day=1
         )
+
     else:
+
         siguiente = fecha.replace(
             month=fecha.month + 1,
             day=1
         )
 
+    # ====================================
+    # 📋 MOVIMIENTOS
+    # ====================================
     cur.execute("""
-        SELECT tipo, monto, descripcion, fecha
+        SELECT
+            id,
+            tipo,
+            monto,
+            descripcion,
+            fecha
         FROM caja
         WHERE fecha >= %s
         AND fecha < %s
@@ -931,10 +955,13 @@ def caja():
 
     for mov in movimientos:
 
-        if mov[0] == "ingreso":
-            ingresos += mov[1]
+        if mov[1] == "ingreso":
+
+            ingresos += mov[2]
+
         else:
-            egresos += mov[1]
+
+            egresos += mov[2]
 
     disponible = ingresos - egresos
 
@@ -948,6 +975,69 @@ def caja():
         disponible=disponible,
         formato=formato,
         mes=fecha.strftime("%Y-%m")
+    )
+
+# ====================================
+# ✏️ EDITAR MOVIMIENTO CAJA
+# ====================================
+@app.route("/editar_caja/<int:id>", methods=["GET", "POST"])
+def editar_caja(id):
+
+    conn = conectar()
+    cur = conn.cursor()
+
+    # ====================================
+    # GUARDAR CAMBIOS
+    # ====================================
+    if request.method == "POST":
+
+        tipo = request.form["tipo"]
+
+        monto = float(
+            request.form["monto"]
+            .replace(".", "")
+            .replace(",", "")
+        )
+
+        descripcion = request.form["descripcion"]
+
+        cur.execute("""
+            UPDATE caja
+            SET
+                tipo=%s,
+                monto=%s,
+                descripcion=%s
+            WHERE id=%s
+        """, (
+            tipo,
+            monto,
+            descripcion,
+            id
+        ))
+
+        conn.commit()
+
+        conn.close()
+
+        return redirect(url_for("caja"))
+
+    # ====================================
+    # OBTENER MOVIMIENTO
+    # ====================================
+    cur.execute("""
+        SELECT *
+        FROM caja
+        WHERE id=%s
+    """, (id,))
+
+    movimiento = cur.fetchone()
+
+    conn.close()
+
+    return render_template(
+        "editar_caja.html",
+        movimiento=movimiento,
+        formato=formato
     )
 # ------------------------------
 # 👥 CLIENTES
