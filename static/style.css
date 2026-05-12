@@ -574,3 +574,143 @@ table,
     }
 
 }
+
+/* ========================================
+📱 RESPONSIVE CELULAR
+======================================== */
+@media screen and (max-width: 768px) {
+
+    /* ============================= */
+    /* SIDEBAR */
+    /* ============================= */
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        padding: 15px;
+    }
+
+    .sidebar h2 {
+        width: 100%;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+
+    .sidebar a {
+        width: 45%;
+        text-align: center;
+        font-size: 14px;
+        padding: 12px;
+    }
+
+    /* ============================= */
+    /* TOPBAR */
+    /* ============================= */
+    .topbar {
+        left: 0;
+        width: 100%;
+        padding: 12px;
+        flex-direction: column;
+        gap: 10px;
+        height: auto;
+    }
+
+    /* ============================= */
+    /* MAIN */
+    /* ============================= */
+    .main {
+        margin-left: 0;
+        margin-top: 20px;
+        padding: 15px;
+        width: 100%;
+    }
+
+    /* ============================= */
+    /* TÍTULOS */
+    /* ============================= */
+    .titulo-panel {
+        font-size: 22px;
+        text-align: center;
+    }
+
+    /* ============================= */
+    /* MÉTRICAS */
+    /* ============================= */
+    .grid-metricas {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .metric {
+        font-size: 24px;
+    }
+
+    /* ============================= */
+    /* FORMULARIOS */
+    /* ============================= */
+    .grid-form {
+        grid-template-columns: 1fr;
+    }
+
+    .input,
+    select,
+    textarea,
+    button {
+        width: 100%;
+        font-size: 16px;
+    }
+
+    /* ============================= */
+    /* TABLAS */
+    /* ============================= */
+    .table-responsive {
+        overflow-x: auto;
+        width: 100%;
+    }
+
+    table {
+        min-width: 700px;
+    }
+
+    th,
+    td {
+        font-size: 13px;
+        padding: 10px;
+        white-space: nowrap;
+    }
+
+    /* ============================= */
+    /* TABLAS GRID */
+    /* ============================= */
+    .tables-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* ============================= */
+    /* CARDS */
+    /* ============================= */
+    .card {
+        padding: 15px;
+    }
+
+    /* ============================= */
+    /* BOTONES */
+    /* ============================= */
+    .btn,
+    .btn-editar {
+        width: 100%;
+        text-align: center;
+    }
+
+    /* ============================= */
+    /* USER BOX */
+    /* ============================= */
+    .user-box {
+        width: 100%;
+        justify-content: center;
+    }
+}
