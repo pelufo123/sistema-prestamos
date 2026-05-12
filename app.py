@@ -38,19 +38,22 @@ def conectar():
         print("❌ No hay DATABASE_URL")
         return None
 
-    if db_url.startswith("postgres://"):
-        db_url = db_url.replace("postgres://", "postgresql://", 1)
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
 
     try:
-        conn = psycopg2.connect(db_url, sslmode="require")
+        conn = psycopg2.connect(
+            db_url,
+            sslmode="require"
+        )
         return conn
-    except Exception as e:
-        print("❌ Error conexión:", e)
-        return None
 
+    except Exception as e:
+        print("❌ Error conexión DB:", e)
+        return None
 #323 2879658
 # ------------------------------
 def init_db():
+
     conn = conectar()
 
     if not conn:
@@ -60,59 +63,113 @@ def init_db():
     cur = conn.cursor()
 
     try:
+
+        # =====================================
+        # 👤 USUARIOS
+        # =====================================
         cur.execute("""
         CREATE TABLE IF NOT EXISTS usuarios (
+
             id SERIAL PRIMARY KEY,
             username TEXT UNIQUE,
             password TEXT
+
         );
         """)
 
+        # =====================================
+        # 👥 CLIENTES
+        # =====================================
         cur.execute("""
         CREATE TABLE IF NOT EXISTS clientes (
+
             id SERIAL PRIMARY KEY,
             nombre TEXT,
             telefono TEXT,
             direccion TEXT,
             usuario TEXT
+
         );
         """)
 
+        # =====================================
+        # 💰 PRESTAMOS
+        # =====================================
         cur.execute("""
         CREATE TABLE IF NOT EXISTS prestamos(
+
             id SERIAL PRIMARY KEY,
+
             cliente_id INTEGER REFERENCES clientes(id),
+
             capital REAL,
             interes REAL,
+
             dias INTEGER,
+
             fecha DATE,
             vencimiento DATE,
+
             total REAL,
+
             usuario TEXT
+
         );
         """)
 
+        # =====================================
+        # 💸 ABONOS
+        # =====================================
         cur.execute("""
         CREATE TABLE IF NOT EXISTS abonos(
+
             id SERIAL PRIMARY KEY,
+
             prestamo_id INTEGER REFERENCES prestamos(id),
+
             monto REAL,
+
             fecha TIMESTAMP,
+
             tipo TEXT,
+
             mes INTEGER,
+
             usuario TEXT
+
+        );
+        """)
+
+        # =====================================
+        # 🏦 CAJA
+        # =====================================
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS caja(
+
+            id SERIAL PRIMARY KEY,
+
+            tipo TEXT,
+
+            monto REAL,
+
+            descripcion TEXT,
+
+            fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
         );
         """)
 
         conn.commit()
+
         print("✅ Base de datos lista")
 
     except Exception as e:
+
         print("❌ Error en DB:", e)
 
     finally:
-        conn.close()
 
+        conn.close()
 def crear_admin():
     conn = conectar()
     if not conn:
@@ -802,7 +859,96 @@ def panel():
         prestamos=prestamos
     )
 
+@app.route("/caja", methods=["GET", "POST"])
+def caja():
 
+    conn = conectar()
+    cur = conn.cursor()
+
+    # =========================
+    # GUARDAR MOVIMIENTO
+    # =========================
+    if request.method == "POST":
+
+        tipo = request.form["tipo"]
+        monto = float(request.form["monto"])
+        descripcion = request.form["descripcion"]
+
+        cur.execute("""
+            INSERT INTO caja (
+                tipo,
+                monto,
+                descripcion
+            )
+            VALUES (%s,%s,%s)
+        """, (
+            tipo,
+            monto,
+            descripcion
+        ))
+
+        conn.commit()
+
+    # =========================
+    # FILTRO MES
+    # =========================
+    mes = request.args.get("mes")
+
+    if mes:
+        fecha = datetime.strptime(mes, "%Y-%m")
+    else:
+        fecha = datetime.now()
+
+    inicio_mes = fecha.replace(day=1)
+
+    if fecha.month == 12:
+        siguiente = fecha.replace(
+            year=fecha.year + 1,
+            month=1,
+            day=1
+        )
+    else:
+        siguiente = fecha.replace(
+            month=fecha.month + 1,
+            day=1
+        )
+
+    cur.execute("""
+        SELECT tipo, monto, descripcion, fecha
+        FROM caja
+        WHERE fecha >= %s
+        AND fecha < %s
+        ORDER BY fecha DESC
+    """, (
+        inicio_mes,
+        siguiente
+    ))
+
+    movimientos = cur.fetchall()
+
+    ingresos = 0
+    egresos = 0
+
+    for mov in movimientos:
+
+        if mov[0] == "ingreso":
+            ingresos += mov[1]
+        else:
+            egresos += mov[1]
+
+    disponible = ingresos - egresos
+
+    conn.close()
+
+    return render_template(
+        "caja.html",
+        movimientos=movimientos,
+        ingresos=ingresos,
+        egresos=egresos,
+        disponible=disponible,
+        formato=formato,
+        mes=fecha.strftime("%Y-%m")
+    )
 # ------------------------------
 # 👥 CLIENTES
 # ------------------------------

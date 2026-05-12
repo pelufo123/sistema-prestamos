@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>Caja</h2>
+
+<form method="POST">
+
+    <select name="tipo">
+        <option value="ingreso">Ingreso</option>
+        <option value="egreso">Egreso</option>
+    </select>
+
+    <input type="number" name="monto" placeholder="Monto">
+
+    <input type="text" name="descripcion" placeholder="Descripción">
+
+    <button type="submit">
+        Guardar
+    </button>
+
+</form>
+
+<hr>
+
+<form method="GET">
+
+    <input type="month" name="mes" value="{{ mes }}">
+
+    <button type="submit">
+        Filtrar
+    </button>
+
+</form>
+
+<hr>
+
+<h3>Ingresos: ${{ formato(ingresos) }}</h3>
+<h3>Egresos: ${{ formato(egresos) }}</h3>
+<h2>Disponible: ${{ formato(disponible) }}</h2>
+
+<hr>
+
+<table border="1">
+
+<tr>
+    <th>Tipo</th>
+    <th>Monto</th>
+    <th>Descripción</th>
+    <th>Fecha</th>
+</tr>
+
+{% for m in movimientos %}
+<tr>
+    <td>{{ m[0] }}</td>
+    <td>${{ formato(m[1]) }}</td>
+    <td>{{ m[2] }}</td>
+    <td>{{ m[3] }}</td>
+</tr>
+{% endfor %}
+
+</table>
+
+{% endblock %}
