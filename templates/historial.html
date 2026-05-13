@@ -20,7 +20,12 @@
 <div class="container">
 
     <!-- BOTONES -->
-    <div style="display:flex; gap:10px; margin-bottom:20px;">
+    <div style="
+        display:flex;
+        gap:10px;
+        margin-bottom:20px;
+        flex-wrap:wrap;
+    ">
 
         <a href="/panel" class="btn">
             🏠 Inicio
@@ -33,7 +38,10 @@
     </div>
 
     <!-- TITULO -->
-    <h1 style="margin-bottom:25px;">
+    <h1 style="
+        margin-bottom:25px;
+        font-size:28px;
+    ">
 
         📄 Historial de {{ cliente[0] }}
 
@@ -47,12 +55,16 @@
         <!-- HEADER -->
         <div class="prestamo-header">
 
-            <div>
+            <div style="width:100%;">
 
-                <h2>
+                <h2 style="
+                    margin-bottom:20px;
+                    word-break:break-word;
+                ">
                     💰 Préstamo #{{ item.prestamo[0] }}
                 </h2>
 
+                <!-- INFO -->
                 <div class="prestamo-info-grid">
 
                     <div class="info-box">
@@ -117,6 +129,7 @@
                             <th>MONTO</th>
                             <th>TIPO</th>
                             <th>FECHA</th>
+                            <th>ACCIÓN</th>
 
                         </tr>
 
@@ -128,13 +141,15 @@
 
                         <tr>
 
+                            <!-- 🔥 MONTO -->
                             <td class="money">
-                                ${{ formato(a[0]) }}
+                                ${{ formato(a[1]) }}
                             </td>
 
+                            <!-- 🔥 TIPO -->
                             <td>
 
-                                {% if a[1] == "capital" %}
+                                {% if a[2] == "capital" %}
 
                                     <span class="badge green">
                                         Capital
@@ -150,8 +165,27 @@
 
                             </td>
 
+                            <!-- 🔥 FECHA -->
                             <td>
-                                {{ a[2] }}
+                                {{ a[3] }}
+                            </td>
+
+                            <!-- 🔥 ELIMINAR -->
+                            <td>
+
+                                <a href="/eliminar_abono/{{ a[0] }}"
+                                   class="btn btn-del"
+                                   style="
+                                        padding:8px 12px;
+                                        font-size:14px;
+                                        white-space:nowrap;
+                                   "
+                                   onclick="return confirm('⚠️ ¿Seguro que deseas eliminar este abono?')">
+
+                                   🗑️ Eliminar
+
+                                </a>
+
                             </td>
 
                         </tr>

@@ -2134,7 +2134,69 @@ def abonos():
 
     )
 
+# ====================================
+# 🗑 ELIMINAR ABONO
+# ====================================
+@app.route("/eliminar_abono/<int:id>")
+def eliminar_abono(id):
 
+    conn = conectar()
+    cur = conn.cursor()
+
+    try:
+
+        # 🔥 obtener préstamo
+        cur.execute("""
+            SELECT prestamo_id
+            FROM abonos
+            WHERE id=%s
+        """, (id,))
+
+        data = cur.fetchone()
+
+        if not data:
+
+            conn.close()
+
+            return redirect(url_for("clientes"))
+
+        prestamo_id = data[0]
+
+        # 🔥 obtener cliente
+        cur.execute("""
+            SELECT cliente_id
+            FROM prestamos
+            WHERE id=%s
+        """, (prestamo_id,))
+
+        cliente = cur.fetchone()
+
+        cliente_id = cliente[0]
+
+        # 🔥 eliminar abono
+        cur.execute("""
+            DELETE FROM abonos
+            WHERE id=%s
+        """, (id,))
+
+        conn.commit()
+
+        conn.close()
+
+        return redirect(
+            url_for(
+                "historial",
+                id=cliente_id
+            )
+        )
+
+    except Exception as e:
+
+        print("ERROR ELIMINAR ABONO:", e)
+
+        conn.close()
+
+        return "❌ Error eliminando abono"
 # ------------------------------
 # 🔥 OBTENER INTERÉS AUTOMÁTICO
 # ------------------------------
