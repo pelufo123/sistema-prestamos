@@ -865,6 +865,8 @@ def caja():
     conn = conectar()
     cur = conn.cursor()
 
+    error = ""
+
     # ====================================
     # 💾 GUARDAR NUEVO MOVIMIENTO
     # ====================================
@@ -880,20 +882,71 @@ def caja():
 
         descripcion = request.form["descripcion"]
 
+        # ====================================
+        # 💰 CALCULAR DISPONIBLE ACTUAL
+        # ====================================
         cur.execute("""
-            INSERT INTO caja (
+            SELECT
+                COALESCE(SUM(
+                    CASE
+                        WHEN tipo='ingreso'
+                        THEN monto
+                        ELSE 0
+                    END
+                ),0),
+
+                COALESCE(SUM(
+                    CASE
+                        WHEN tipo='egreso'
+                        THEN monto
+                        ELSE 0
+                    END
+                ),0)
+
+            FROM caja
+        """)
+
+        datos = cur.fetchone()
+
+        ingresos_actuales = datos[0] or 0
+        egresos_actuales = datos[1] or 0
+
+        disponible_actual = (
+            ingresos_actuales -
+            egresos_actuales
+        )
+
+        # ====================================
+        # ❌ VALIDAR FONDOS
+        # ====================================
+        if (
+            tipo == "egreso"
+            and monto > disponible_actual
+        ):
+
+            error = (
+                "❌ No hay suficiente dinero disponible en caja"
+            )
+
+        else:
+
+            # ====================================
+            # 💾 GUARDAR
+            # ====================================
+            cur.execute("""
+                INSERT INTO caja (
+                    tipo,
+                    monto,
+                    descripcion
+                )
+                VALUES (%s,%s,%s)
+            """, (
                 tipo,
                 monto,
                 descripcion
-            )
-            VALUES (%s,%s,%s)
-        """, (
-            tipo,
-            monto,
-            descripcion
-        ))
+            ))
 
-        conn.commit()
+            conn.commit()
 
     # ====================================
     # 📅 FILTRO POR MES
@@ -969,12 +1022,20 @@ def caja():
 
     return render_template(
         "caja.html",
+
         movimientos=movimientos,
+
         ingresos=ingresos,
+
         egresos=egresos,
+
         disponible=disponible,
+
         formato=formato,
-        mes=fecha.strftime("%Y-%m")
+
+        mes=fecha.strftime("%Y-%m"),
+
+        error=error
     )
 
 # ====================================
@@ -985,6 +1046,19 @@ def editar_caja(id):
 
     conn = conectar()
     cur = conn.cursor()
+
+    error = ""
+
+    # ====================================
+    # OBTENER MOVIMIENTO ACTUAL
+    # ====================================
+    cur.execute("""
+        SELECT *
+        FROM caja
+        WHERE id=%s
+    """, (id,))
+
+    movimiento = cur.fetchone()
 
     # ====================================
     # GUARDAR CAMBIOS
@@ -1001,43 +1075,84 @@ def editar_caja(id):
 
         descripcion = request.form["descripcion"]
 
+        # ====================================
+        # 💰 DISPONIBLE ACTUAL
+        # ====================================
         cur.execute("""
-            UPDATE caja
-            SET
-                tipo=%s,
-                monto=%s,
-                descripcion=%s
-            WHERE id=%s
-        """, (
-            tipo,
-            monto,
-            descripcion,
-            id
-        ))
+            SELECT
+                COALESCE(SUM(
+                    CASE
+                        WHEN tipo='ingreso'
+                        THEN monto
+                        ELSE 0
+                    END
+                ),0),
 
-        conn.commit()
+                COALESCE(SUM(
+                    CASE
+                        WHEN tipo='egreso'
+                        THEN monto
+                        ELSE 0
+                    END
+                ),0)
 
-        conn.close()
+            FROM caja
+            WHERE id != %s
+        """, (id,))
 
-        return redirect(url_for("caja"))
+        datos = cur.fetchone()
 
-    # ====================================
-    # OBTENER MOVIMIENTO
-    # ====================================
-    cur.execute("""
-        SELECT *
-        FROM caja
-        WHERE id=%s
-    """, (id,))
+        ingresos = datos[0] or 0
+        egresos = datos[1] or 0
 
-    movimiento = cur.fetchone()
+        disponible = ingresos - egresos
+
+        # ====================================
+        # ❌ VALIDAR
+        # ====================================
+        if (
+            tipo == "egreso"
+            and monto > disponible
+        ):
+
+            error = (
+                "❌ No hay suficiente dinero en caja"
+            )
+
+        else:
+
+            cur.execute("""
+                UPDATE caja
+                SET
+                    tipo=%s,
+                    monto=%s,
+                    descripcion=%s
+                WHERE id=%s
+            """, (
+                tipo,
+                monto,
+                descripcion,
+                id
+            ))
+
+            conn.commit()
+
+            conn.close()
+
+            return redirect(
+                url_for("caja")
+            )
 
     conn.close()
 
     return render_template(
         "editar_caja.html",
+
         movimiento=movimiento,
-        formato=formato
+
+        formato=formato,
+
+        error=error
     )
 # ------------------------------
 # 👥 CLIENTES
@@ -1255,6 +1370,8 @@ def prestamos():
     conn = conectar()
     cur = conn.cursor()
 
+    error = ""
+
     # 🔹 clientes
     cur.execute("SELECT * FROM clientes")
     clientes = cur.fetchall()
@@ -1266,8 +1383,15 @@ def prestamos():
 
         try:
 
-            capital = float(request.form["capital"])
-            interes = float(request.form["interes"])
+            capital = float(
+                request.form["capital"]
+                .replace(".", "")
+                .replace(",", "")
+            )
+
+            interes = float(
+                request.form["interes"]
+            )
 
             fecha = datetime.strptime(
                 request.form["fecha"],
@@ -1279,67 +1403,116 @@ def prestamos():
                 "%Y-%m-%d"
             )
 
+            # =====================================
+            # ❌ VALIDAR FECHA
+            # =====================================
             if venc <= fecha:
 
-                conn.close()
-
-                return "❌ La fecha de vencimiento debe ser mayor"
-
-            total = capital + (
-                capital * interes / 100
-            )
-
-            # =====================================
-            # 💾 GUARDAR PRÉSTAMO
-            # =====================================
-            cur.execute("""
-                INSERT INTO prestamos (
-
-                    cliente_id,
-                    capital,
-                    interes,
-                    fecha,
-                    vencimiento,
-                    total
-
+                error = (
+                    "❌ La fecha de vencimiento debe ser mayor"
                 )
-                VALUES (%s,%s,%s,%s,%s,%s)
-            """, (
 
-                request.form["cliente"],
-                capital,
-                interes,
-                fecha.date(),
-                venc.date(),
-                total
+            else:
 
-            ))
+                # =====================================
+                # 💰 DINERO DISPONIBLE EN CAJA
+                # =====================================
+                cur.execute("""
+                    SELECT
+                        COALESCE(SUM(
+                            CASE
+                                WHEN tipo='ingreso'
+                                THEN monto
+                                ELSE 0
+                            END
+                        ),0),
 
-            # =====================================
-            # 🏦 EGRESO EN CAJA
-            # =====================================
-            cur.execute("""
-                INSERT INTO caja (
+                        COALESCE(SUM(
+                            CASE
+                                WHEN tipo='egreso'
+                                THEN monto
+                                ELSE 0
+                            END
+                        ),0)
 
-                    tipo,
-                    monto,
-                    descripcion
+                    FROM caja
+                """)
 
-                )
-                VALUES (%s,%s,%s)
-            """, (
+                datos = cur.fetchone()
 
-                "egreso",
-                capital,
-                "Préstamo entregado"
+                ingresos = datos[0] or 0
+                egresos = datos[1] or 0
 
-            ))
+                disponible = ingresos - egresos
 
-            conn.commit()
+                # =====================================
+                # ❌ VALIDAR SALDO
+                # =====================================
+                if capital > disponible:
+
+                    error = (
+                        "❌ No hay suficiente dinero disponible en caja"
+                    )
+
+                else:
+
+                    total = capital + (
+                        capital * interes / 100
+                    )
+
+                    # =====================================
+                    # 💾 GUARDAR PRÉSTAMO
+                    # =====================================
+                    cur.execute("""
+                        INSERT INTO prestamos (
+
+                            cliente_id,
+                            capital,
+                            interes,
+                            fecha,
+                            vencimiento,
+                            total
+
+                        )
+                        VALUES (%s,%s,%s,%s,%s,%s)
+                    """, (
+
+                        request.form["cliente"],
+                        capital,
+                        interes,
+                        fecha.date(),
+                        venc.date(),
+                        total
+
+                    ))
+
+                    # =====================================
+                    # 🏦 EGRESO EN CAJA
+                    # =====================================
+                    cur.execute("""
+                        INSERT INTO caja (
+
+                            tipo,
+                            monto,
+                            descripcion
+
+                        )
+                        VALUES (%s,%s,%s)
+                    """, (
+
+                        "egreso",
+                        capital,
+                        "Préstamo entregado"
+
+                    ))
+
+                    conn.commit()
 
         except Exception as e:
 
             print("ERROR:", e)
+
+            error = "❌ Error al guardar préstamo"
 
     # =============================
     # 🔍 FILTRO POR FECHA
@@ -1437,11 +1610,11 @@ def prestamos():
 
         cantidad_dia=cantidad_dia,
 
-        fecha=fecha_filtro
+        fecha=fecha_filtro,
+
+        error=error
 
     )
-
-
 # 💸 ABONOS
 # ------------------------------
 @app.route("/abonos", methods=["GET", "POST"])
