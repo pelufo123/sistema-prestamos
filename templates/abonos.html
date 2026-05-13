@@ -14,15 +14,26 @@
 
 <div class="card">
 
-    <form method="GET">
+    <form method="GET" id="formCliente">
 
-        <label>
+        <label style="
+            display:block;
+            margin-bottom:10px;
+            font-weight:600;
+        ">
             Seleccionar cliente
         </label>
 
         <select
             name="cliente"
-            onchange="this.form.submit()"
+            onchange="document.getElementById('formCliente').submit()"
+            style="
+                width:100%;
+                padding:14px;
+                border-radius:12px;
+                border:2px solid #ff7b00;
+                font-size:16px;
+            "
         >
 
             <option value="">
@@ -33,7 +44,9 @@
 
             <option
                 value="{{ c[0] }}"
-                {% if cliente_id == c[0]|string %}selected{% endif %}
+                {% if cliente_id|string == c[0]|string %}
+                    selected
+                {% endif %}
             >
 
                 {{ c[1] }}
@@ -329,7 +342,7 @@
 
 {% if mensaje %}
 
-<div class="card red">
+<div class="card red" style="margin-top:20px;">
 
     {{ mensaje }}
 
@@ -383,7 +396,6 @@ function cambiarTipo(select){
         alerta.style.display =
         "none";
 
-        // 🔥 LIMPIAR CAMPO
         monto.value = "";
 
     }
@@ -400,7 +412,6 @@ function cambiarTipo(select){
 
         actualizarResumen(selectMes);
 
-        // 🔥 RECARGAR SOLO EL INTERÉS
         cargarInteres(selectMes);
 
     }
@@ -483,11 +494,9 @@ function actualizarResumen(select){
         meses = 1;
     }
 
-    // 🔥 EL INTERÉS PENDIENTE SIEMPRE ES EL MISMO
     let nuevoInteres =
     interesMensual;
 
-    // 🔥 SOLO CAMBIA TOTAL
     let nuevoTotal =
     totalBase +
     (interesMensual * (meses - 1));
@@ -521,7 +530,6 @@ function cargarInteres(select){
     let monto =
     form.querySelector(".monto");
 
-    // 🔥 SI ES CAPITAL NO HACER NADA
     if(tipo === "capital"){
         return;
     }
@@ -536,12 +544,10 @@ function cargarInteres(select){
     let meses =
     parseInt(select.value);
 
-    // 🔥 SI NO HAY MES
     if(isNaN(meses)){
         meses = 1;
     }
 
-    // 🔥 SIEMPRE REINICIAR
     let total =
     interesMensual * meses;
 
@@ -596,18 +602,22 @@ function(){
 
         });
 
-        input.form.addEventListener(
-        "submit",
-        function(){
+        if(input.form){
 
-            inputs.forEach(i => {
+            input.form.addEventListener(
+            "submit",
+            function(){
 
-                i.value =
-                limpiarNumero(i.value);
+                inputs.forEach(i => {
+
+                    i.value =
+                    limpiarNumero(i.value);
+
+                });
 
             });
 
-        });
+        }
 
     });
 
