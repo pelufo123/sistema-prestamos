@@ -130,7 +130,6 @@
         <div class="grid-metricas">
 
             <!-- CAPITAL -->
-
             <div class="card" style="
                 background:#f8fbff;
                 border-left:5px solid #3498db;
@@ -147,7 +146,6 @@
             </div>
 
             <!-- INTERÉS -->
-
             <div class="card" style="
                 background:#fffaf2;
                 border-left:5px solid #f39c12;
@@ -167,7 +165,6 @@
             </div>
 
             <!-- TOTAL -->
-
             <div class="card" style="
                 background:#f7fff8;
                 border-left:5px solid #2ecc71;
@@ -209,7 +206,6 @@
             >
 
             <!-- INTERÉS MENSUAL -->
-
             <input
                 type="hidden"
                 class="interes_mensual"
@@ -228,6 +224,12 @@
                 name="tipo"
                 class="tipo"
                 onchange="cambiarTipo(this)"
+                style="
+                    width:100%;
+                    padding:12px;
+                    border-radius:10px;
+                    margin-top:5px;
+                "
             >
 
                 <option value="interes">
@@ -259,6 +261,12 @@
                         mostrarAlerta(this);
                         actualizarResumen(this);
                         cargarInteres(this);
+                    "
+                    style="
+                        width:100%;
+                        padding:12px;
+                        border-radius:10px;
+                        margin-top:5px;
                     "
                 >
 
@@ -320,11 +328,30 @@
                 class="monto money"
                 placeholder="50.000"
                 required
+                style="
+                    width:100%;
+                    padding:14px;
+                    border-radius:10px;
+                    margin-top:5px;
+                "
             >
 
             <br><br>
 
-            <button>
+            <button
+                type="submit"
+                style="
+                    width:100%;
+                    padding:14px;
+                    border:none;
+                    border-radius:12px;
+                    background:#ff7b00;
+                    color:white;
+                    font-size:16px;
+                    font-weight:bold;
+                    cursor:pointer;
+                "
+            >
                 💾 Guardar abono
             </button>
 
@@ -333,6 +360,18 @@
     </div>
 
     {% endfor %}
+
+{% else %}
+
+    {% if cliente_id %}
+
+    <div class="card" style="margin-top:20px;">
+
+        ⚠️ Este cliente no tiene préstamos pendientes.
+
+    </div>
+
+    {% endif %}
 
 {% endif %}
 
