@@ -283,6 +283,9 @@ def calcular(pid, conn):
 
     cur = conn.cursor()
 
+    # =====================================
+    # DATOS PRÉSTAMO
+    # =====================================
     cur.execute("""
         SELECT capital, interes, fecha
         FROM prestamos
@@ -294,142 +297,93 @@ def calcular(pid, conn):
     if not data:
         return 0, 0, 0, 0, 0
 
-    capital_original, interes, fecha = data
+    capital_original = float(data[0])
+    interes = float(data[1])
+    fecha = data[2]
 
     # =====================================
-    # 💸 CAPITAL ABONADO
+    # CAPITAL ABONADO
     # =====================================
-
     cur.execute("""
-        SELECT SUM(monto)
+        SELECT COALESCE(SUM(monto),0)
         FROM abonos
         WHERE prestamo_id=%s
         AND tipo='capital'
     """, (pid,))
 
-    abonado_capital = cur.fetchone()[0] or 0
+    abonado_capital = float(
+        cur.fetchone()[0] or 0
+    )
 
-    capital_restante = capital_original - abonado_capital
+    capital_restante = (
+        capital_original - abonado_capital
+    )
 
     if capital_restante < 0:
         capital_restante = 0
 
     # =====================================
-    # 📆 MESES TRANSCURRIDOS
+    # MESES TRANSCURRIDOS
     # =====================================
-
     meses = meses_atraso(fecha)
 
-    if meses < 0:
-        meses = 0
+    if meses < 1:
+        meses = 1
 
     # =====================================
-    # 🔥 INTERÉS SOBRE CAPITAL RESTANTE
+    # INTERÉS MENSUAL
     # =====================================
-
-    interes_mensual_actual = capital_restante * (interes / 100)
-
-    interes_total = interes_mensual_actual * meses
+    interes_mensual = (
+        capital_restante *
+        (interes / 100)
+    )
 
     # =====================================
-    # 💰 INTERÉS PAGADO
+    # INTERÉS GENERADO
     # =====================================
+    interes_generado = (
+        interes_mensual * meses
+    )
 
+    # =====================================
+    # INTERÉS PAGADO
+    # =====================================
     cur.execute("""
-        SELECT SUM(monto)
+        SELECT COALESCE(SUM(monto),0)
         FROM abonos
         WHERE prestamo_id=%s
         AND tipo='interes'
     """, (pid,))
 
-    abonado_interes = cur.fetchone()[0] or 0
+    abonado_interes = float(
+        cur.fetchone()[0] or 0
+    )
 
-    interes_restante = interes_total - abonado_interes
+    interes_restante = (
+        interes_generado -
+        abonado_interes
+    )
 
     if interes_restante < 0:
         interes_restante = 0
 
     # =====================================
-    # 💵 TOTAL
+    # TOTAL
     # =====================================
-
-    saldo_total = capital_restante + interes_restante
-
-    return (
-        capital_restante,
-        interes_restante,
-        saldo_total,
-        abonado_capital,
-        abonado_interes
+    saldo_total = (
+        capital_restante +
+        interes_restante
     )
 
-def meses_disponibles(pid, conn):
+    return (
 
-    cur = conn.cursor()
+        round(capital_restante),
+        round(interes_restante),
+        round(saldo_total),
+        round(abonado_capital),
+        round(abonado_interes)
 
-    # 🔥 obtener fecha préstamo
-    cur.execute("""
-        SELECT fecha
-        FROM prestamos
-        WHERE id=%s
-    """, (pid,))
-
-    data = cur.fetchone()
-
-    if not data:
-        return []
-
-    fecha = data[0]
-
-    hoy = datetime.now()
-
-    # 🔥 permitir hasta 24 meses adelantados
-    total_meses = 24
-
-    # 🔥 meses ya pagados
-    cur.execute("""
-        SELECT mes
-        FROM abonos
-        WHERE prestamo_id=%s
-        AND tipo='interes'
-    """, (pid,))
-
-    pagados = [m[0] for m in cur.fetchall()]
-
-    meses = []
-
-    nombres = [
-        "Enero",
-        "Febrero",
-        "Marzo",
-        "Abril",
-        "Mayo",
-        "Junio",
-        "Julio",
-        "Agosto",
-        "Septiembre",
-        "Octubre",
-        "Noviembre",
-        "Diciembre"
-    ]
-
-    for i in range(1, total_meses + 1):
-
-        if i not in pagados:
-
-            fecha_mes = fecha + timedelta(days=i * 30)
-
-            nombre_mes = nombres[fecha_mes.month - 1]
-
-            texto = f"{nombre_mes} {fecha_mes.year}"
-
-            meses.append({
-                "numero": i,
-                "texto": texto
-            })
-
-    return meses
-
+    )
 # ------------------------------
 # 🏠 INICIO
 # ------------------------------
