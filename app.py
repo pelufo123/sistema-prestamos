@@ -1364,6 +1364,9 @@ def historial(id):
 # ------------------------------
 # 💼 PRÉSTAMOS
 # ------------------------------
+# ====================================
+# 💰 PRÉSTAMOS
+# ====================================
 @app.route("/prestamos", methods=["GET","POST"])
 def prestamos():
 
@@ -1372,13 +1375,20 @@ def prestamos():
 
     error = ""
 
-    # 🔹 clientes
-    cur.execute("SELECT * FROM clientes")
+    # ====================================
+    # 👥 CLIENTES
+    # ====================================
+    cur.execute("""
+        SELECT *
+        FROM clientes
+        ORDER BY nombre ASC
+    """)
+
     clientes = cur.fetchall()
 
-    # =============================
-    # 🔥 GUARDAR PRÉSTAMO
-    # =============================
+    # ====================================
+    # 💾 GUARDAR PRÉSTAMO
+    # ====================================
     if request.method == "POST":
 
         try:
@@ -1403,9 +1413,9 @@ def prestamos():
                 "%Y-%m-%d"
             )
 
-            # =====================================
+            # ====================================
             # ❌ VALIDAR FECHA
-            # =====================================
+            # ====================================
             if venc <= fecha:
 
                 error = (
@@ -1414,11 +1424,12 @@ def prestamos():
 
             else:
 
-                # =====================================
+                # ====================================
                 # 💰 DINERO DISPONIBLE EN CAJA
-                # =====================================
+                # ====================================
                 cur.execute("""
                     SELECT
+
                         COALESCE(SUM(
                             CASE
                                 WHEN tipo='ingreso'
@@ -1440,18 +1451,26 @@ def prestamos():
 
                 datos = cur.fetchone()
 
-                ingresos = datos[0] or 0
-                egresos = datos[1] or 0
+                ingresos = float(
+                    datos[0] or 0
+                )
 
-                disponible = ingresos - egresos
+                egresos = float(
+                    datos[1] or 0
+                )
 
-                # =====================================
+                disponible = (
+                    ingresos - egresos
+                )
+
+                # ====================================
                 # ❌ VALIDAR SALDO
-                # =====================================
+                # ====================================
                 if capital > disponible:
 
                     error = (
-                        "❌ No hay suficiente dinero disponible en caja"
+                        f"❌ Caja insuficiente. "
+                        f"Disponible: ${formato(disponible)}"
                     )
 
                 else:
@@ -1460,9 +1479,9 @@ def prestamos():
                         capital * interes / 100
                     )
 
-                    # =====================================
+                    # ====================================
                     # 💾 GUARDAR PRÉSTAMO
-                    # =====================================
+                    # ====================================
                     cur.execute("""
                         INSERT INTO prestamos (
 
@@ -1486,9 +1505,9 @@ def prestamos():
 
                     ))
 
-                    # =====================================
+                    # ====================================
                     # 🏦 EGRESO EN CAJA
-                    # =====================================
+                    # ====================================
                     cur.execute("""
                         INSERT INTO caja (
 
@@ -1510,13 +1529,15 @@ def prestamos():
 
         except Exception as e:
 
-            print("ERROR:", e)
+            print("ERROR PRESTAMOS:", e)
 
-            error = "❌ Error al guardar préstamo"
+            error = (
+                "❌ Error al guardar préstamo"
+            )
 
-    # =============================
+    # ====================================
     # 🔍 FILTRO POR FECHA
-    # =============================
+    # ====================================
     fecha_filtro = request.args.get("fecha")
 
     if fecha_filtro:
@@ -1530,9 +1551,9 @@ def prestamos():
 
         fecha_filtro = datetime.now().date()
 
-    # =============================
+    # ====================================
     # 📋 PRÉSTAMOS DEL DÍA
-    # =============================
+    # ====================================
     cur.execute("""
         SELECT
 
@@ -1548,15 +1569,20 @@ def prestamos():
         ON p.cliente_id = c.id
 
         WHERE p.fecha = %s
+
+        ORDER BY p.id DESC
+
     """, (fecha_filtro,))
 
     prestamos_dia = cur.fetchall()
 
-    cantidad_dia = len(prestamos_dia)
+    cantidad_dia = len(
+        prestamos_dia
+    )
 
-    # =============================
+    # ====================================
     # 📋 LISTA GENERAL
-    # =============================
+    # ====================================
     cur.execute("""
         SELECT
 
@@ -1568,33 +1594,49 @@ def prestamos():
 
         JOIN clientes c
         ON p.cliente_id = c.id
+
+        ORDER BY p.id DESC
     """)
 
     prestamos_lista = []
 
-    for p in cur.fetchall():
+    resultados = cur.fetchall()
 
-        cap_rest, _, _, _, _ = calcular(
-            p[0],
-            conn
-        )
+    for p in resultados:
 
-        saldo = (
-            cap_rest +
-            interes_hoy(p[0], conn)
-        )
+        try:
 
-        prestamos_lista.append({
+            cap_rest, _, _, _, _ = calcular(
+                p[0],
+                conn
+            )
 
-            "id": p[0],
+            saldo = (
+                cap_rest +
+                interes_hoy(
+                    p[0],
+                    conn
+                )
+            )
 
-            "cliente": p[1],
+            prestamos_lista.append({
 
-            "total": formato(p[2]),
+                "id": p[0],
 
-            "saldo": formato(saldo)
+                "cliente": p[1],
 
-        })
+                "total": formato(p[2]),
+
+                "saldo": formato(saldo)
+
+            })
+
+        except Exception as e:
+
+            print(
+                "ERROR CALCULANDO:",
+                e
+            )
 
     conn.close()
 
@@ -1615,6 +1657,7 @@ def prestamos():
         error=error
 
     )
+    
 # 💸 ABONOS
 # ------------------------------
 @app.route("/abonos", methods=["GET", "POST"])
