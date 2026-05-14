@@ -1321,10 +1321,17 @@ def historial(id):
 # ====================================
 # 💰 PRÉSTAMOS
 # ====================================
+# ====================================
+# 💰 PRÉSTAMOS
+# ====================================
 @app.route("/prestamos", methods=["GET","POST"])
 def prestamos():
 
     conn = conectar()
+
+    if not conn:
+        return "Error conexión DB"
+
     cur = conn.cursor()
 
     error = ""
@@ -1542,7 +1549,9 @@ def prestamos():
 
             p.id,
             c.nombre,
-            p.total
+            p.capital,
+            p.interes,
+            p.fecha
 
         FROM prestamos p
 
@@ -1560,28 +1569,34 @@ def prestamos():
 
         try:
 
-            cap_rest, _, _, _, _ = calcular(
-                p[0],
+            pid = p[0]
+            nombre = p[1]
+
+            # ====================================
+            # 🔥 CÁLCULO REAL
+            # ====================================
+            cap_rest, int_rest, saldo_total, _, _ = calcular(
+                pid,
                 conn
             )
 
-            saldo = (
-                cap_rest +
-                interes_hoy(
-                    p[0],
-                    conn
-                )
-            )
+            # 🔥 SI YA PAGÓ TODO
+            if saldo_total <= 0:
+                continue
 
             prestamos_lista.append({
 
-                "id": p[0],
+                "id": pid,
 
-                "cliente": p[1],
+                "cliente": nombre,
 
-                "total": formato(p[2]),
+                "total": formato(
+                    saldo_total
+                ),
 
-                "saldo": formato(saldo)
+                "saldo": formato(
+                    saldo_total
+                )
 
             })
 
