@@ -1054,16 +1054,23 @@ def caja():
 # ====================================
 # ✏️ EDITAR MOVIMIENTO CAJA
 # ====================================
+# ====================================
+# ✏️ EDITAR MOVIMIENTO CAJA
+# ====================================
 @app.route("/editar_caja/<int:id>", methods=["GET", "POST"])
 def editar_caja(id):
 
     conn = conectar()
+
+    if not conn:
+        return "Error conexión DB"
+
     cur = conn.cursor()
 
     error = ""
 
     # ====================================
-    # GUARDAR CAMBIOS
+    # 💾 GUARDAR CAMBIOS
     # ====================================
     if request.method == "POST":
 
@@ -1083,15 +1090,29 @@ def editar_caja(id):
             # 🔥 OBTENER MOVIMIENTO ACTUAL
             # ====================================
             cur.execute("""
-                SELECT tipo, monto
+                SELECT
+                    tipo,
+                    monto
                 FROM caja
                 WHERE id=%s
             """, (id,))
 
             actual = cur.fetchone()
 
+            # 🔥 SI NO EXISTE
+            if not actual:
+
+                conn.close()
+
+                return redirect(
+                    url_for("caja")
+                )
+
             tipo_actual = actual[0]
-            monto_actual = float(actual[1])
+
+            monto_actual = float(
+                actual[1]
+            )
 
             # ====================================
             # 💰 TOTALES ACTUALES
@@ -1120,29 +1141,45 @@ def editar_caja(id):
 
             datos = cur.fetchone()
 
-            ingresos = float(datos[0] or 0)
-            egresos = float(datos[1] or 0)
+            ingresos = float(
+                datos[0] or 0
+            )
+
+            egresos = float(
+                datos[1] or 0
+            )
 
             # ====================================
             # 🔥 QUITAR MOVIMIENTO ACTUAL
             # ====================================
             if tipo_actual == "ingreso":
+
                 ingresos -= monto_actual
+
             else:
+
                 egresos -= monto_actual
 
             # ====================================
             # 🔥 AGREGAR NUEVO MOVIMIENTO
             # ====================================
             if tipo == "ingreso":
+
                 ingresos += monto
+
             else:
+
                 egresos += monto
 
-            disponible = ingresos - egresos
+            # ====================================
+            # 💰 DISPONIBLE
+            # ====================================
+            disponible = (
+                ingresos - egresos
+            )
 
             # ====================================
-            # ❌ VALIDAR
+            # ❌ VALIDAR NEGATIVO
             # ====================================
             if disponible < 0:
 
@@ -1153,6 +1190,9 @@ def editar_caja(id):
 
             else:
 
+                # ====================================
+                # 💾 ACTUALIZAR
+                # ====================================
                 cur.execute("""
                     UPDATE caja
                     SET
@@ -1181,16 +1221,29 @@ def editar_caja(id):
 
         except Exception as e:
 
-            print("ERROR EDITAR CAJA:", e)
+            print(
+                "ERROR EDITAR CAJA:",
+                e
+            )
 
-            error = "❌ Error editando movimiento"
+            error = (
+                "❌ Error editando movimiento"
+            )
 
     # ====================================
-    # OBTENER MOVIMIENTO
+    # 🔍 OBTENER MOVIMIENTO
     # ====================================
     cur.execute("""
-        SELECT *
+        SELECT
+
+            id,
+            tipo,
+            monto,
+            descripcion,
+            fecha
+
         FROM caja
+
         WHERE id=%s
     """, (id,))
 
@@ -1207,6 +1260,7 @@ def editar_caja(id):
         formato=formato,
 
         error=error
+
     )
 @app.route("/eliminar_caja/<int:id>")
 def eliminar_caja(id):
