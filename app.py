@@ -944,7 +944,18 @@ def caja():
 
         fecha = datetime.now()
 
-    inicio_mes = fecha.replace(day=1)
+    # ====================================
+    # 🔥 INICIO MES
+    # ====================================
+    inicio_mes = fecha.replace(
+
+        day=1,
+        hour=0,
+        minute=0,
+        second=0,
+        microsecond=0
+
+    )
 
     # ====================================
     # 🔥 SIGUIENTE MES
@@ -952,20 +963,32 @@ def caja():
     if fecha.month == 12:
 
         siguiente = fecha.replace(
+
             year=fecha.year + 1,
             month=1,
-            day=1
+            day=1,
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0
+
         )
 
     else:
 
         siguiente = fecha.replace(
+
             month=fecha.month + 1,
-            day=1
+            day=1,
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0
+
         )
 
     # ====================================
-    # 📋 MOVIMIENTOS
+    # 📋 MOVIMIENTOS DEL MES
     # ====================================
     cur.execute("""
         SELECT
@@ -982,6 +1005,7 @@ def caja():
         AND fecha < %s
 
         ORDER BY id DESC
+
     """, (
 
         inicio_mes,
@@ -992,40 +1016,30 @@ def caja():
     movimientos = cur.fetchall()
 
     # ====================================
-    # 💰 TOTALES GENERALES
+    # 🔥 INICIAR TOTALES EN 0
     # ====================================
-    cur.execute("""
-        SELECT
+    ingresos = 0
+    egresos = 0
+    disponible = 0
 
-            COALESCE(SUM(
-                CASE
-                    WHEN tipo='ingreso'
-                    THEN monto
-                    ELSE 0
-                END
-            ),0),
+    # ====================================
+    # 🔥 SUMAR MOVIMIENTOS DEL MES
+    # ====================================
+    for mov in movimientos:
 
-            COALESCE(SUM(
-                CASE
-                    WHEN tipo='egreso'
-                    THEN monto
-                    ELSE 0
-                END
-            ),0)
+        monto_mov = float(mov[2])
 
-        FROM caja
-    """)
+        if mov[1] == "ingreso":
 
-    datos_totales = cur.fetchone()
+            ingresos += monto_mov
 
-    ingresos = float(
-        datos_totales[0] or 0
-    )
+        else:
 
-    egresos = float(
-        datos_totales[1] or 0
-    )
+            egresos += monto_mov
 
+    # ====================================
+    # 💰 DISPONIBLE
+    # ====================================
     disponible = ingresos - egresos
 
     conn.close()
@@ -1051,10 +1065,6 @@ def caja():
         mensaje=mensaje
     )
 
-# ====================================
-# ✏️ EDITAR MOVIMIENTO CAJA
-# ====================================
-# ====================================
 # ✏️ EDITAR MOVIMIENTO CAJA
 # ====================================
 @app.route("/editar_caja/<int:id>", methods=["GET", "POST"])
