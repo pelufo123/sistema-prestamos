@@ -7,6 +7,30 @@
 </h2>
 
 <!-- ================================= -->
+<!-- 🔥 MENSAJES -->
+<!-- ================================= -->
+
+{% if error %}
+
+<div class="card red" style="margin-bottom:20px;">
+
+    {{ error }}
+
+</div>
+
+{% endif %}
+
+{% if mensaje %}
+
+<div class="card green" style="margin-bottom:20px;">
+
+    {{ mensaje }}
+
+</div>
+
+{% endif %}
+
+<!-- ================================= -->
 <!-- 💾 FORMULARIO -->
 <!-- ================================= -->
 <div class="card">
@@ -82,7 +106,7 @@
             type="submit"
             class="btn"
         >
-            Guardar movimiento
+            💾 Guardar movimiento
         </button>
 
     </form>
@@ -115,13 +139,16 @@
 
             </div>
 
-            <div style="display:flex;align-items:end;">
+            <div style="
+                display:flex;
+                align-items:end;
+            ">
 
                 <button
                     type="submit"
                     class="btn"
                 >
-                    Filtrar
+                    🔍 Filtrar
                 </button>
 
             </div>
@@ -208,6 +235,7 @@
 
                 <tr>
 
+                    <!-- TIPO -->
                     <td>
 
                         {% if mov[1] == "ingreso" %}
@@ -226,26 +254,59 @@
 
                     </td>
 
+                    <!-- MONTO -->
                     <td>
                         ${{ formato(mov[2]) }}
                     </td>
 
+                    <!-- DESCRIPCIÓN -->
                     <td>
                         {{ mov[3] }}
                     </td>
 
+                    <!-- FECHA -->
                     <td>
                         {{ mov[4] }}
                     </td>
 
-                    <td>
+                    <!-- ACCIONES -->
+                    <td style="
+                        display:flex;
+                        gap:8px;
+                        flex-wrap:wrap;
+                    ">
 
+                        <!-- ✏️ EDITAR -->
                         <a
                             href="/editar_caja/{{ mov[0] }}"
-                            class="btn-editar"
+                            class="btn btn-edit"
+                            style="
+                                padding:8px 12px;
+                                font-size:14px;
+                            "
                         >
 
-                            <i class="fa-solid fa-pen"></i>
+                            ✏️
+
+                        </a>
+
+                        <!-- 🗑️ ELIMINAR -->
+                        <a
+                            href="/eliminar_caja/{{ mov[0] }}"
+                            class="btn btn-del"
+
+                            style="
+                                padding:8px 12px;
+                                font-size:14px;
+                            "
+
+                            onclick="
+                            return confirm(
+                            '⚠️ ¿Seguro que deseas eliminar este movimiento?'
+                            )"
+                        >
+
+                            🗑️
 
                         </a>
 
@@ -262,5 +323,66 @@
     </div>
 
 </div>
+
+<!-- ================================= -->
+<!-- 🔥 FORMATO MILES -->
+<!-- ================================= -->
+<script>
+
+function formatearMiles(input){
+
+    let valor =
+    input.value.replace(/\D/g, "");
+
+    valor = valor.replace(
+        /\B(?=(\d{3})+(?!\d))/g,
+        "."
+    );
+
+    input.value = valor;
+
+}
+
+function limpiarNumero(valor){
+
+    return valor.replace(/\./g, "");
+
+}
+
+document.addEventListener(
+"DOMContentLoaded",
+function(){
+
+    const inputs =
+    document.querySelectorAll(".money");
+
+    inputs.forEach(input => {
+
+        input.addEventListener(
+        "input",
+        function(){
+
+            formatearMiles(this);
+
+        });
+
+        input.form?.addEventListener(
+        "submit",
+        function(){
+
+            inputs.forEach(i => {
+
+                i.value =
+                limpiarNumero(i.value);
+
+            });
+
+        });
+
+    });
+
+});
+
+</script>
 
 {% endblock %}

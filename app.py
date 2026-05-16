@@ -817,30 +817,435 @@ def panel():
 def caja():
 
     conn = conectar()
+
+    if not conn:
+        return "Error conexión DB"
+
     cur = conn.cursor()
 
     error = ""
+    mensaje = ""
 
     # ====================================
     # 💾 GUARDAR NUEVO MOVIMIENTO
     # ====================================
     if request.method == "POST":
 
-        tipo = request.form["tipo"]
+        try:
 
-        monto = float(
-            request.form["monto"]
-            .replace(".", "")
-            .replace(",", "")
+            tipo = request.form["tipo"]
+
+            monto = float(
+                request.form["monto"]
+                .replace(".", "")
+                .replace(",", "")
+            )
+
+            descripcion = request.form["descripcion"]
+
+            # ====================================
+            # 💰 CALCULAR DISPONIBLE ACTUAL
+            # ====================================
+            cur.execute("""
+                SELECT
+
+                    COALESCE(SUM(
+                        CASE
+                            WHEN tipo='ingreso'
+                            THEN monto
+                            ELSE 0
+                        END
+                    ),0),
+
+                    COALESCE(SUM(
+                        CASE
+                            WHEN tipo='egreso'
+                            THEN monto
+                            ELSE 0
+                        END
+                    ),0)
+
+                FROM caja
+            """)
+
+            datos = cur.fetchone()
+
+            ingresos_actuales = float(
+                datos[0] or 0
+            )
+
+            egresos_actuales = float(
+                datos[1] or 0
+            )
+
+            disponible_actual = (
+                ingresos_actuales -
+                egresos_actuales
+            )
+
+            # ====================================
+            # ❌ VALIDAR FONDOS
+            # ====================================
+            if (
+                tipo == "egreso"
+                and monto > disponible_actual
+            ):
+
+                error = (
+                    f"❌ No hay suficiente dinero en caja. "
+                    f"Disponible: ${formato(disponible_actual)}"
+                )
+
+            else:
+
+                # ====================================
+                # 💾 GUARDAR
+                # ====================================
+                cur.execute("""
+                    INSERT INTO caja (
+
+                        tipo,
+                        monto,
+                        descripcion
+
+                    )
+                    VALUES (%s,%s,%s)
+                """, (
+
+                    tipo,
+                    monto,
+                    descripcion
+
+                ))
+
+                conn.commit()
+
+                mensaje = "✅ Movimiento guardado"
+
+        except Exception as e:
+
+            print("ERROR CAJA:", e)
+
+            error = "❌ Error guardando movimiento"
+
+    # ====================================
+    # 📅 FILTRO POR MES
+    # ====================================
+    mes = request.args.get("mes")
+
+    if mes:
+
+        fecha = datetime.strptime(
+            mes,
+            "%Y-%m"
         )
 
-        descripcion = request.form["descripcion"]
+    else:
+
+        fecha = datetime.now()
+
+    inicio_mes = fecha.replace(day=1)
+
+    # ====================================
+    # 🔥 SIGUIENTE MES
+    # ====================================
+    if fecha.month == 12:
+
+        siguiente = fecha.replace(
+            year=fecha.year + 1,
+            month=1,
+            day=1
+        )
+
+    else:
+
+        siguiente = fecha.replace(
+            month=fecha.month + 1,
+            day=1
+        )
+
+    # ====================================
+    # 📋 MOVIMIENTOS
+    # ====================================
+    cur.execute("""
+        SELECT
+
+            id,
+            tipo,
+            monto,
+            descripcion,
+            fecha
+
+        FROM caja
+
+        WHERE fecha >= %s
+        AND fecha < %s
+
+        ORDER BY id DESC
+    """, (
+
+        inicio_mes,
+        siguiente
+
+    ))
+
+    movimientos = cur.fetchall()
+
+    # ====================================
+    # 💰 TOTALES GENERALES
+    # ====================================
+    cur.execute("""
+        SELECT
+
+            COALESCE(SUM(
+                CASE
+                    WHEN tipo='ingreso'
+                    THEN monto
+                    ELSE 0
+                END
+            ),0),
+
+            COALESCE(SUM(
+                CASE
+                    WHEN tipo='egreso'
+                    THEN monto
+                    ELSE 0
+                END
+            ),0)
+
+        FROM caja
+    """)
+
+    datos_totales = cur.fetchone()
+
+    ingresos = float(
+        datos_totales[0] or 0
+    )
+
+    egresos = float(
+        datos_totales[1] or 0
+    )
+
+    disponible = ingresos - egresos
+
+    conn.close()
+
+    return render_template(
+
+        "caja.html",
+
+        movimientos=movimientos,
+
+        ingresos=ingresos,
+
+        egresos=egresos,
+
+        disponible=disponible,
+
+        formato=formato,
+
+        mes=fecha.strftime("%Y-%m"),
+
+        error=error,
+
+        mensaje=mensaje
+    )
+
+# ====================================
+# ✏️ EDITAR MOVIMIENTO CAJA
+# ====================================
+@app.route("/editar_caja/<int:id>", methods=["GET", "POST"])
+def editar_caja(id):
+
+    conn = conectar()
+    cur = conn.cursor()
+
+    error = ""
+
+    # ====================================
+    # GUARDAR CAMBIOS
+    # ====================================
+    if request.method == "POST":
+
+        try:
+
+            tipo = request.form["tipo"]
+
+            monto = float(
+                request.form["monto"]
+                .replace(".", "")
+                .replace(",", "")
+            )
+
+            descripcion = request.form["descripcion"]
+
+            # ====================================
+            # 🔥 OBTENER MOVIMIENTO ACTUAL
+            # ====================================
+            cur.execute("""
+                SELECT tipo, monto
+                FROM caja
+                WHERE id=%s
+            """, (id,))
+
+            actual = cur.fetchone()
+
+            tipo_actual = actual[0]
+            monto_actual = float(actual[1])
+
+            # ====================================
+            # 💰 TOTALES ACTUALES
+            # ====================================
+            cur.execute("""
+                SELECT
+
+                    COALESCE(SUM(
+                        CASE
+                            WHEN tipo='ingreso'
+                            THEN monto
+                            ELSE 0
+                        END
+                    ),0),
+
+                    COALESCE(SUM(
+                        CASE
+                            WHEN tipo='egreso'
+                            THEN monto
+                            ELSE 0
+                        END
+                    ),0)
+
+                FROM caja
+            """)
+
+            datos = cur.fetchone()
+
+            ingresos = float(datos[0] or 0)
+            egresos = float(datos[1] or 0)
+
+            # ====================================
+            # 🔥 QUITAR MOVIMIENTO ACTUAL
+            # ====================================
+            if tipo_actual == "ingreso":
+                ingresos -= monto_actual
+            else:
+                egresos -= monto_actual
+
+            # ====================================
+            # 🔥 AGREGAR NUEVO MOVIMIENTO
+            # ====================================
+            if tipo == "ingreso":
+                ingresos += monto
+            else:
+                egresos += monto
+
+            disponible = ingresos - egresos
+
+            # ====================================
+            # ❌ VALIDAR
+            # ====================================
+            if disponible < 0:
+
+                error = (
+                    "❌ Esa edición dejaría "
+                    "la caja en negativo"
+                )
+
+            else:
+
+                cur.execute("""
+                    UPDATE caja
+                    SET
+
+                        tipo=%s,
+                        monto=%s,
+                        descripcion=%s
+
+                    WHERE id=%s
+                """, (
+
+                    tipo,
+                    monto,
+                    descripcion,
+                    id
+
+                ))
+
+                conn.commit()
+
+                conn.close()
+
+                return redirect(
+                    url_for("caja")
+                )
+
+        except Exception as e:
+
+            print("ERROR EDITAR CAJA:", e)
+
+            error = "❌ Error editando movimiento"
+
+    # ====================================
+    # OBTENER MOVIMIENTO
+    # ====================================
+    cur.execute("""
+        SELECT *
+        FROM caja
+        WHERE id=%s
+    """, (id,))
+
+    movimiento = cur.fetchone()
+
+    conn.close()
+
+    return render_template(
+
+        "editar_caja.html",
+
+        movimiento=movimiento,
+
+        formato=formato,
+
+        error=error
+    )
+@app.route("/eliminar_caja/<int:id>")
+def eliminar_caja(id):
+
+    conn = conectar()
+    cur = conn.cursor()
+
+    try:
 
         # ====================================
-        # 💰 CALCULAR DISPONIBLE ACTUAL
+        # 🔥 OBTENER MOVIMIENTO
         # ====================================
         cur.execute("""
             SELECT
+                tipo,
+                monto
+            FROM caja
+            WHERE id=%s
+        """, (id,))
+
+        movimiento = cur.fetchone()
+
+        if not movimiento:
+
+            conn.close()
+
+            return redirect(
+                url_for("caja")
+            )
+
+        tipo = movimiento[0]
+        monto = float(movimiento[1])
+
+        # ====================================
+        # 💰 VALIDAR SI SE PUEDE ELIMINAR
+        # ====================================
+        cur.execute("""
+            SELECT
+
                 COALESCE(SUM(
                     CASE
                         WHEN tipo='ingreso'
@@ -862,251 +1267,44 @@ def caja():
 
         datos = cur.fetchone()
 
-        ingresos_actuales = datos[0] or 0
-        egresos_actuales = datos[1] or 0
-
-        disponible_actual = (
-            ingresos_actuales -
-            egresos_actuales
-        )
-
-        # ====================================
-        # ❌ VALIDAR FONDOS
-        # ====================================
-        if (
-            tipo == "egreso"
-            and monto > disponible_actual
-        ):
-
-            error = (
-                "❌ No hay suficiente dinero disponible en caja"
-            )
-
-        else:
-
-            # ====================================
-            # 💾 GUARDAR
-            # ====================================
-            cur.execute("""
-                INSERT INTO caja (
-                    tipo,
-                    monto,
-                    descripcion
-                )
-                VALUES (%s,%s,%s)
-            """, (
-                tipo,
-                monto,
-                descripcion
-            ))
-
-            conn.commit()
-
-    # ====================================
-    # 📅 FILTRO POR MES
-    # ====================================
-    mes = request.args.get("mes")
-
-    if mes:
-
-        fecha = datetime.strptime(
-            mes,
-            "%Y-%m"
-        )
-
-    else:
-
-        fecha = datetime.now()
-
-    inicio_mes = fecha.replace(day=1)
-
-    # 🔥 siguiente mes
-    if fecha.month == 12:
-
-        siguiente = fecha.replace(
-            year=fecha.year + 1,
-            month=1,
-            day=1
-        )
-
-    else:
-
-        siguiente = fecha.replace(
-            month=fecha.month + 1,
-            day=1
-        )
-
-    # ====================================
-    # 📋 MOVIMIENTOS
-    # ====================================
-    cur.execute("""
-        SELECT
-            id,
-            tipo,
-            monto,
-            descripcion,
-            fecha
-        FROM caja
-        WHERE fecha >= %s
-        AND fecha < %s
-        ORDER BY fecha DESC
-    """, (
-        inicio_mes,
-        siguiente
-    ))
-
-    movimientos = cur.fetchall()
-
-    ingresos = 0
-    egresos = 0
-
-    for mov in movimientos:
-
-        if mov[1] == "ingreso":
-
-            ingresos += mov[2]
-
-        else:
-
-            egresos += mov[2]
-
-    disponible = ingresos - egresos
-
-    conn.close()
-
-    return render_template(
-        "caja.html",
-
-        movimientos=movimientos,
-
-        ingresos=ingresos,
-
-        egresos=egresos,
-
-        disponible=disponible,
-
-        formato=formato,
-
-        mes=fecha.strftime("%Y-%m"),
-
-        error=error
-    )
-
-# ====================================
-# ✏️ EDITAR MOVIMIENTO CAJA
-# ====================================
-@app.route("/editar_caja/<int:id>", methods=["GET", "POST"])
-def editar_caja(id):
-
-    conn = conectar()
-    cur = conn.cursor()
-
-    error = ""
-
-    # ====================================
-    # OBTENER MOVIMIENTO ACTUAL
-    # ====================================
-    cur.execute("""
-        SELECT *
-        FROM caja
-        WHERE id=%s
-    """, (id,))
-
-    movimiento = cur.fetchone()
-
-    # ====================================
-    # GUARDAR CAMBIOS
-    # ====================================
-    if request.method == "POST":
-
-        tipo = request.form["tipo"]
-
-        monto = float(
-            request.form["monto"]
-            .replace(".", "")
-            .replace(",", "")
-        )
-
-        descripcion = request.form["descripcion"]
-
-        # ====================================
-        # 💰 DISPONIBLE ACTUAL
-        # ====================================
-        cur.execute("""
-            SELECT
-                COALESCE(SUM(
-                    CASE
-                        WHEN tipo='ingreso'
-                        THEN monto
-                        ELSE 0
-                    END
-                ),0),
-
-                COALESCE(SUM(
-                    CASE
-                        WHEN tipo='egreso'
-                        THEN monto
-                        ELSE 0
-                    END
-                ),0)
-
-            FROM caja
-            WHERE id != %s
-        """, (id,))
-
-        datos = cur.fetchone()
-
-        ingresos = datos[0] or 0
-        egresos = datos[1] or 0
+        ingresos = float(datos[0] or 0)
+        egresos = float(datos[1] or 0)
 
         disponible = ingresos - egresos
 
         # ====================================
-        # ❌ VALIDAR
+        # ❌ NO DEJAR NEGATIVO
         # ====================================
         if (
-            tipo == "egreso"
-            and monto > disponible
+            tipo == "ingreso"
+            and (disponible - monto) < 0
         ):
-
-            error = (
-                "❌ No hay suficiente dinero en caja"
-            )
-
-        else:
-
-            cur.execute("""
-                UPDATE caja
-                SET
-                    tipo=%s,
-                    monto=%s,
-                    descripcion=%s
-                WHERE id=%s
-            """, (
-                tipo,
-                monto,
-                descripcion,
-                id
-            ))
-
-            conn.commit()
 
             conn.close()
 
-            return redirect(
-                url_for("caja")
+            return (
+                "❌ No puedes eliminar este ingreso "
+                "porque dejaría la caja en negativo"
             )
+
+        # ====================================
+        # 🗑️ ELIMINAR
+        # ====================================
+        cur.execute("""
+            DELETE FROM caja
+            WHERE id=%s
+        """, (id,))
+
+        conn.commit()
+
+    except Exception as e:
+
+        print("ERROR ELIMINAR CAJA:", e)
 
     conn.close()
 
-    return render_template(
-        "editar_caja.html",
-
-        movimiento=movimiento,
-
-        formato=formato,
-
-        error=error
+    return redirect(
+        url_for("caja")
     )
 # ------------------------------
 # 👥 CLIENTES
@@ -1315,13 +1513,6 @@ def historial(id):
         formato=formato
     )
 
-# ------------------------------
-# 💼 PRÉSTAMOS
-# ------------------------------
-# ====================================
-# 💰 PRÉSTAMOS
-# ====================================
-# ====================================
 # 💰 PRÉSTAMOS
 # ====================================
 @app.route("/prestamos", methods=["GET","POST"])
