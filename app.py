@@ -71,7 +71,9 @@ def init_db():
         CREATE TABLE IF NOT EXISTS usuarios (
 
             id SERIAL PRIMARY KEY,
+
             username TEXT UNIQUE,
+
             password TEXT
 
         );
@@ -84,9 +86,13 @@ def init_db():
         CREATE TABLE IF NOT EXISTS clientes (
 
             id SERIAL PRIMARY KEY,
+
             nombre TEXT,
+
             telefono TEXT,
+
             direccion TEXT,
+
             usuario TEXT
 
         );
@@ -103,19 +109,42 @@ def init_db():
             cliente_id INTEGER REFERENCES clientes(id),
 
             capital REAL,
+
             interes REAL,
 
             dias INTEGER,
 
             fecha DATE,
+
             vencimiento DATE,
 
             total REAL,
+
+            estado TEXT DEFAULT 'Activo',
 
             usuario TEXT
 
         );
         """)
+
+        # =====================================
+        # 🔥 AGREGAR COLUMNA ESTADO
+        # SI NO EXISTE
+        # =====================================
+        try:
+
+            cur.execute("""
+                ALTER TABLE prestamos
+                ADD COLUMN estado TEXT DEFAULT 'Activo'
+            """)
+
+            conn.commit()
+
+            print("✅ Columna estado agregada")
+
+        except Exception as e:
+
+            print("ℹ️ La columna estado ya existe")
 
         # =====================================
         # 💸 ABONOS
@@ -1141,14 +1170,15 @@ def reporte_general():
         # 📋 PRÉSTAMOS
         # ====================================
         cur.execute("""
-            SELECT
-                id,
-                capital,
-                interes,
-                fecha,
-                total
-            FROM prestamos
-            WHERE cliente_id=%s
+                SELECT
+                    id,
+                    capital,
+                    interes,
+                    fecha,
+                    total,
+                    estado
+                FROM prestamos
+                WHERE cliente_id=%s
         """, (cliente_id,))
 
         prestamos = cur.fetchall()
@@ -1240,6 +1270,58 @@ def reporte_general():
         mes=fecha.strftime("%Y-%m")
 
     )
+
+# ====================================
+# 🔄 CAMBIAR ESTADO PRÉSTAMO
+# ====================================
+@app.route("/cambiar_estado/<int:id>")
+def cambiar_estado(id):
+
+    conn = conectar()
+    cur = conn.cursor()
+
+    try:
+
+        # 🔍 ESTADO ACTUAL
+        cur.execute("""
+            SELECT estado
+            FROM prestamos
+            WHERE id=%s
+        """, (id,))
+
+        data = cur.fetchone()
+
+        if data:
+
+            estado_actual = data[0]
+
+            nuevo_estado = "Inactivo"
+
+            if estado_actual == "Inactivo":
+                nuevo_estado = "Activo"
+
+            # 🔥 ACTUALIZAR
+            cur.execute("""
+                UPDATE prestamos
+                SET estado=%s
+                WHERE id=%s
+            """, (
+
+                nuevo_estado,
+                id
+
+            ))
+
+            conn.commit()
+
+    except Exception as e:
+
+        print("ERROR CAMBIANDO ESTADO:", e)
+
+    conn.close()
+
+    return redirect(url_for("reporte_general"))
+
 # ✏️ EDITAR MOVIMIENTO CAJA
 # ====================================
 @app.route("/editar_caja/<int:id>", methods=["GET", "POST"])
@@ -1881,10 +1963,11 @@ def prestamos():
                             interes,
                             fecha,
                             vencimiento,
-                            total
+                            total,
+                            estado
 
                         )
-                        VALUES (%s,%s,%s,%s,%s,%s)
+                        VALUES (%s,%s,%s,%s,%s,%s,%s)
                     """, (
 
                         request.form["cliente"],
@@ -1892,7 +1975,8 @@ def prestamos():
                         interes,
                         fecha.date(),
                         venc.date(),
-                        total
+                        total,
+                        "Activo"
 
                     ))
 
@@ -1960,6 +2044,7 @@ def prestamos():
         ON p.cliente_id = c.id
 
         WHERE p.fecha = %s
+        AND p.estado = 'Activo'
 
         ORDER BY p.id DESC
 
@@ -1981,12 +2066,15 @@ def prestamos():
             c.nombre,
             p.capital,
             p.interes,
-            p.fecha
+            p.fecha,
+            p.estado
 
         FROM prestamos p
 
         JOIN clientes c
         ON p.cliente_id = c.id
+
+        WHERE p.estado = 'Activo'
 
         ORDER BY p.id DESC
     """)
@@ -2001,6 +2089,7 @@ def prestamos():
 
             pid = p[0]
             nombre = p[1]
+            estado = p[5]
 
             # ====================================
             # 🔥 CÁLCULO REAL
@@ -2019,6 +2108,8 @@ def prestamos():
                 "id": pid,
 
                 "cliente": nombre,
+
+                "estado": estado,
 
                 "total": formato(
                     saldo_total
