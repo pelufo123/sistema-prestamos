@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2 class="titulo-panel">
+    📊 Reporte General
+</h2>
+
+<!-- FILTRO -->
+
+<div class="card">
+
+    <form method="GET">
+
+        <div class="grid-form">
+
+            <div>
+
+                <label>
+                    Filtrar por mes
+                </label>
+
+                <input
+                    type="month"
+                    name="mes"
+                    value="{{ mes }}"
+                    class="input"
+                >
+
+            </div>
+
+            <div style="display:flex;align-items:end;">
+
+                <button class="btn">
+
+                    🔍 Filtrar
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </form>
+
+</div>
+
+<br>
+
+<!-- CLIENTES -->
+
+{% for r in reporte %}
+
+<div class="card" style="margin-bottom:25px;">
+
+    <!-- HEADER -->
+
+    <div style="
+        display:flex;
+        justify-content:space-between;
+        flex-wrap:wrap;
+        gap:15px;
+        margin-bottom:20px;
+    ">
+
+        <div>
+
+            <h3 style="margin:0;">
+                👤 {{ r.cliente[1] }}
+            </h3>
+
+            <div style="margin-top:8px;color:#666;">
+
+                📞 {{ r.cliente[2] }}
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- MÉTRICAS -->
+
+    <div class="grid-metricas">
+
+        <div class="card blue">
+
+            <div class="label">
+                Capital prestado
+            </div>
+
+            <div class="metric">
+                ${{ formato(r.prestado) }}
+            </div>
+
+        </div>
+
+        <div class="card green">
+
+            <div class="label">
+                Abonos del mes
+            </div>
+
+            <div class="metric">
+                ${{ formato(r.abonos_mes) }}
+            </div>
+
+        </div>
+
+        <div class="card orange">
+
+            <div class="label">
+                Intereses pagados
+            </div>
+
+            <div class="metric">
+                ${{ formato(r.intereses) }}
+            </div>
+
+        </div>
+
+        <div class="card red">
+
+            <div class="label">
+                Saldo pendiente
+            </div>
+
+            <div class="metric">
+                ${{ formato(r.saldo) }}
+            </div>
+
+        </div>
+
+    </div>
+
+    <br>
+
+    <!-- HISTORIAL -->
+
+    {% for h in r.historial %}
+
+    <div class="table-responsive">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>Préstamo</th>
+                    <th>Tipo</th>
+                    <th>Monto</th>
+                    <th>Fecha</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for a in h.abonos %}
+
+                <tr>
+
+                    <td>
+                        #{{ h.prestamo[0] }}
+                    </td>
+
+                    <td>
+
+                        {% if a[1] == "capital" %}
+
+                            <span class="badge green">
+                                Capital
+                            </span>
+
+                        {% else %}
+
+                            <span class="badge orange">
+                                Interés
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+                        ${{ formato(a[0]) }}
+                    </td>
+
+                    <td>
+                        {{ a[2] }}
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <br>
+
+    {% endfor %}
+
+</div>
+
+{% endfor %}
+
+{% endblock %}

@@ -1065,6 +1065,181 @@ def caja():
         mensaje=mensaje
     )
 
+# ====================================
+# 📊 REPORTE GENERAL
+# ====================================
+@app.route("/reporte_general")
+def reporte_general():
+
+    conn = conectar()
+
+    if not conn:
+        return "Error conexión DB"
+
+    cur = conn.cursor()
+
+    # ====================================
+    # 📅 FILTRO MES
+    # ====================================
+    mes = request.args.get("mes")
+
+    if mes:
+
+        fecha = datetime.strptime(
+            mes,
+            "%Y-%m"
+        )
+
+    else:
+
+        fecha = datetime.now()
+
+    inicio_mes = fecha.replace(
+        day=1
+    ).date()
+
+    # 🔥 siguiente mes
+    if fecha.month == 12:
+
+        siguiente = fecha.replace(
+            year=fecha.year + 1,
+            month=1,
+            day=1
+        ).date()
+
+    else:
+
+        siguiente = fecha.replace(
+            month=fecha.month + 1,
+            day=1
+        ).date()
+
+    # ====================================
+    # 👥 CLIENTES
+    # ====================================
+    cur.execute("""
+        SELECT
+            id,
+            nombre,
+            telefono
+        FROM clientes
+        ORDER BY nombre ASC
+    """)
+
+    clientes = cur.fetchall()
+
+    reporte = []
+
+    # ====================================
+    # 🔥 RECORRER CLIENTES
+    # ====================================
+    for cliente in clientes:
+
+        cliente_id = cliente[0]
+
+        # ====================================
+        # 📋 PRÉSTAMOS
+        # ====================================
+        cur.execute("""
+            SELECT
+                id,
+                capital,
+                interes,
+                fecha,
+                total
+            FROM prestamos
+            WHERE cliente_id=%s
+        """, (cliente_id,))
+
+        prestamos = cur.fetchall()
+
+        total_prestado = 0
+        saldo_total = 0
+        intereses_pagados = 0
+        abonos_mes = 0
+
+        historial = []
+
+        for p in prestamos:
+
+            prestamo_id = p[0]
+
+            total_prestado += float(
+                p[1]
+            )
+
+            # ====================================
+            # 🔥 CALCULAR SALDO
+            # ====================================
+            cap_rest, int_rest, saldo, _, _ = calcular(
+                prestamo_id,
+                conn
+            )
+
+            saldo_total += saldo
+
+            # ====================================
+            # 💳 ABONOS DEL MES
+            # ====================================
+            cur.execute("""
+                SELECT
+                    monto,
+                    tipo,
+                    fecha
+                FROM abonos
+                WHERE prestamo_id=%s
+                AND fecha >= %s
+                AND fecha < %s
+                ORDER BY fecha DESC
+            """, (
+                prestamo_id,
+                inicio_mes,
+                siguiente
+            ))
+
+            abonos = cur.fetchall()
+
+            for a in abonos:
+
+                abonos_mes += float(a[0])
+
+                if a[1] == "interes":
+
+                    intereses_pagados += float(
+                        a[0]
+                    )
+
+            historial.append({
+
+                "prestamo": p,
+                "abonos": abonos
+
+            })
+
+        reporte.append({
+
+            "cliente": cliente,
+            "prestado": total_prestado,
+            "saldo": saldo_total,
+            "intereses": intereses_pagados,
+            "abonos_mes": abonos_mes,
+            "historial": historial
+
+        })
+
+    conn.close()
+
+    return render_template(
+
+        "reporte_general.html",
+
+        reporte=reporte,
+
+        formato=formato,
+
+        mes=fecha.strftime("%Y-%m")
+
+    )
 # ✏️ EDITAR MOVIMIENTO CAJA
 # ====================================
 @app.route("/editar_caja/<int:id>", methods=["GET", "POST"])
