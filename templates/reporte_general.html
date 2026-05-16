@@ -47,6 +47,129 @@
 
 <br>
 
+<!-- TABLA GENERAL -->
+
+<div class="card">
+
+    <div class="table-responsive">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>ID</th>
+
+                    <th>Cliente</th>
+
+                    <th>Capital</th>
+
+                    <th>Interés</th>
+
+                    <th>Fecha</th>
+
+                    <th>Saldo</th>
+
+                    <th>Estado</th>
+
+                    <th>Acción</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for r in reporte %}
+
+                    {% for h in r.historial %}
+
+                    <tr>
+
+                        <!-- ID -->
+                        <td>
+                            #{{ h.prestamo[0] }}
+                        </td>
+
+                        <!-- CLIENTE -->
+                        <td>
+                            {{ r.cliente[1] }}
+                        </td>
+
+                        <!-- CAPITAL -->
+                        <td>
+                            ${{ formato(h.prestamo[1]) }}
+                        </td>
+
+                        <!-- INTERÉS -->
+                        <td>
+                            {{ h.prestamo[2] }}%
+                        </td>
+
+                        <!-- FECHA -->
+                        <td>
+                            {{ h.prestamo[3] }}
+                        </td>
+
+                        <!-- SALDO -->
+                        <td>
+                            ${{ formato(r.saldo) }}
+                        </td>
+
+                        <!-- ESTADO -->
+                        <td>
+
+                            {% if h.prestamo[5] == "Activo" %}
+
+                                <span class="badge green">
+                                    Activo
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge red">
+                                    Inactivo
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <!-- BOTÓN -->
+                        <td>
+
+                            <a
+                                href="/cambiar_estado/{{ h.prestamo[0] }}"
+                                class="btn"
+                                style="
+                                    padding:8px 12px;
+                                    font-size:13px;
+                                "
+                            >
+
+                                🔄 Cambiar
+
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<br><br>
+
 <!-- CLIENTES -->
 
 {% for r in reporte %}
