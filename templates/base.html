@@ -1,18 +1,26 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
 
     <meta charset="UTF-8">
 
-    <meta name="viewport"
-    content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-    <title>Sistema</title>
+    <title>SoftwarePelufo</title>
 
-    <link rel="stylesheet" href="/static/style.css">
+    <link
+        rel="stylesheet"
+        href="/static/style.css"
+    >
 
-    <link rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    >
 
 </head>
 
@@ -21,46 +29,126 @@
 <!-- ========================= -->
 <!-- SIDEBAR -->
 <!-- ========================= -->
+
 <div class="sidebar">
 
-    <h2>💰 Sistema</h2>
+    <h2>
+        💰 Sistema
+    </h2>
 
     <a href="/panel">
+
         <i class="fa-solid fa-chart-line"></i>
+
         Dashboard
+
     </a>
 
     <a href="/clientes">
+
         <i class="fa-solid fa-users"></i>
+
         Clientes
+
     </a>
 
     <a href="/prestamos">
+
         <i class="fa-solid fa-hand-holding-dollar"></i>
+
         Préstamos
+
     </a>
 
     <a href="/abonos">
+
         <i class="fa-solid fa-money-bill-wave"></i>
+
         Abonos
+
     </a>
 
     <a href="/caja">
+
         <i class="fa-solid fa-cash-register"></i>
+
         Caja
+
     </a>
 
-    <!-- 🔥 NUEVO BOTÓN REPORTES -->
     <a href="/reporte_general">
+
         <i class="fa-solid fa-chart-pie"></i>
+
         Reportes
+
     </a>
-    <a href="/reporte_excel" class="btn">
-    📊 Descargar Excel
-     </a>
+
+    <!-- ================================= -->
+    <!-- 🔥 DESCARGA EXCEL MEJORADA -->
+    <!-- ================================= -->
+
+    <div class="excel-box">
+
+        <h4>
+            📊 Reporte Excel
+        </h4>
+
+        <form action="/reporte_excel" method="GET">
+
+            <label>
+                Mes
+            </label>
+
+            <select name="mes" required>
+
+                <option value="1">Enero</option>
+                <option value="2">Febrero</option>
+                <option value="3">Marzo</option>
+                <option value="4">Abril</option>
+                <option value="5">Mayo</option>
+                <option value="6">Junio</option>
+                <option value="7">Julio</option>
+                <option value="8">Agosto</option>
+                <option value="9">Septiembre</option>
+                <option value="10">Octubre</option>
+                <option value="11">Noviembre</option>
+                <option value="12">Diciembre</option>
+
+            </select>
+
+            <label>
+                Año
+            </label>
+
+            <input
+                type="number"
+                name="anio"
+                value="2026"
+                required
+            >
+
+            <button
+                type="submit"
+                class="btn-excel"
+            >
+
+                <i class="fa-solid fa-file-excel"></i>
+
+                Descargar Excel
+
+            </button>
+
+        </form>
+
+    </div>
+
     <a href="/logout">
+
         <i class="fa-solid fa-right-from-bracket"></i>
+
         Cerrar sesión
+
     </a>
 
 </div>
@@ -68,10 +156,13 @@
 <!-- ========================= -->
 <!-- TOPBAR -->
 <!-- ========================= -->
+
 <div class="topbar">
 
-    <div>
+    <div class="logo-top">
+
         SoftwarePelufo
+
     </div>
 
     <div class="user-box">
@@ -81,11 +172,15 @@
         <div>
 
             <div class="user-name">
+
                 {{ session["usuario"] }}
+
             </div>
 
             <div class="user-role">
+
                 En línea
+
             </div>
 
         </div>
@@ -97,6 +192,7 @@
 <!-- ========================= -->
 <!-- MAIN -->
 <!-- ========================= -->
+
 <div class="main">
 
     {% block content %}
@@ -105,22 +201,20 @@
 </div>
 
 <!-- ========================= -->
-<!-- SCRIPT FORMATO DINERO -->
+<!-- SCRIPT DINERO -->
 <!-- ========================= -->
+
 <script>
 
 function formatearMiles(input){
 
-    // 🔥 quitar todo lo que NO sea número
     let valor = input.value.replace(/\D/g, "");
 
-    // 🔥 colocar puntos automáticamente
     valor = valor.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 
     input.value = valor;
 }
 
-// 🔥 convertir a número real
 function limpiarNumero(valor){
 
     return valor.replace(/\./g, "");
@@ -139,7 +233,6 @@ document.addEventListener("DOMContentLoaded", function(){
 
         });
 
-        // 🔥 antes de enviar
         input.form?.addEventListener("submit", function(){
 
             inputs.forEach(i => {
@@ -157,4 +250,5 @@ document.addEventListener("DOMContentLoaded", function(){
 </script>
 
 </body>
+
 </html>

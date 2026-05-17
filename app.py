@@ -1,13 +1,33 @@
 import os
-import psycopg2
-from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill
-from flask import send_file
 import io
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_file
+import psycopg2
+
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    session,
+    jsonify,
+    send_file
+)
+
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
+
+from openpyxl import Workbook
+
+from openpyxl.styles import (
+    Font,
+    PatternFill,
+    Alignment,
+    Border,
+    Side
+)
+
 app = Flask(__name__)
+
 app.secret_key = "clave_super_segura"
 
 # ------------------------------
@@ -2823,34 +2843,69 @@ def obtener_interes():
         round(interes_mensual, 2)
 
     })
-# ==========================================
-# 📊 REPORTE EXCEL
-# ==========================================
+
+# ============================================
+# 📊 REPORTE EXCEL PREMIUM
+# ============================================
+
 @app.route("/reporte_excel")
 def reporte_excel():
 
     conn = conectar()
 
     if not conn:
-        return "Error conexión DB"
+        return "Error DB"
 
     cur = conn.cursor()
 
-    # ==========================================
-    # 📘 CREAR EXCEL
-    # ==========================================
+    # ============================================
+    # 📅 FILTRO POR MES
+    # ============================================
+
+    mes = request.args.get("mes")
+
+    if not mes:
+
+        mes = datetime.now().strftime("%Y-%m")
+
+    anio = int(mes.split("-")[0])
+    mes_num = int(mes.split("-")[1])
+
+    # ============================================
+    # 📦 CREAR EXCEL
+    # ============================================
+
     wb = Workbook()
 
     ws = wb.active
 
-    ws.title = "Resumen"
+    ws.title = "Reporte General"
 
-    # ==========================================
+    # ============================================
     # 🎨 ESTILOS
-    # ==========================================
+    # ============================================
+
     azul = PatternFill(
-        start_color="1F4E78",
-        end_color="1F4E78",
+        start_color="1E40AF",
+        end_color="1E40AF",
+        fill_type="solid"
+    )
+
+    naranja = PatternFill(
+        start_color="F97316",
+        end_color="F97316",
+        fill_type="solid"
+    )
+
+    verde = PatternFill(
+        start_color="22C55E",
+        end_color="22C55E",
+        fill_type="solid"
+    )
+
+    rojo = PatternFill(
+        start_color="EF4444",
+        end_color="EF4444",
         fill_type="solid"
     )
 
@@ -2859,121 +2914,306 @@ def reporte_excel():
         bold=True
     )
 
-    # ==========================================
-    # 💰 CAPITAL EN CALLE
-    # ==========================================
-    cur.execute("""
-        SELECT COALESCE(SUM(total),0)
-        FROM prestamos
-        WHERE estado='Activo'
-    """)
-
-    capital_calle = float(
-        cur.fetchone()[0] or 0
+    titulo = Font(
+        size=16,
+        bold=True
     )
 
-    # ==========================================
-    # 🏦 DINERO EN CAJA
-    # ==========================================
-    cur.execute("""
-        SELECT
+    negrita = Font(
+        bold=True
+    )
 
-        COALESCE(SUM(
-            CASE
-            WHEN tipo='ingreso'
-            THEN monto
-            ELSE 0
-            END
-        ),0),
+    center = Alignment(
+        horizontal="center"
+    )
 
-        COALESCE(SUM(
-            CASE
-            WHEN tipo='egreso'
-            THEN monto
-            ELSE 0
-            END
-        ),0)
+    borde = Border(
 
-        FROM caja
-    """)
+        left=Side(style='thin'),
 
-    datos = cur.fetchone()
+        right=Side(style='thin'),
 
-    ingresos = float(datos[0] or 0)
+        top=Side(style='thin'),
 
-    egresos = float(datos[1] or 0)
+        bottom=Side(style='thin')
 
-    caja = ingresos - egresos
+    )
 
-    # ==========================================
-    # 👥 CLIENTES
-    # ==========================================
+    # ============================================
+    # 🔥 TÍTULO
+    # ============================================
+
+    ws.merge_cells("A1:H1")
+
+    ws["A1"] = f"REPORTE GENERAL - {mes}"
+
+    ws["A1"].font = titulo
+
+    ws["A1"].alignment = center
+
+    fila = 3
+
+    # ============================================
+    # 👥 TOTAL CLIENTES
+    # ============================================
+
     cur.execute("""
         SELECT COUNT(*)
         FROM clientes
     """)
 
-    clientes = cur.fetchone()[0]
+    total_clientes = cur.fetchone()[0]
 
-    # ==========================================
-    # 📋 RESUMEN
-    # ==========================================
-    ws["A1"] = "REPORTE GENERAL"
+    # ============================================
+    # 💰 DINERO EN CAJA
+    # ============================================
 
-    ws["A1"].font = Font(
-        bold=True,
-        size=16
+    cur.execute("""
+
+        SELECT
+
+            COALESCE(SUM(
+                CASE
+                    WHEN tipo='ingreso'
+                    THEN monto
+                    ELSE 0
+                END
+            ),0),
+
+            COALESCE(SUM(
+                CASE
+                    WHEN tipo='egreso'
+                    THEN monto
+                    ELSE 0
+                END
+            ),0)
+
+        FROM caja
+
+    """)
+
+    datos_caja = cur.fetchone()
+
+    ingresos = float(datos_caja[0] or 0)
+
+    egresos = float(datos_caja[1] or 0)
+
+    disponible = ingresos - egresos
+
+    # ============================================
+    # 💸 TOTAL PRESTADO
+    # ============================================
+
+    cur.execute("""
+
+        SELECT COALESCE(SUM(capital),0)
+
+        FROM prestamos
+
+        WHERE EXTRACT(YEAR FROM fecha)=%s
+        AND EXTRACT(MONTH FROM fecha)=%s
+
+    """, (
+
+        anio,
+        mes_num
+
+    ))
+
+    total_prestado = float(
+        cur.fetchone()[0] or 0
     )
 
-    ws["A3"] = "Capital en calle"
-    ws["B3"] = capital_calle
+    # ============================================
+    # 📊 MÉTRICAS
+    # ============================================
 
-    ws["A4"] = "Dinero en caja"
-    ws["B4"] = caja
+    datos = [
 
-    ws["A5"] = "Clientes"
-    ws["B5"] = clientes
+        ["Total clientes", total_clientes],
 
-    # ==========================================
-    # 👥 HOJA CLIENTES
-    # ==========================================
-    ws2 = wb.create_sheet(
-        title="Clientes"
-    )
+        ["Ingresos", ingresos],
 
-    encabezados = [
-        "Cliente",
-        "Capital",
-        "Interés",
-        "Total",
-        "Estado"
+        ["Egresos", egresos],
+
+        ["Disponible en caja", disponible],
+
+        ["Total prestado mes", total_prestado]
+
     ]
 
-    for col, titulo in enumerate(
-        encabezados,
-        1
-    ):
+    for d in datos:
 
-        celda = ws2.cell(
-            row=1,
+        ws[f"A{fila}"] = d[0]
+        ws[f"B{fila}"] = d[1]
+
+        ws[f"A{fila}"].font = negrita
+
+        fila += 1
+
+    fila += 2
+
+    # ============================================
+    # 👥 CLIENTES
+    # ============================================
+
+    ws.merge_cells(
+        start_row=fila,
+        start_column=1,
+        end_row=fila,
+        end_column=5
+    )
+
+    ws.cell(
+        row=fila,
+        column=1
+    ).value = "CLIENTES"
+
+    ws.cell(
+        row=fila,
+        column=1
+    ).fill = azul
+
+    ws.cell(
+        row=fila,
+        column=1
+    ).font = blanco
+
+    fila += 1
+
+    encabezados = [
+
+        "ID",
+        "Nombre",
+        "Teléfono",
+        "Dirección",
+        "Usuario"
+
+    ]
+
+    for col, valor in enumerate(encabezados, 1):
+
+        c = ws.cell(
+            row=fila,
             column=col
         )
 
-        celda.value = titulo
+        c.value = valor
 
-        celda.fill = azul
+        c.fill = naranja
 
-        celda.font = blanco
+        c.font = blanco
 
-    # ==========================================
-    # 📋 DATOS CLIENTES
-    # ==========================================
+        c.alignment = center
+
+        c.border = borde
+
+    fila += 1
+
     cur.execute("""
+
+        SELECT
+            id,
+            nombre,
+            telefono,
+            direccion,
+            usuario
+
+        FROM clientes
+
+        ORDER BY nombre ASC
+
+    """)
+
+    clientes = cur.fetchall()
+
+    for c in clientes:
+
+        for col, valor in enumerate(c, 1):
+
+            celda = ws.cell(
+                row=fila,
+                column=col
+            )
+
+            celda.value = valor
+
+            celda.border = borde
+
+        fila += 1
+
+    fila += 3
+
+    # ============================================
+    # 💸 PRÉSTAMOS
+    # ============================================
+
+    ws.merge_cells(
+        start_row=fila,
+        start_column=1,
+        end_row=fila,
+        end_column=8
+    )
+
+    ws.cell(
+        row=fila,
+        column=1
+    ).value = "PRÉSTAMOS"
+
+    ws.cell(
+        row=fila,
+        column=1
+    ).fill = verde
+
+    ws.cell(
+        row=fila,
+        column=1
+    ).font = blanco
+
+    fila += 1
+
+    encabezados = [
+
+        "ID",
+        "Cliente",
+        "Capital",
+        "Interés",
+        "Fecha",
+        "Vencimiento",
+        "Total",
+        "Estado"
+
+    ]
+
+    for col, valor in enumerate(encabezados, 1):
+
+        c = ws.cell(
+            row=fila,
+            column=col
+        )
+
+        c.value = valor
+
+        c.fill = naranja
+
+        c.font = blanco
+
+        c.alignment = center
+
+        c.border = borde
+
+    fila += 1
+
+    cur.execute("""
+
         SELECT
 
+            p.id,
             c.nombre,
             p.capital,
             p.interes,
+            p.fecha,
+            p.vencimiento,
             p.total,
             p.estado
 
@@ -2982,50 +3222,162 @@ def reporte_excel():
         JOIN clientes c
         ON p.cliente_id = c.id
 
-        ORDER BY c.nombre ASC
-    """)
+        WHERE EXTRACT(YEAR FROM p.fecha)=%s
+        AND EXTRACT(MONTH FROM p.fecha)=%s
 
-    datos = cur.fetchall()
+        ORDER BY p.id DESC
 
-    fila = 2
+    """, (
 
-    for d in datos:
+        anio,
+        mes_num
 
-        ws2.cell(
-            row=fila,
-            column=1,
-            value=d[0]
-        )
+    ))
 
-        ws2.cell(
-            row=fila,
-            column=2,
-            value=float(d[1])
-        )
+    prestamos = cur.fetchall()
 
-        ws2.cell(
-            row=fila,
-            column=3,
-            value=float(d[2])
-        )
+    for p in prestamos:
 
-        ws2.cell(
-            row=fila,
-            column=4,
-            value=float(d[3])
-        )
+        for col, valor in enumerate(p, 1):
 
-        ws2.cell(
-            row=fila,
-            column=5,
-            value=d[4]
-        )
+            celda = ws.cell(
+                row=fila,
+                column=col
+            )
+
+            celda.value = valor
+
+            celda.border = borde
 
         fila += 1
 
-    # ==========================================
-    # 📦 GUARDAR EN MEMORIA
-    # ==========================================
+    fila += 3
+
+    # ============================================
+    # 💵 ABONOS
+    # ============================================
+
+    ws.merge_cells(
+        start_row=fila,
+        start_column=1,
+        end_row=fila,
+        end_column=6
+    )
+
+    ws.cell(
+        row=fila,
+        column=1
+    ).value = "ABONOS"
+
+    ws.cell(
+        row=fila,
+        column=1
+    ).fill = rojo
+
+    ws.cell(
+        row=fila,
+        column=1
+    ).font = blanco
+
+    fila += 1
+
+    encabezados = [
+
+        "ID",
+        "Cliente",
+        "Monto",
+        "Fecha",
+        "Tipo",
+        "Usuario"
+
+    ]
+
+    for col, valor in enumerate(encabezados, 1):
+
+        c = ws.cell(
+            row=fila,
+            column=col
+        )
+
+        c.value = valor
+
+        c.fill = naranja
+
+        c.font = blanco
+
+        c.alignment = center
+
+        c.border = borde
+
+    fila += 1
+
+    cur.execute("""
+
+        SELECT
+
+            a.id,
+            c.nombre,
+            a.monto,
+            a.fecha,
+            a.tipo,
+            a.usuario
+
+        FROM abonos a
+
+        JOIN prestamos p
+        ON a.prestamo_id = p.id
+
+        JOIN clientes c
+        ON p.cliente_id = c.id
+
+        WHERE EXTRACT(YEAR FROM a.fecha)=%s
+        AND EXTRACT(MONTH FROM a.fecha)=%s
+
+        ORDER BY a.id DESC
+
+    """, (
+
+        anio,
+        mes_num
+
+    ))
+
+    abonos = cur.fetchall()
+
+    for a in abonos:
+
+        for col, valor in enumerate(a, 1):
+
+            celda = ws.cell(
+                row=fila,
+                column=col
+            )
+
+            celda.value = valor
+
+            celda.border = borde
+
+        fila += 1
+
+    # ============================================
+    # 📏 ANCHO COLUMNAS
+    # ============================================
+
+    columnas = [
+
+        "A","B","C","D",
+        "E","F","G","H"
+
+    ]
+
+    for col in columnas:
+
+        ws.column_dimensions[col].width = 24
+
+    # ============================================
+    # 💾 GUARDAR MEMORIA
+    # ============================================
+
     archivo = io.BytesIO()
 
     wb.save(archivo)
@@ -3034,19 +3386,22 @@ def reporte_excel():
 
     conn.close()
 
-    # ==========================================
-    # 📥 DESCARGAR
-    # ==========================================
+    # ============================================
+    # ⬇ DESCARGAR
+    # ============================================
+
     return send_file(
 
         archivo,
 
         as_attachment=True,
 
-        download_name="reporte.xlsx",
+        download_name=f"reporte_{mes}.xlsx",
 
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
     )
+
 if __name__ == "__main__":
     init_db()
     crear_admin()
