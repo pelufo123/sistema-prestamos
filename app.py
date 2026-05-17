@@ -2862,14 +2862,24 @@ def reporte_excel():
     # 📅 FILTRO POR MES
     # ============================================
 
-    mes = request.args.get("mes")
+    mes = request.args.get("mes", "").strip()
 
-    if not mes:
+    # 🔥 SI VIENE VACÍO O MAL FORMADO
+    if not mes or "-" not in mes:
 
         mes = datetime.now().strftime("%Y-%m")
 
-    anio = int(mes.split("-")[0])
-    mes_num = int(mes.split("-")[1])
+    try:
+
+        anio = int(mes.split("-")[0])
+        mes_num = int(mes.split("-")[1])
+
+    except:
+
+        anio = datetime.now().year
+        mes_num = datetime.now().month
+
+        mes = datetime.now().strftime("%Y-%m")
 
     # ============================================
     # 📦 CREAR EXCEL
@@ -3048,6 +3058,8 @@ def reporte_excel():
         ws[f"B{fila}"] = d[1]
 
         ws[f"A{fila}"].font = negrita
+        ws[f"A{fila}"].border = borde
+        ws[f"B{fila}"].border = borde
 
         fila += 1
 
@@ -3078,6 +3090,11 @@ def reporte_excel():
         row=fila,
         column=1
     ).font = blanco
+
+    ws.cell(
+        row=fila,
+        column=1
+    ).alignment = center
 
     fila += 1
 
@@ -3169,6 +3186,11 @@ def reporte_excel():
         row=fila,
         column=1
     ).font = blanco
+
+    ws.cell(
+        row=fila,
+        column=1
+    ).alignment = center
 
     fila += 1
 
@@ -3278,6 +3300,11 @@ def reporte_excel():
         row=fila,
         column=1
     ).font = blanco
+
+    ws.cell(
+        row=fila,
+        column=1
+    ).alignment = center
 
     fila += 1
 
