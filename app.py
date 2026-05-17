@@ -1,6 +1,10 @@
 import os
 import psycopg2
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill
+from flask import send_file
+import io
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_file
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 app = Flask(__name__)
@@ -2819,6 +2823,230 @@ def obtener_interes():
         round(interes_mensual, 2)
 
     })
+# ==========================================
+# 📊 REPORTE EXCEL
+# ==========================================
+@app.route("/reporte_excel")
+def reporte_excel():
+
+    conn = conectar()
+
+    if not conn:
+        return "Error conexión DB"
+
+    cur = conn.cursor()
+
+    # ==========================================
+    # 📘 CREAR EXCEL
+    # ==========================================
+    wb = Workbook()
+
+    ws = wb.active
+
+    ws.title = "Resumen"
+
+    # ==========================================
+    # 🎨 ESTILOS
+    # ==========================================
+    azul = PatternFill(
+        start_color="1F4E78",
+        end_color="1F4E78",
+        fill_type="solid"
+    )
+
+    blanco = Font(
+        color="FFFFFF",
+        bold=True
+    )
+
+    # ==========================================
+    # 💰 CAPITAL EN CALLE
+    # ==========================================
+    cur.execute("""
+        SELECT COALESCE(SUM(total),0)
+        FROM prestamos
+        WHERE estado='Activo'
+    """)
+
+    capital_calle = float(
+        cur.fetchone()[0] or 0
+    )
+
+    # ==========================================
+    # 🏦 DINERO EN CAJA
+    # ==========================================
+    cur.execute("""
+        SELECT
+
+        COALESCE(SUM(
+            CASE
+            WHEN tipo='ingreso'
+            THEN monto
+            ELSE 0
+            END
+        ),0),
+
+        COALESCE(SUM(
+            CASE
+            WHEN tipo='egreso'
+            THEN monto
+            ELSE 0
+            END
+        ),0)
+
+        FROM caja
+    """)
+
+    datos = cur.fetchone()
+
+    ingresos = float(datos[0] or 0)
+
+    egresos = float(datos[1] or 0)
+
+    caja = ingresos - egresos
+
+    # ==========================================
+    # 👥 CLIENTES
+    # ==========================================
+    cur.execute("""
+        SELECT COUNT(*)
+        FROM clientes
+    """)
+
+    clientes = cur.fetchone()[0]
+
+    # ==========================================
+    # 📋 RESUMEN
+    # ==========================================
+    ws["A1"] = "REPORTE GENERAL"
+
+    ws["A1"].font = Font(
+        bold=True,
+        size=16
+    )
+
+    ws["A3"] = "Capital en calle"
+    ws["B3"] = capital_calle
+
+    ws["A4"] = "Dinero en caja"
+    ws["B4"] = caja
+
+    ws["A5"] = "Clientes"
+    ws["B5"] = clientes
+
+    # ==========================================
+    # 👥 HOJA CLIENTES
+    # ==========================================
+    ws2 = wb.create_sheet(
+        title="Clientes"
+    )
+
+    encabezados = [
+        "Cliente",
+        "Capital",
+        "Interés",
+        "Total",
+        "Estado"
+    ]
+
+    for col, titulo in enumerate(
+        encabezados,
+        1
+    ):
+
+        celda = ws2.cell(
+            row=1,
+            column=col
+        )
+
+        celda.value = titulo
+
+        celda.fill = azul
+
+        celda.font = blanco
+
+    # ==========================================
+    # 📋 DATOS CLIENTES
+    # ==========================================
+    cur.execute("""
+        SELECT
+
+            c.nombre,
+            p.capital,
+            p.interes,
+            p.total,
+            p.estado
+
+        FROM prestamos p
+
+        JOIN clientes c
+        ON p.cliente_id = c.id
+
+        ORDER BY c.nombre ASC
+    """)
+
+    datos = cur.fetchall()
+
+    fila = 2
+
+    for d in datos:
+
+        ws2.cell(
+            row=fila,
+            column=1,
+            value=d[0]
+        )
+
+        ws2.cell(
+            row=fila,
+            column=2,
+            value=float(d[1])
+        )
+
+        ws2.cell(
+            row=fila,
+            column=3,
+            value=float(d[2])
+        )
+
+        ws2.cell(
+            row=fila,
+            column=4,
+            value=float(d[3])
+        )
+
+        ws2.cell(
+            row=fila,
+            column=5,
+            value=d[4]
+        )
+
+        fila += 1
+
+    # ==========================================
+    # 📦 GUARDAR EN MEMORIA
+    # ==========================================
+    archivo = io.BytesIO()
+
+    wb.save(archivo)
+
+    archivo.seek(0)
+
+    conn.close()
+
+    # ==========================================
+    # 📥 DESCARGAR
+    # ==========================================
+    return send_file(
+
+        archivo,
+
+        as_attachment=True,
+
+        download_name="reporte.xlsx",
+
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 if __name__ == "__main__":
     init_db()
     crear_admin()
