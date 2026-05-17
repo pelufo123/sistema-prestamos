@@ -1937,12 +1937,13 @@ def prestamos():
                 )
 
                 # ====================================
-                # ❌ VALIDAR SALDO
+                # ❌ VALIDAR DINERO EN CAJA
                 # ====================================
                 if capital > disponible:
 
                     error = (
-                        f"❌ Caja insuficiente. "
+                        f"❌ No es posible realizar el préstamo. "
+                        f"Dinero insuficiente en caja. "
                         f"Disponible: ${formato(disponible)}"
                     )
 
@@ -2099,7 +2100,9 @@ def prestamos():
                 conn
             )
 
+            # ====================================
             # 🔥 SI YA PAGÓ TODO
+            # ====================================
             if saldo_total <= 0:
                 continue
 
