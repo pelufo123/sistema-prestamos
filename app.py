@@ -30,6 +30,7 @@ app = Flask(__name__)
 
 app.secret_key = "clave_super_segura"
 
+
 # ------------------------------
 # 🔐 PROTEGER RUTAS
 # ------------------------------
@@ -225,22 +226,37 @@ def init_db():
         conn.close()
 def crear_admin():
     conn = conectar()
+
     if not conn:
         return
 
     cur = conn.cursor()
 
     try:
-        cur.execute("SELECT * FROM usuarios WHERE username=%s", ("admin",))
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS usuarios (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(100) UNIQUE NOT NULL,
+                password VARCHAR(100) NOT NULL
+            )
+        """)
+
+        conn.commit()
+
+        cur.execute(
+            "SELECT * FROM usuarios WHERE username=%s",
+            ("admin",)
+        )
+
         if not cur.fetchone():
             cur.execute(
                 "INSERT INTO usuarios (username, password) VALUES (%s, %s)",
                 ("admin", "1234")
             )
             conn.commit()
-            print("✅ admin creado")
+
     except Exception as e:
-        print("Error creando admin:", e)
+        print("Error:", e)
 
     finally:
         conn.close()
@@ -3429,6 +3445,7 @@ def reporte_excel():
 
     )
 
+crear_admin()
 if __name__ == "__main__":
     init_db()
     crear_admin()
