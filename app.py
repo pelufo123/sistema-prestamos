@@ -1667,6 +1667,24 @@ def eliminar_caja(id):
     return redirect(
         url_for("caja")
     )
+
+def crear_tabla_clientes():
+    conn = conectar()
+
+    if not conn:
+        return
+
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS clientes (
+            id SERIAL PRIMARY KEY,
+            nombre VARCHAR(200) NOT NULL
+        )
+    """)
+
+    conn.commit()
+    conn.close()
 # ------------------------------
 # 👥 CLIENTES
 # ------------------------------
@@ -3494,6 +3512,7 @@ def reporte_excel():
 crear_admin()
 crear_tabla_prestamos()
 crear_tabla_abonos()
+crear_tabla_clientes()
 if __name__ == "__main__":
     init_db()
     crear_admin()
