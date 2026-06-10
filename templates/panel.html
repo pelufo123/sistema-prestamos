@@ -4,231 +4,243 @@
 
 <div class="dashboard-header">
 
-```
-<h1>📊 Dashboard Financiero</h1>
+    <h1>📊 Dashboard Financiero</h1>
 
-<p>
-    Control general de cartera y recaudo
-</p>
-```
+    <p>
+        Control general de cartera y recaudo
+    </p>
 
 </div>
+
+<!-- ================================= -->
+<!-- MÉTRICAS -->
+<!-- ================================= -->
 
 <div class="dashboard-cards">
 
-```
-<div class="stat-card">
+    <div class="stat-card capital">
 
-    <div class="title">
-        💰 Capital en calle
+        <div class="stat-icon">💰</div>
+
+        <div class="stat-info">
+
+            <span>Capital en calle</span>
+
+            <h2>${{ capital_total }}</h2>
+
+        </div>
+
     </div>
 
-    <div class="value">
-        ${{ capital_total }}
+    <div class="stat-card capital-hoy">
+
+        <div class="stat-icon">📥</div>
+
+        <div class="stat-info">
+
+            <span>Capital recogido hoy</span>
+
+            <h2>${{ capital_dia }}</h2>
+
+        </div>
+
+    </div>
+
+    <div class="stat-card interes-hoy">
+
+        <div class="stat-icon">📈</div>
+
+        <div class="stat-info">
+
+            <span>Interés recogido hoy</span>
+
+            <h2>${{ interes_dia }}</h2>
+
+        </div>
+
+    </div>
+
+    <div class="stat-card capital-mes">
+
+        <div class="stat-icon">📅</div>
+
+        <div class="stat-info">
+
+            <span>Capital mensual</span>
+
+            <h2>${{ capital_mes }}</h2>
+
+        </div>
+
+    </div>
+
+    <div class="stat-card interes-mes">
+
+        <div class="stat-icon">🏦</div>
+
+        <div class="stat-info">
+
+            <span>Interés mensual</span>
+
+            <h2>${{ interes_mes }}</h2>
+
+        </div>
+
     </div>
 
 </div>
 
-<div class="stat-card">
-
-    <div class="title">
-        📥 Capital recogido hoy
-    </div>
-
-    <div class="value">
-        ${{ capital_dia }}
-    </div>
-
-</div>
-
-<div class="stat-card">
-
-    <div class="title">
-        📈 Interés recogido hoy
-    </div>
-
-    <div class="value">
-        ${{ interes_dia }}
-    </div>
-
-</div>
-
-<div class="stat-card">
-
-    <div class="title">
-        📅 Capital mensual
-    </div>
-
-    <div class="value">
-        ${{ capital_mes }}
-    </div>
-
-</div>
-
-<div class="stat-card">
-
-    <div class="title">
-        🏦 Interés mensual
-    </div>
-
-    <div class="value">
-        ${{ interes_mes }}
-    </div>
-
-</div>
-```
-
-</div>
+<!-- ================================= -->
+<!-- ALERTAS -->
+<!-- ================================= -->
 
 <div class="alerts-grid">
 
-```
-<div class="alert-card warning">
+    <!-- PRÓXIMOS -->
 
-    <div class="table-header">
+    <div class="alert-card warning">
 
-        <h3>
-            ⚠️ Próximos a vencer
-        </h3>
+        <div class="alert-header">
 
-        <span class="badge orange">
-            {{ por_vencer|length }}
-        </span>
+            <h3>⚠️ Próximos a vencer</h3>
 
-    </div>
+            <span class="badge orange">
+                {{ por_vencer|length }}
+            </span>
 
-    {% if por_vencer %}
+        </div>
 
-    <div class="table-responsive">
+        {% if por_vencer %}
 
-        <table>
+        <div class="table-responsive">
 
-            <thead>
+            <table>
 
-                <tr>
-                    <th>ID</th>
-                    <th>Cliente</th>
-                    <th>Días</th>
-                    <th>Saldo</th>
-                </tr>
+                <thead>
 
-            </thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Cliente</th>
+                        <th>Días</th>
+                        <th>Saldo</th>
+                    </tr>
 
-            <tbody>
+                </thead>
 
-                {% for p in por_vencer %}
+                <tbody>
 
-                <tr>
+                    {% for p in por_vencer %}
 
-                    <td>{{ p[0] }}</td>
+                    <tr>
 
-                    <td>{{ p[1] }}</td>
+                        <td>{{ p[0] }}</td>
 
-                    <td>
+                        <td>{{ p[1] }}</td>
 
-                        <span class="badge orange">
-                            {{ p[2] }} días
-                        </span>
+                        <td>
 
-                    </td>
+                            <span class="badge orange">
+                                {{ p[2] }} días
+                            </span>
 
-                    <td>
-                        ${{ p[3] }}
-                    </td>
+                        </td>
 
-                </tr>
+                        <td>
+                            ${{ p[3] }}
+                        </td>
 
-                {% endfor %}
+                    </tr>
 
-            </tbody>
+                    {% endfor %}
 
-        </table>
+                </tbody>
 
-    </div>
+            </table>
 
-    {% else %}
+        </div>
 
-    <div class="empty-box">
-        No hay préstamos próximos a vencer
-    </div>
+        {% else %}
 
-    {% endif %}
+        <div class="empty-box">
+            No hay préstamos próximos a vencer
+        </div>
 
-</div>
-
-<div class="alert-card danger">
-
-    <div class="table-header">
-
-        <h3>
-            ❌ Vencidos
-        </h3>
-
-        <span class="badge red">
-            {{ vencidos|length }}
-        </span>
+        {% endif %}
 
     </div>
 
-    {% if vencidos %}
+    <!-- VENCIDOS -->
 
-    <div class="table-responsive">
+    <div class="alert-card danger">
 
-        <table>
+        <div class="alert-header">
 
-            <thead>
+            <h3>❌ Vencidos</h3>
 
-                <tr>
-                    <th>ID</th>
-                    <th>Cliente</th>
-                    <th>Atraso</th>
-                    <th>Saldo</th>
-                </tr>
+            <span class="badge red">
+                {{ vencidos|length }}
+            </span>
 
-            </thead>
+        </div>
 
-            <tbody>
+        {% if vencidos %}
 
-                {% for v in vencidos %}
+        <div class="table-responsive">
 
-                <tr>
+            <table>
 
-                    <td>{{ v[0] }}</td>
+                <thead>
 
-                    <td>{{ v[1] }}</td>
+                    <tr>
+                        <th>ID</th>
+                        <th>Cliente</th>
+                        <th>Atraso</th>
+                        <th>Saldo</th>
+                    </tr>
 
-                    <td>
+                </thead>
 
-                        <span class="badge red">
-                            {{ v[2] }} días
-                        </span>
+                <tbody>
 
-                    </td>
+                    {% for v in vencidos %}
 
-                    <td>
-                        ${{ v[3] }}
-                    </td>
+                    <tr>
 
-                </tr>
+                        <td>{{ v[0] }}</td>
 
-                {% endfor %}
+                        <td>{{ v[1] }}</td>
 
-            </tbody>
+                        <td>
 
-        </table>
+                            <span class="badge red">
+                                {{ v[2] }} días
+                            </span>
+
+                        </td>
+
+                        <td>
+                            ${{ v[3] }}
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <div class="empty-box">
+            No hay préstamos vencidos
+        </div>
+
+        {% endif %}
 
     </div>
-
-    {% else %}
-
-    <div class="empty-box">
-        No hay préstamos vencidos
-    </div>
-
-    {% endif %}
-
-</div>
-```
 
 </div>
 
