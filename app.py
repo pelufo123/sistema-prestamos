@@ -623,27 +623,6 @@ def panel():
 
             interes_mes += monto
 
-    # =============================
-    # 📈 ACUMULADO TOTAL
-    # =============================
-    cur.execute("""
-        SELECT monto, tipo
-        FROM abonos
-        WHERE DATE(fecha) <= %s
-    """, (fecha,))
-
-    capital_acumulado = 0
-    interes_acumulado = 0
-
-    for monto, tipo_pago in cur.fetchall():
-
-        if tipo_pago == "capital":
-
-            capital_acumulado += monto
-
-        else:
-
-            interes_acumulado += monto
 
     # =============================
     # ⚠️ PRÓXIMOS Y VENCIDOS
@@ -871,16 +850,12 @@ def panel():
 
         interes_mes=formato(interes_mes),
 
-        capital_acumulado=formato(capital_acumulado),
-
-        interes_acumulado=formato(interes_acumulado),
-
         por_vencer=por_vencer,
 
         vencidos=vencidos,
 
         prestamos=prestamos
-    )
+)
 
 def crear_tabla_caja():
     conn = conectar()
