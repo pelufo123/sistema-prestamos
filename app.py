@@ -2215,6 +2215,28 @@ def prestamos():
 
     )
     
+def crear_tabla_abonos():
+    conn = conectar()
+
+    if not conn:
+        return
+
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS abonos (
+            id SERIAL PRIMARY KEY,
+            prestamo_id INTEGER NOT NULL,
+            monto NUMERIC(15,2) NOT NULL,
+            fecha TIMESTAMP NOT NULL,
+            tipo VARCHAR(30) NOT NULL,
+            mes INTEGER DEFAULT 0
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
 # 💸 ABONOS
 # ------------------------------
 @app.route("/abonos", methods=["GET", "POST"])
@@ -3471,6 +3493,7 @@ def reporte_excel():
 
 crear_admin()
 crear_tabla_prestamos()
+crear_tabla_abonos()
 if __name__ == "__main__":
     init_db()
     crear_admin()
