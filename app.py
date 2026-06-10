@@ -1874,6 +1874,30 @@ def historial(id):
         formato=formato
     )
 
+def crear_tabla_prestamos():
+    conn = conectar()
+    if not conn:
+        return
+
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS prestamos (
+            id SERIAL PRIMARY KEY,
+            cliente_id INTEGER NOT NULL,
+            capital NUMERIC(15,2) NOT NULL,
+            interes NUMERIC(10,2) NOT NULL,
+            fecha DATE NOT NULL,
+            vencimiento DATE NOT NULL,
+            total NUMERIC(15,2) NOT NULL,
+            estado VARCHAR(30) DEFAULT 'Activo'
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
 # 💰 PRÉSTAMOS
 # ====================================
 @app.route("/prestamos", methods=["GET","POST"])
@@ -3446,6 +3470,7 @@ def reporte_excel():
     )
 
 crear_admin()
+crear_tabla_prestamos()
 if __name__ == "__main__":
     init_db()
     crear_admin()
