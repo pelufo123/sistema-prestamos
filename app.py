@@ -1701,12 +1701,17 @@ def crear_tabla_clientes():
     cur.execute("""
         CREATE TABLE IF NOT EXISTS clientes (
             id SERIAL PRIMARY KEY,
-            nombre VARCHAR(200) NOT NULL
+            nombre VARCHAR(200) NOT NULL,
+            telefono VARCHAR(50),
+            direccion VARCHAR(255),
+            usuario VARCHAR(100)
         )
     """)
 
     conn.commit()
     conn.close()
+
+    
 # ------------------------------
 # 👥 CLIENTES
 # ------------------------------
@@ -1749,6 +1754,41 @@ def clientes():
 # ------------------------------
 # 🔐 LOGIN
 # ------------------------------
+
+def actualizar_tabla_clientes():
+
+    conn = conectar()
+
+    if not conn:
+        return
+
+    cur = conn.cursor()
+
+    try:
+
+        cur.execute("""
+            ALTER TABLE clientes
+            ADD COLUMN IF NOT EXISTS telefono VARCHAR(50)
+        """)
+
+        cur.execute("""
+            ALTER TABLE clientes
+            ADD COLUMN IF NOT EXISTS direccion VARCHAR(255)
+        """)
+
+        cur.execute("""
+            ALTER TABLE clientes
+            ADD COLUMN IF NOT EXISTS usuario VARCHAR(100)
+        """)
+
+        conn.commit()
+
+    except Exception as e:
+        print("Error actualizando clientes:", e)
+
+    finally:
+        conn.close()
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
 
@@ -3535,6 +3575,7 @@ crear_admin()
 crear_tabla_prestamos()
 crear_tabla_abonos()
 crear_tabla_clientes()
+actualizar_tabla_clientes()
 crear_tabla_caja()
 if __name__ == "__main__":
     init_db()
