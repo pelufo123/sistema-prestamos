@@ -2005,9 +2005,7 @@ def prestamos():
                 "%Y-%m-%d"
             )
 
-            # ====================================
-            # ❌ VALIDAR FECHA
-            # ====================================
+
             if venc <= fecha:
 
                 error = (
@@ -2016,9 +2014,7 @@ def prestamos():
 
             else:
 
-                # ====================================
-                # 💰 DINERO DISPONIBLE EN CAJA
-                # ====================================
+
                 cur.execute("""
                     SELECT
 
@@ -2043,26 +2039,15 @@ def prestamos():
 
                 datos = cur.fetchone()
 
-                ingresos = float(
-                    datos[0] or 0
-                )
+                ingresos = float(datos[0] or 0)
+                egresos = float(datos[1] or 0)
 
-                egresos = float(
-                    datos[1] or 0
-                )
+                disponible = ingresos - egresos
 
-                disponible = (
-                    ingresos - egresos
-                )
-
-                # ====================================
-                # ❌ VALIDAR DINERO EN CAJA
-                # ====================================
                 if capital > disponible:
 
                     error = (
-                        f"❌ No es posible realizar el préstamo. "
-                        f"Dinero insuficiente en caja. "
+                        f"❌ Dinero insuficiente en caja. "
                         f"Disponible: ${formato(disponible)}"
                     )
 
@@ -2072,9 +2057,7 @@ def prestamos():
                         capital * interes / 100
                     )
 
-                    # ====================================
-                    # 💾 GUARDAR PRÉSTAMO
-                    # ====================================
+
                     cur.execute("""
                         INSERT INTO prestamos (
 
@@ -2100,9 +2083,7 @@ def prestamos():
 
                     ))
 
-                    # ====================================
-                    # 🏦 EGRESO EN CAJA
-                    # ====================================
+
                     cur.execute("""
                         INSERT INTO caja (
 
@@ -2126,9 +2107,7 @@ def prestamos():
 
             print("ERROR PRESTAMOS:", e)
 
-            error = (
-                "❌ Error al guardar préstamo"
-            )
+            error = "❌ Error al guardar préstamo"
 
     # ====================================
     # 🔍 FILTRO POR FECHA
@@ -2167,14 +2146,12 @@ def prestamos():
         AND p.estado = 'Activo'
 
         ORDER BY p.id DESC
-
+                
     """, (fecha_filtro,))
 
     prestamos_dia = cur.fetchall()
 
-    cantidad_dia = len(
-        prestamos_dia
-    )
+    cantidad_dia = len(prestamos_dia)
 
     # ====================================
     # 📋 LISTA GENERAL
@@ -2187,6 +2164,7 @@ def prestamos():
             p.capital,
             p.interes,
             p.fecha,
+            p.vencimiento,
             p.estado
 
         FROM prestamos p
@@ -2194,7 +2172,7 @@ def prestamos():
         JOIN clientes c
         ON p.cliente_id = c.id
 
-        WHERE p.estado = 'Activo'
+        WHERE p.estado='Activo'
 
         ORDER BY p.id DESC
     """)
@@ -2203,27 +2181,50 @@ def prestamos():
 
     resultados = cur.fetchall()
 
+    meses = {
+        1:"Enero",
+        2:"Febrero",
+        3:"Marzo",
+        4:"Abril",
+        5:"Mayo",
+        6:"Junio",
+        7:"Julio",
+        8:"Agosto",
+        9:"Septiembre",
+        10:"Octubre",
+        11:"Noviembre",
+        12:"Diciembre"
+    }
+
     for p in resultados:
 
         try:
 
             pid = p[0]
             nombre = p[1]
-            estado = p[5]
+            fecha_inicio = p[4]
+            fecha_fin = p[5]
+            estado = p[6]
 
-            # ====================================
-            # 🔥 CÁLCULO REAL
-            # ====================================
+
             cap_rest, int_rest, saldo_total, _, _ = calcular(
                 pid,
                 conn
             )
 
-            # ====================================
-            # 🔥 SI YA PAGÓ TODO
-            # ====================================
+
             if saldo_total <= 0:
                 continue
+
+            mes_inicio = (
+                f"{meses[fecha_inicio.month]} "
+                f"{fecha_inicio.year}"
+            )
+
+            mes_fin = (
+                f"{meses[fecha_fin.month]} "
+                f"{fecha_fin.year}"
+            )
 
             prestamos_lista.append({
 
@@ -2233,13 +2234,21 @@ def prestamos():
 
                 "estado": estado,
 
-                "total": formato(
-                    saldo_total
-                ),
+                "total": formato(saldo_total),
 
-                "saldo": formato(
-                    saldo_total
-                )
+                "saldo": formato(saldo_total),
+
+                "fecha_inicio":
+                    fecha_inicio.strftime("%d/%m/%Y"),
+
+                "fecha_fin":
+                    fecha_fin.strftime("%d/%m/%Y"),
+
+                "mes_inicio":
+                    mes_inicio,
+
+                "mes_fin":
+                    mes_fin
 
             })
 
@@ -2269,8 +2278,9 @@ def prestamos():
         error=error
 
     )
-    
+
 def crear_tabla_abonos():
+
     conn = conectar()
 
     if not conn:
@@ -2291,7 +2301,7 @@ def crear_tabla_abonos():
 
     conn.commit()
     conn.close()
-
+    
 # 💸 ABONOS
 # ------------------------------
 @app.route("/abonos", methods=["GET", "POST"])
