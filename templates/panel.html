@@ -2,218 +2,232 @@
 
 {% block content %}
 
-<div class="card blue">
+<div class="dashboard-header">
 
 ```
-<div class="label">
-    Capital en calle
-</div>
+<h1>📊 Dashboard Financiero</h1>
 
-<div class="metric">
-    ${{ capital_total }}
-</div>
+<p>
+    Control general de cartera y recaudo
+</p>
 ```
 
 </div>
 
-<div class="card green">
+<div class="dashboard-cards">
 
 ```
-<div class="label">
-    Capital recogido hoy
-</div>
+<div class="stat-card">
 
-<div class="metric">
-    ${{ capital_dia }}
-</div>
-```
+    <div class="title">
+        💰 Capital en calle
+    </div>
 
-</div>
-
-<div class="card orange">
-
-```
-<div class="label">
-    Interés recogido hoy
-</div>
-
-<div class="metric">
-    ${{ interes_dia }}
-</div>
-```
+    <div class="value">
+        ${{ capital_total }}
+    </div>
 
 </div>
 
-<div class="card">
+<div class="stat-card">
 
-```
-<div class="label">
-    Capital mensual
-</div>
+    <div class="title">
+        📥 Capital recogido hoy
+    </div>
 
-<div class="metric" style="color:black !important;">
-    ${{ capital_mes }}
-</div>
-```
+    <div class="value">
+        ${{ capital_dia }}
+    </div>
 
 </div>
 
-<div class="card">
+<div class="stat-card">
 
-```
-<div class="label">
-    Interés mensual
-</div>
+    <div class="title">
+        📈 Interés recogido hoy
+    </div>
 
-<div class="metric" style="color:black !important;">
-    ${{ interes_mes }}
-</div>
-```
+    <div class="value">
+        ${{ interes_dia }}
+    </div>
 
 </div>
 
-<!-- 🔥 PRÓXIMOS -->
+<div class="stat-card">
 
-<div class="card orange">
+    <div class="title">
+        📅 Capital mensual
+    </div>
 
-```
-<div class="table-header">
-
-    <h3>
-        ⚠️ Próximos a vencer
-    </h3>
-
-    <span class="badge orange">
-        {{ por_vencer|length }}
-    </span>
+    <div class="value">
+        ${{ capital_mes }}
+    </div>
 
 </div>
 
-{% if por_vencer %}
+<div class="stat-card">
 
-<div class="table-responsive">
+    <div class="title">
+        🏦 Interés mensual
+    </div>
 
-    <table>
-
-        <thead>
-
-            <tr>
-                <th>ID</th>
-                <th>Cliente</th>
-                <th>Días</th>
-                <th>Saldo</th>
-            </tr>
-
-        </thead>
-
-        <tbody>
-
-            {% for p in por_vencer %}
-
-            <tr>
-
-                <td>{{ p[0] }}</td>
-
-                <td>{{ p[1] }}</td>
-
-                <td>
-                    <span class="badge orange">
-                        {{ p[2] }} días
-                    </span>
-                </td>
-
-                <td>${{ p[3] }}</td>
-
-            </tr>
-
-            {% endfor %}
-
-        </tbody>
-
-    </table>
+    <div class="value">
+        ${{ interes_mes }}
+    </div>
 
 </div>
-
-{% else %}
-
-<div class="empty-box">
-    No hay préstamos próximos a vencer
-</div>
-
-{% endif %}
 ```
 
 </div>
 
-<!-- 🔥 VENCIDOS -->
-
-<div class="card red">
+<div class="alerts-grid">
 
 ```
-<div class="table-header">
+<div class="alert-card warning">
 
-    <h3>
-        ❌ Vencidos
-    </h3>
+    <div class="table-header">
 
-    <span class="badge red">
-        {{ vencidos|length }}
-    </span>
+        <h3>
+            ⚠️ Próximos a vencer
+        </h3>
+
+        <span class="badge orange">
+            {{ por_vencer|length }}
+        </span>
+
+    </div>
+
+    {% if por_vencer %}
+
+    <div class="table-responsive">
+
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Días</th>
+                    <th>Saldo</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for p in por_vencer %}
+
+                <tr>
+
+                    <td>{{ p[0] }}</td>
+
+                    <td>{{ p[1] }}</td>
+
+                    <td>
+
+                        <span class="badge orange">
+                            {{ p[2] }} días
+                        </span>
+
+                    </td>
+
+                    <td>
+                        ${{ p[3] }}
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    {% else %}
+
+    <div class="empty-box">
+        No hay préstamos próximos a vencer
+    </div>
+
+    {% endif %}
 
 </div>
 
-{% if vencidos %}
+<div class="alert-card danger">
 
-<div class="table-responsive">
+    <div class="table-header">
 
-    <table>
+        <h3>
+            ❌ Vencidos
+        </h3>
 
-        <thead>
+        <span class="badge red">
+            {{ vencidos|length }}
+        </span>
 
-            <tr>
-                <th>ID</th>
-                <th>Cliente</th>
-                <th>Atraso</th>
-                <th>Saldo</th>
-            </tr>
+    </div>
 
-        </thead>
+    {% if vencidos %}
 
-        <tbody>
+    <div class="table-responsive">
 
-            {% for v in vencidos %}
+        <table>
 
-            <tr>
+            <thead>
 
-                <td>{{ v[0] }}</td>
+                <tr>
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Atraso</th>
+                    <th>Saldo</th>
+                </tr>
 
-                <td>{{ v[1] }}</td>
+            </thead>
 
-                <td>
-                    <span class="badge red">
-                        {{ v[2] }} días
-                    </span>
-                </td>
+            <tbody>
 
-                <td>${{ v[3] }}</td>
+                {% for v in vencidos %}
 
-            </tr>
+                <tr>
 
-            {% endfor %}
+                    <td>{{ v[0] }}</td>
 
-        </tbody>
+                    <td>{{ v[1] }}</td>
 
-    </table>
+                    <td>
+
+                        <span class="badge red">
+                            {{ v[2] }} días
+                        </span>
+
+                    </td>
+
+                    <td>
+                        ${{ v[3] }}
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    {% else %}
+
+    <div class="empty-box">
+        No hay préstamos vencidos
+    </div>
+
+    {% endif %}
 
 </div>
-
-{% else %}
-
-<div class="empty-box">
-    No hay préstamos vencidos
-</div>
-
-{% endif %}
 ```
 
 </div>
