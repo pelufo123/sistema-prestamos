@@ -882,6 +882,28 @@ def panel():
         prestamos=prestamos
     )
 
+def crear_tabla_caja():
+    conn = conectar()
+
+    if not conn:
+        return
+
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS caja (
+            id SERIAL PRIMARY KEY,
+            tipo VARCHAR(20) NOT NULL,
+            monto NUMERIC(15,2) NOT NULL,
+            descripcion VARCHAR(255),
+            fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+#  CAJA
 @app.route("/caja", methods=["GET", "POST"])
 def caja():
 
@@ -3513,6 +3535,7 @@ crear_admin()
 crear_tabla_prestamos()
 crear_tabla_abonos()
 crear_tabla_clientes()
+crear_tabla_caja()
 if __name__ == "__main__":
     init_db()
     crear_admin()
