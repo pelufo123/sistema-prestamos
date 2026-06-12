@@ -2206,7 +2206,7 @@ def prestamos():
             fecha_inicio = p[4]
             fecha_fin = p[5]
 
-            cap_rest, int_rest, saldo_total, _, _ = calcular(
+            _, _, saldo_total, _, _ = calcular(
                 pid,
                 conn
             )
@@ -2226,58 +2226,49 @@ def prestamos():
 
             prestamos_lista.append({
 
-        "id": pid,
+                "id": pid,
 
-        "cliente": nombre,
+                "cliente": nombre,
 
-        "capital": formato(p[2]),
+                "capital": formato(p[2]),
 
-        "interes": f"{p[3]}%",
+                "interes": f"{p[3]}%",
 
-        # Cuota mensual (solo interés mensual)
-        "cuota_mensual": formato(
-            p[2] * (p[3] / 100)
-        ),
+                "cuota_mensual": formato(
+                    p[2] * (p[3] / 100)
+                ),
 
-        # Total deuda = capital + 1 mes de interés
-        "total_deuda": formato(
-            p[2] + (p[2] * p[3] / 100)
-        ),
+                "total_deuda": formato(
+                    p[2] + (p[2] * p[3] / 100)
+                ),
 
-        # Debe o No debe
-        "estado_pago":
-            "Debe" if saldo_total > 0
-            else "No debe",
+                "estado_pago":
+                    "Debe" if saldo_total > 0
+                    else "No debe",
 
-        # Fechas
-        "fecha_inicio":
-            fecha_inicio.strftime("%d/%m/%Y"),
+                "fecha_inicio":
+                    fecha_inicio.strftime("%d/%m/%Y"),
 
-        "fecha_fin":
-            fecha_fin.strftime("%d/%m/%Y"),
+                "fecha_fin":
+                    fecha_fin.strftime("%d/%m/%Y"),
 
-        # Meses
-        "mes_inicio":
-            mes_inicio,
+                "mes_inicio":
+                    mes_inicio,
 
-        "mes_fin":
-            mes_fin,
+                "mes_fin":
+                    mes_fin,
 
-        # Mes mostrado en la tabla
-        "mes":
-            mes_fin,
+                "proximo_pago":
+                    fecha_fin.strftime("%d/%m/%Y")
 
-        # Próximo pago
-        "proximo_pago":
-            fecha_fin.strftime("%d/%m/%Y")
+            })
 
-    })
         except Exception as e:
 
             print(
-            "ERROR CALCULANDO:",
-            e
-        )
+                "ERROR CALCULANDO:",
+                e
+            )
 
 
         conn.close()
