@@ -97,100 +97,108 @@
 <div class="card">
 
     <div class="table-header">
-        <h3>📋 Préstamos Activos</h3>
-    </div>
+    <h3>📋 Préstamos Activos</h3>
+</div>
 
-    <div class="table-responsive">
+<div class="table-responsive">
 
-        <table>
+    <table>
 
-            <thead>
+        <thead>
+
+            <tr>
+
+                <th>ID</th>
+                <th>Cliente</th>
+                <th>Crédito</th>
+                <th>Interés</th>
+                <th>Total</th>
+                <th>Saldo</th>
+                <th>Estado de Pago</th>
+                <th>Inicio</th>
+                <th>Próximo Pago</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            {% if prestamos %}
+
+                {% for p in prestamos %}
 
                 <tr>
 
-                    <th>ID</th>
-                    <th>Cliente</th>
-                    <th>Inicio</th>
-                    <th>Próximo Pago</th>
-                    <th>Estado</th>
-                    <th>Total</th>
-                    <th>Saldo</th>
+                    <td>{{ p.id }}</td>
+
+                    <td>{{ p.cliente }}</td>
+
+                    <td>
+                        ${{ p.capital }}
+                    </td>
+
+                    <td>
+                        {{ p.interes }}
+                    </td>
+
+                    <td>
+                        ${{ p.total }}
+                    </td>
+
+                    <td>
+                        ${{ p.saldo }}
+                    </td>
+
+                    <td>
+
+                        {% if p.estado_pago == "Debe" %}
+
+                            <span class="badge red">
+                                Debe
+                            </span>
+
+                        {% else %}
+
+                            <span class="badge green">
+                                No debe
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+                        {{ p.fecha_inicio }}
+                    </td>
+
+                    <td>
+                        {{ p.proximo_pago }}
+                    </td>
 
                 </tr>
 
-            </thead>
+                {% endfor %}
 
-            <tbody>
+            {% else %}
 
-                {% if prestamos %}
+                <tr>
 
-                    {% for p in prestamos %}
+                    <td colspan="9">
 
-                    <tr>
+                        <div class="sin-registros">
+                            No hay préstamos activos
+                        </div>
 
-                        <td>{{ p.id }}</td>
+                    </td>
 
-                        <td>{{ p.cliente }}</td>
+                </tr>
 
-                        <td>
-                            {{ p.fecha_inicio }}
-                        </td>
+            {% endif %}
 
-                        <td>
-                            {{ p.fecha_fin }}
-                        </td>
+        </tbody>
 
-                        <td>
-
-                            {% if p.estado == "Activo" %}
-
-                                <span class="estado-activo">
-                                    {{ p.estado }}
-                                </span>
-
-                            {% else %}
-
-                                <span class="estado-inactivo">
-                                    {{ p.estado }}
-                                </span>
-
-                            {% endif %}
-
-                        </td>
-
-                        <td>
-                            ${{ p.total }}
-                        </td>
-
-                        <td>
-                            ${{ p.saldo }}
-                        </td>
-
-                    </tr>
-
-                    {% endfor %}
-
-                {% else %}
-
-                    <tr>
-
-                        <td colspan="7">
-
-                            <div class="sin-registros">
-                                No hay préstamos activos
-                            </div>
-
-                        </td>
-
-                    </tr>
-
-                {% endif %}
-
-            </tbody>
-
-        </table>
-
-    </div>
+    </table>
 
 </div>
 

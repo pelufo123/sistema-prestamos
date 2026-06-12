@@ -1255,3 +1255,19 @@ table,
 .danger{
     border-top:5px solid #ef4444;
 }
+
+.badge.green{
+    background:#22c55e;
+    color:white;
+    padding:6px 12px;
+    border-radius:20px;
+    font-weight:bold;
+}
+
+.badge.red{
+    background:#ef4444;
+    color:white;
+    padding:6px 12px;
+    border-radius:20px;
+    font-weight:bold;
+}

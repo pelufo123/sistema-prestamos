@@ -2151,6 +2151,7 @@ def prestamos():
 
     prestamos_dia = cur.fetchall()
 
+
     cantidad_dia = len(prestamos_dia)
 
     # ====================================
@@ -2204,14 +2205,11 @@ def prestamos():
             nombre = p[1]
             fecha_inicio = p[4]
             fecha_fin = p[5]
-            estado = p[6]
-
 
             cap_rest, int_rest, saldo_total, _, _ = calcular(
                 pid,
                 conn
             )
-
 
             if saldo_total <= 0:
                 continue
@@ -2232,11 +2230,21 @@ def prestamos():
 
                 "cliente": nombre,
 
-                "estado": estado,
+                "capital": formato(p[2]),
 
-                "total": formato(saldo_total),
+                "interes": f"{p[3]}%",
 
-                "saldo": formato(saldo_total),
+                "total": formato(
+                    p[2] + (p[2] * p[3] / 100)
+                ),
+
+                "saldo": formato(
+                    saldo_total
+                ),
+
+                "estado_pago":
+                    "Debe" if saldo_total > 0
+                    else "No debe",
 
                 "fecha_inicio":
                     fecha_inicio.strftime("%d/%m/%Y"),
@@ -2248,20 +2256,24 @@ def prestamos():
                     mes_inicio,
 
                 "mes_fin":
-                    mes_fin
+                    mes_fin,
 
-            })
+                "proximo_pago":
+                    fecha_fin.strftime("%d/%m/%Y")
+
+        })
 
         except Exception as e:
 
             print(
-                "ERROR CALCULANDO:",
-                e
-            )
+            "ERROR CALCULANDO:",
+            e
+        )
 
-    conn.close()
 
-    return render_template(
+        conn.close()
+
+        return render_template(
 
         "prestamos.html",
 
@@ -2277,7 +2289,7 @@ def prestamos():
 
         error=error
 
-    )
+)
 
 def crear_tabla_abonos():
 
