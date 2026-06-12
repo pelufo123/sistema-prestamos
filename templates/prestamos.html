@@ -96,7 +96,7 @@
 
 <div class="card">
 
-    <div class="table-header">
+   <div class="table-header">
     <h3>📋 Préstamos Activos</h3>
 </div>
 
@@ -112,11 +112,11 @@
                 <th>Cliente</th>
                 <th>Crédito</th>
                 <th>Interés</th>
-                <th>Total</th>
-                <th>Saldo</th>
-                <th>Estado de Pago</th>
-                <th>Inicio</th>
-                <th>Próximo Pago</th>
+                <th>Total Deuda</th>
+                <th>Cuota Mensual</th>
+                <th>Estado</th>
+                <th>Mes Inicio</th>
+                <th>Mes Pago</th>
 
             </tr>
 
@@ -147,7 +147,7 @@
                     </td>
 
                     <td>
-                        ${{ p.saldo }}
+                        ${{ p.cuota_mensual }}
                     </td>
 
                     <td>
@@ -169,11 +169,11 @@
                     </td>
 
                     <td>
-                        {{ p.fecha_inicio }}
+                        {{ p.mes_inicio }}
                     </td>
 
                     <td>
-                        {{ p.proximo_pago }}
+                        {{ p.mes_fin }}
                     </td>
 
                 </tr>

@@ -2226,43 +2226,52 @@ def prestamos():
 
             prestamos_lista.append({
 
-                "id": pid,
+        "id": pid,
 
-                "cliente": nombre,
+        "cliente": nombre,
 
-                "capital": formato(p[2]),
+        "capital": formato(p[2]),
 
-                "interes": f"{p[3]}%",
+        "interes": f"{p[3]}%",
 
-                "total": formato(
-                    p[2] + (p[2] * p[3] / 100)
-                ),
+        # Cuota mensual (solo interés mensual)
+        "cuota_mensual": formato(
+            p[2] * (p[3] / 100)
+        ),
 
-                "saldo": formato(
-                    saldo_total
-                ),
+        # Total deuda = capital + 1 mes de interés
+        "total_deuda": formato(
+            p[2] + (p[2] * p[3] / 100)
+        ),
 
-                "estado_pago":
-                    "Debe" if saldo_total > 0
-                    else "No debe",
+        # Debe o No debe
+        "estado_pago":
+            "Debe" if saldo_total > 0
+            else "No debe",
 
-                "fecha_inicio":
-                    fecha_inicio.strftime("%d/%m/%Y"),
+        # Fechas
+        "fecha_inicio":
+            fecha_inicio.strftime("%d/%m/%Y"),
 
-                "fecha_fin":
-                    fecha_fin.strftime("%d/%m/%Y"),
+        "fecha_fin":
+            fecha_fin.strftime("%d/%m/%Y"),
 
-                "mes_inicio":
-                    mes_inicio,
+        # Meses
+        "mes_inicio":
+            mes_inicio,
 
-                "mes_fin":
-                    mes_fin,
+        "mes_fin":
+            mes_fin,
 
-                "proximo_pago":
-                    fecha_fin.strftime("%d/%m/%Y")
+        # Mes mostrado en la tabla
+        "mes":
+            mes_fin,
 
-        })
+        # Próximo pago
+        "proximo_pago":
+            fecha_fin.strftime("%d/%m/%Y")
 
+    })
         except Exception as e:
 
             print(
