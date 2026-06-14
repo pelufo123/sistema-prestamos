@@ -2,387 +2,306 @@
 
 {% block content %}
 
-<h2 class="titulo-panel">
-    💰 Caja
-</h2>
-
-<!-- ================================= -->
-<!-- 🔥 MENSAJES -->
-<!-- ================================= -->
-
 {% if error %}
 
-<div class="card red" style="margin-bottom:20px;">
-
-    {{ error }}
-
-</div>
+{{ error }}
 
 {% endif %}
 
 {% if mensaje %}
 
-<div class="card green" style="margin-bottom:20px;">
-
-    {{ mensaje }}
-
-</div>
+{{ mensaje }}
 
 {% endif %}
 
-<!-- ================================= -->
-<!-- 💾 FORMULARIO -->
-<!-- ================================= -->
-<div class="card">
+<form method="POST">
 
-    <form method="POST">
+```
+<div class="grid-form">
 
-        <div class="grid-form">
+    <div>
 
-            <!-- TIPO -->
-            <div>
+        <label>
+            Tipo
+        </label>
 
-                <label>
-                    Tipo
-                </label>
+        <select
+            name="tipo"
+            class="input"
+            required
+        >
 
-                <select
-                    name="tipo"
-                    class="input"
-                    required
-                >
+            <option value="ingreso">
+                Ingreso
+            </option>
 
-                    <option value="ingreso">
-                        Ingreso
-                    </option>
+            <option value="egreso">
+                Egreso
+            </option>
 
-                    <option value="egreso">
-                        Egreso
-                    </option>
+            <option value="inversion">
+                Inversión
+            </option>
 
-                </select>
+        </select>
 
-            </div>
+    </div>
 
-            <!-- MONTO -->
-            <div>
+    <div>
 
-                <label>
-                    Monto
-                </label>
+        <label>
+            Monto
+        </label>
 
-                <input
-                    type="text"
-                    name="monto"
-                    class="input money"
-                    placeholder="Ej: 500.000"
-                    required
-                >
+        <input
+            type="text"
+            name="monto"
+            class="input money"
+            placeholder="Ej: 500.000"
+            required
+        >
 
-            </div>
+    </div>
 
-        </div>
+</div>
 
-        <!-- DESCRIPCIÓN -->
-        <div style="margin-top:15px;">
+<div style="margin-top:15px;">
 
-            <label>
-                Descripción
-            </label>
+    <label>
+        Descripción
+    </label>
 
-            <input
-                type="text"
-                name="descripcion"
-                class="input"
-                placeholder="Descripción del movimiento"
-                required
-            >
+    <input
+        type="text"
+        name="descripcion"
+        class="input"
+        placeholder="Descripción del movimiento"
+        required
+    >
 
-        </div>
+</div>
 
-        <br>
+<br>
+
+<button
+    type="submit"
+    class="btn"
+>
+    💾 Guardar movimiento
+</button>
+```
+
+</form>
+
+<br>
+
+<form method="GET">
+
+```
+<div class="grid-form">
+
+    <div>
+
+        <label>
+            Filtrar por mes
+        </label>
+
+        <input
+            type="month"
+            name="mes"
+            value="{{ mes }}"
+            class="input"
+        >
+
+    </div>
+
+    <div style="
+        display:flex;
+        align-items:end;
+    ">
 
         <button
             type="submit"
             class="btn"
         >
-            💾 Guardar movimiento
+            🔍 Filtrar
         </button>
 
-    </form>
+    </div>
 
 </div>
+```
+
+</form>
 
 <br>
 
-<!-- ================================= -->
-<!-- 🔍 FILTRO -->
-<!-- ================================= -->
-<div class="card">
-
-    <form method="GET">
-
-        <div class="grid-form">
-
-            <div>
-
-                <label>
-                    Filtrar por mes
-                </label>
-
-                <input
-                    type="month"
-                    name="mes"
-                    value="{{ mes }}"
-                    class="input"
-                >
-
-            </div>
-
-            <div style="
-                display:flex;
-                align-items:end;
-            ">
-
-                <button
-                    type="submit"
-                    class="btn"
-                >
-                    🔍 Filtrar
-                </button>
-
-            </div>
-
-        </div>
-
-    </form>
-
-</div>
-
-<br>
-
-<!-- ================================= -->
-<!-- 📊 RESUMEN -->
-<!-- ================================= -->
 <div class="grid-metricas">
 
-    <div class="card green">
+```
+<div class="card green">
 
-        <div class="label">
-            Ingresos
-        </div>
-
-        <div class="metric">
-            ${{ formato(ingresos) }}
-        </div>
-
+    <div class="label">
+        Ingresos
     </div>
 
-    <div class="card red">
-
-        <div class="label">
-            Egresos
-        </div>
-
-        <div class="metric">
-            ${{ formato(egresos) }}
-        </div>
-
+    <div class="metric">
+        ${{ formato(ingresos) }}
     </div>
 
-    <div class="card blue">
+</div>
 
-        <div class="label">
-            Disponible en caja
-        </div>
+<div class="card red">
 
-        <div class="metric">
-            ${{ formato(disponible) }}
-        </div>
-
+    <div class="label">
+        Egresos
     </div>
+
+    <div class="metric">
+        ${{ formato(egresos) }}
+    </div>
+
+</div>
+
+<div class="card orange">
+
+    <div class="label">
+        Inversión en créditos
+    </div>
+
+    <div class="metric">
+        ${{ formato(inversiones) }}
+    </div>
+
+</div>
+
+<div class="card blue">
+
+    <div class="label">
+        Disponible en caja
+    </div>
+
+    <div class="metric">
+        ${{ formato(disponible) }}
+    </div>
+
+</div>
+```
 
 </div>
 
 <br>
 
-<!-- ================================= -->
-<!-- 📋 TABLA -->
-<!-- ================================= -->
-<div class="card">
+<div class="table-responsive">
 
-    <div class="table-responsive">
+```
+<table>
 
-        <table>
+    <thead>
 
-            <thead>
+        <tr>
 
-                <tr>
+            <th>Tipo</th>
+            <th>Monto</th>
+            <th>Descripción</th>
+            <th>Fecha</th>
+            <th>Acciones</th>
 
-                    <th>Tipo</th>
-                    <th>Monto</th>
-                    <th>Descripción</th>
-                    <th>Fecha</th>
-                    <th>Acciones</th>
+        </tr>
 
-                </tr>
+    </thead>
 
-            </thead>
+    <tbody>
 
-            <tbody>
+        {% for mov in movimientos %}
 
-                {% for mov in movimientos %}
+        <tr>
 
-                <tr>
+            <td>
 
-                    <!-- TIPO -->
-                    <td>
+                {% if mov[1] == "ingreso" %}
 
-                        {% if mov[1] == "ingreso" %}
+                    <span class="badge green">
+                        Ingreso
+                    </span>
 
-                            <span class="badge green">
-                                Ingreso
-                            </span>
+                {% elif mov[1] == "egreso" %}
 
-                        {% else %}
+                    <span class="badge red">
+                        Egreso
+                    </span>
 
-                            <span class="badge red">
-                                Egreso
-                            </span>
+                {% elif mov[1] == "inversion" %}
 
-                        {% endif %}
+                    <span class="badge orange">
+                        Inversión
+                    </span>
 
-                    </td>
+                {% else %}
 
-                    <!-- MONTO -->
-                    <td>
-                        ${{ formato(mov[2]) }}
-                    </td>
+                    <span class="badge">
+                        {{ mov[1] }}
+                    </span>
 
-                    <!-- DESCRIPCIÓN -->
-                    <td>
-                        {{ mov[3] }}
-                    </td>
+                {% endif %}
 
-                    <!-- FECHA -->
-                    <td>
-                        {{ mov[4] }}
-                    </td>
+            </td>
 
-                    <!-- ACCIONES -->
-                    <td style="
-                        display:flex;
-                        gap:8px;
-                        flex-wrap:wrap;
-                    ">
+            <td>
+                ${{ formato(mov[2]) }}
+            </td>
 
-                        <!-- ✏️ EDITAR -->
-                        <a
-                            href="/editar_caja/{{ mov[0] }}"
-                            class="btn btn-edit"
-                            style="
-                                padding:8px 12px;
-                                font-size:14px;
-                            "
-                        >
+            <td>
+                {{ mov[3] }}
+            </td>
 
-                            ✏️
+            <td>
+                {{ mov[4] }}
+            </td>
 
-                        </a>
+            <td style="
+                display:flex;
+                gap:8px;
+                flex-wrap:wrap;
+            ">
 
-                        <!-- 🗑️ ELIMINAR -->
-                        <a
-                            href="/eliminar_caja/{{ mov[0] }}"
-                            class="btn btn-del"
+                <a
+                    href="/editar_caja/{{ mov[0] }}"
+                    class="btn btn-edit"
+                    style="
+                        padding:8px 12px;
+                        font-size:14px;
+                    "
+                >
+                    ✏️
+                </a>
 
-                            style="
-                                padding:8px 12px;
-                                font-size:14px;
-                            "
+                <a
+                    href="/eliminar_caja/{{ mov[0] }}"
+                    class="btn btn-del"
+                    style="
+                        padding:8px 12px;
+                        font-size:14px;
+                    "
+                    onclick="
+                    return confirm(
+                    '⚠️ ¿Seguro que deseas eliminar este movimiento?'
+                    )"
+                >
+                    🗑️
+                </a>
 
-                            onclick="
-                            return confirm(
-                            '⚠️ ¿Seguro que deseas eliminar este movimiento?'
-                            )"
-                        >
+            </td>
 
-                            🗑️
+        </tr>
 
-                        </a>
+        {% endfor %}
 
-                    </td>
+    </tbody>
 
-                </tr>
-
-                {% endfor %}
-
-            </tbody>
-
-        </table>
-
-    </div>
+</table>
+```
 
 </div>
-
-<!-- ================================= -->
-<!-- 🔥 FORMATO MILES -->
-<!-- ================================= -->
-<script>
-
-function formatearMiles(input){
-
-    let valor =
-    input.value.replace(/\D/g, "");
-
-    valor = valor.replace(
-        /\B(?=(\d{3})+(?!\d))/g,
-        "."
-    );
-
-    input.value = valor;
-
-}
-
-function limpiarNumero(valor){
-
-    return valor.replace(/\./g, "");
-
-}
-
-document.addEventListener(
-"DOMContentLoaded",
-function(){
-
-    const inputs =
-    document.querySelectorAll(".money");
-
-    inputs.forEach(input => {
-
-        input.addEventListener(
-        "input",
-        function(){
-
-            formatearMiles(this);
-
-        });
-
-        input.form?.addEventListener(
-        "submit",
-        function(){
-
-            inputs.forEach(i => {
-
-                i.value =
-                limpiarNumero(i.value);
-
-            });
-
-        });
-
-    });
-
-});
-
-</script>
 
 {% endblock %}

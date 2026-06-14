@@ -1627,9 +1627,9 @@ def eliminar_caja(id):
 
         ingresos = float(datos[0] or 0)
         egresos = float(datos[1] or 0)
+        inversiones = float(datos[2] or 0)
 
-        disponible = ingresos - egresos
-
+        disponible = ingresos - egresos - inversiones
         # ====================================
         # ❌ NO DEJAR NEGATIVO
         # ====================================
@@ -2086,18 +2086,16 @@ def prestamos():
 
                     cur.execute("""
                         INSERT INTO caja (
-
                             tipo,
                             monto,
                             descripcion
-
                         )
                         VALUES (%s,%s,%s)
                     """, (
 
-                        "egreso",
+                        "inversion",
                         capital,
-                        "Préstamo entregado"
+                        "Crédito entregado"
 
                     ))
 
@@ -2774,25 +2772,25 @@ def abonos():
 
                     ))
 
-                    # =====================================
-                    # 🏦 INGRESO EN CAJA
-                    # =====================================
-                    cur.execute("""
-                        INSERT INTO caja (
+                # =====================================
+                # 🏦 RECUPERACIÓN DE CRÉDITO
+                # =====================================
+                cur.execute("""
+                    INSERT INTO caja (
 
-                            tipo,
-                            monto,
-                            descripcion
+                        tipo,
+                        monto,
+                        descripcion
 
-                        )
-                        VALUES (%s,%s,%s)
-                    """, (
+                    )
+                    VALUES (%s,%s,%s)
+                """, (
 
-                        "ingreso",
-                        round(monto),
-                        "Abono capital"
+                    "ingreso",
+                    round(monto),
+                    "Recuperación de crédito"
 
-                    ))
+                ))
 
                 conn.commit()
 
@@ -3115,27 +3113,35 @@ def reporte_excel():
 
     cur.execute("""
 
-        SELECT
+SELECT
 
-            COALESCE(SUM(
-                CASE
-                    WHEN tipo='ingreso'
-                    THEN monto
-                    ELSE 0
-                END
-            ),0),
+    COALESCE(SUM(
+        CASE
+            WHEN tipo='ingreso'
+            THEN monto
+            ELSE 0
+        END
+    ),0),
 
-            COALESCE(SUM(
-                CASE
-                    WHEN tipo='egreso'
-                    THEN monto
-                    ELSE 0
-                END
-            ),0)
+    COALESCE(SUM(
+        CASE
+            WHEN tipo='egreso'
+            THEN monto
+            ELSE 0
+        END
+    ),0),
 
-        FROM caja
+    COALESCE(SUM(
+        CASE
+            WHEN tipo='inversion'
+            THEN monto
+            ELSE 0
+        END
+    ),0)
 
-    """)
+FROM caja
+
+            """)
 
     datos_caja = cur.fetchone()
 
@@ -3143,7 +3149,13 @@ def reporte_excel():
 
     egresos = float(datos_caja[1] or 0)
 
-    disponible = ingresos - egresos
+    inversiones = float(datos_caja[2] or 0)
+
+    disponible = (
+        ingresos
+        - egresos
+        - inversiones
+    )
 
     # ============================================
     # 💸 TOTAL PRESTADO
