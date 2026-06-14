@@ -929,6 +929,14 @@ def caja():
                             THEN monto
                             ELSE 0
                         END
+                    ),0),
+
+                    COALESCE(SUM(
+                        CASE
+                            WHEN tipo='inversion'
+                            THEN monto
+                            ELSE 0
+                        END
                     ),0)
 
                 FROM caja
@@ -936,24 +944,21 @@ def caja():
 
             datos = cur.fetchone()
 
-            ingresos_actuales = float(
-                datos[0] or 0
-            )
-
-            egresos_actuales = float(
-                datos[1] or 0
-            )
+            ingresos_actuales = float(datos[0] or 0)
+            egresos_actuales = float(datos[1] or 0)
+            inversiones_actuales = float(datos[2] or 0)
 
             disponible_actual = (
-                ingresos_actuales -
-                egresos_actuales
+                ingresos_actuales
+                - egresos_actuales
+                - inversiones_actuales
             )
 
             # ====================================
             # ❌ VALIDAR FONDOS
             # ====================================
             if (
-                tipo == "egreso"
+                tipo in ["egreso", "inversion"]
                 and monto > disponible_actual
             ):
 
@@ -964,9 +969,6 @@ def caja():
 
             else:
 
-                # ====================================
-                # 💾 GUARDAR
-                # ====================================
                 cur.execute("""
                     INSERT INTO caja (
 
@@ -1011,25 +1013,22 @@ def caja():
         fecha = datetime.now()
 
     # ====================================
-    # 🔥 INICIO MES
+    # 📅 INICIO MES
     # ====================================
     inicio_mes = fecha.replace(
-
         day=1,
         hour=0,
         minute=0,
         second=0,
         microsecond=0
-
     )
 
     # ====================================
-    # 🔥 SIGUIENTE MES
+    # 📅 SIGUIENTE MES
     # ====================================
     if fecha.month == 12:
 
         siguiente = fecha.replace(
-
             year=fecha.year + 1,
             month=1,
             day=1,
@@ -1037,20 +1036,17 @@ def caja():
             minute=0,
             second=0,
             microsecond=0
-
         )
 
     else:
 
         siguiente = fecha.replace(
-
             month=fecha.month + 1,
             day=1,
             hour=0,
             minute=0,
             second=0,
             microsecond=0
-
         )
 
     # ====================================
@@ -1071,7 +1067,6 @@ def caja():
         AND fecha < %s
 
         ORDER BY id DESC
-
     """, (
 
         inicio_mes,
@@ -1082,15 +1077,12 @@ def caja():
     movimientos = cur.fetchall()
 
     # ====================================
-    # 🔥 INICIAR TOTALES EN 0
+    # 📊 TOTALES
     # ====================================
     ingresos = 0
     egresos = 0
-    disponible = 0
+    inversiones = 0
 
-    # ====================================
-    # 🔥 SUMAR MOVIMIENTOS DEL MES
-    # ====================================
     for mov in movimientos:
 
         monto_mov = float(mov[2])
@@ -1099,6 +1091,10 @@ def caja():
 
             ingresos += monto_mov
 
+        elif mov[1] == "inversion":
+
+            inversiones += monto_mov
+
         else:
 
             egresos += monto_mov
@@ -1106,7 +1102,11 @@ def caja():
     # ====================================
     # 💰 DISPONIBLE
     # ====================================
-    disponible = ingresos - egresos
+    disponible = (
+        ingresos
+        - egresos
+        - inversiones
+    )
 
     conn.close()
 
@@ -1120,6 +1120,8 @@ def caja():
 
         egresos=egresos,
 
+        inversiones=inversiones,
+
         disponible=disponible,
 
         formato=formato,
@@ -1129,8 +1131,8 @@ def caja():
         error=error,
 
         mensaje=mensaje
-    )
 
+    )
 # ====================================
 # 📊 REPORTE GENERAL
 # ====================================
