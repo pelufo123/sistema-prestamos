@@ -112,8 +112,10 @@
                 <th>Cliente</th>
                 <th>Crédito</th>
                 <th>Interés</th>
-                <th>Total Deuda</th>
                 <th>Cuota Mensual</th>
+                <th>Meses Debidos</th>
+                <th>Interés Pendiente</th>
+                <th>Total Deuda</th>
                 <th>Estado</th>
                 <th>Mes Inicio</th>
                 <th>Mes Pago</th>
@@ -143,11 +145,21 @@
                     </td>
 
                     <td>
-                        ${{ p.total }}
+                        ${{ p.cuota_mensual }}
                     </td>
 
                     <td>
-                        ${{ p.cuota_mensual }}
+                        {{ p.meses_deuda }}
+                    </td>
+
+                    <td>
+                        ${{ p.interes_pendiente }}
+                    </td>
+
+                    <td>
+                        <strong>
+                            ${{ p.total_deuda }}
+                        </strong>
                     </td>
 
                     <td>
@@ -173,7 +185,7 @@
                     </td>
 
                     <td>
-                        {{ p.mes_fin }}
+                        {{ p.mes_pago }}
                     </td>
 
                 </tr>
@@ -184,7 +196,7 @@
 
                 <tr>
 
-                    <td colspan="9">
+                    <td colspan="11">
 
                         <div class="sin-registros">
                             No hay préstamos activos

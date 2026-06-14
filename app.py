@@ -2206,7 +2206,7 @@ def prestamos():
             fecha_inicio = p[4]
             fecha_fin = p[5]
 
-            _, _, saldo_total, _, _ = calcular(
+            capital_restante, interes_restante, saldo_total, _, _ = calcular(
                 pid,
                 conn
             )
@@ -2224,6 +2224,17 @@ def prestamos():
                 f"{fecha_fin.year}"
             )
 
+            cuota_mensual = (
+                p[2] * (p[3] / 100)
+            )
+
+            meses_deuda = 0
+
+            if cuota_mensual > 0:
+                meses_deuda = round(
+                    interes_restante / cuota_mensual
+                )
+
             prestamos_lista.append({
 
                 "id": pid,
@@ -2232,34 +2243,31 @@ def prestamos():
 
                 "capital": formato(p[2]),
 
-                "interes": f"{p[3]}%",
+                "interes": f"{p[3]:.2f}%",
 
                 "cuota_mensual": formato(
-                    p[2] * (p[3] / 100)
+                    cuota_mensual
                 ),
 
+                "interes_pendiente": formato(
+                    interes_restante
+                ),
+
+                "meses_deuda": meses_deuda,
+
                 "total_deuda": formato(
-                    p[2] + (p[2] * p[3] / 100)
+                    saldo_total
                 ),
 
                 "estado_pago":
                     "Debe" if saldo_total > 0
                     else "No debe",
 
-                "fecha_inicio":
-                    fecha_inicio.strftime("%d/%m/%Y"),
-
-                "fecha_fin":
-                    fecha_fin.strftime("%d/%m/%Y"),
-
                 "mes_inicio":
                     mes_inicio,
 
-                "mes_fin":
-                    mes_fin,
-
-                "proximo_pago":
-                    fecha_fin.strftime("%d/%m/%Y")
+                "mes_pago":
+                    mes_fin
 
             })
 
@@ -2270,10 +2278,9 @@ def prestamos():
                 e
             )
 
+    conn.close()
 
-        conn.close()
-
-        return render_template(
+    return render_template(
 
         "prestamos.html",
 
@@ -2289,7 +2296,7 @@ def prestamos():
 
         error=error
 
-)
+    )
 
 def crear_tabla_abonos():
 
