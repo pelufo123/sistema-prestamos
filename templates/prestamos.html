@@ -10,296 +10,312 @@
 
 {% endif %}
 
-<div class="table-header">
-    <h3>💰 Nuevo Préstamo</h3>
-</div>
+<div class="card">
 
-<form method="POST">
-
-```
-<div class="grid-metricas">
-
-    <div>
-        <label>👤 Cliente</label>
-
-        <select name="cliente" required>
-
-            {% for c in clientes %}
-
-            <option value="{{ c[0] }}">
-                {{ c[1] }}
-            </option>
-
-            {% endfor %}
-
-        </select>
+    <div class="table-header">
+        <h3>💰 Nuevo Préstamo</h3>
     </div>
 
-    <div>
-        <label>💰 Crédito</label>
+    <form method="POST">
 
-        <input
-            type="text"
-            name="capital"
-            class="money"
-            placeholder="100.000"
-            required
-        >
-    </div>
+        <div class="grid-metricas">
 
-    <div>
-        <label>📈 Interés %</label>
+            <div>
+                <label>👤 Cliente</label>
 
-        <input
-            type="number"
-            step="0.1"
-            name="interes"
-            placeholder="20"
-            required
-        >
-    </div>
+                <select name="cliente" required>
 
-    <div>
-        <label>📅 Fecha inicio Crédito</label>
+                    {% for c in clientes %}
 
-        <input
-            type="date"
-            name="fecha"
-            required
-        >
-    </div>
+                    <option value="{{ c[0] }}">
+                        {{ c[1] }}
+                    </option>
 
-    <div>
-        <label>📅 Próximo pago</label>
+                    {% endfor %}
 
-        <input
-            type="date"
-            name="vencimiento"
-            required
-        >
-    </div>
+                </select>
+            </div>
+
+            <div>
+                <label>💰 Crédito</label>
+
+                <input
+                    type="text"
+                    name="capital"
+                    class="money"
+                    placeholder="100.000"
+                    required
+                >
+            </div>
+
+            <div>
+                <label>📈 Interés %</label>
+
+                <input
+                    type="number"
+                    step="0.1"
+                    name="interes"
+                    placeholder="20"
+                    required
+                >
+            </div>
+
+            <div>
+                <label>📅 Fecha inicio Crédito</label>
+
+                <input
+                    type="date"
+                    name="fecha"
+                    required
+                >
+            </div>
+
+            <div>
+                <label>📅 Próximo pago</label>
+
+                <input
+                    type="date"
+                    name="vencimiento"
+                    required
+                >
+            </div>
+
+        </div>
+
+        <br>
+
+        <button type="submit">
+            💾 Guardar préstamo
+        </button>
+
+    </form>
 
 </div>
 
 <br>
 
-<button type="submit">
-    💾 Guardar préstamo
-</button>
-```
+<div class="card">
 
-</form>
-
-<br>
-
-<div class="table-header">
+   <div class="table-header">
     <h3>📋 Préstamos Activos</h3>
 </div>
 
 <div class="table-responsive">
 
-```
-<table>
+    <table>
 
-    <thead>
-
-        <tr>
-
-            <th>ID</th>
-            <th>Cliente</th>
-            <th>Crédito</th>
-            <th>Interés</th>
-            <th>Cuota Mensual</th>
-            <th>Meses Debidos</th>
-            <th>Total Deuda</th>
-            <th>Estado de Pago</th>
-            <th>Próximo Pago</th>
-
-        </tr>
-
-    </thead>
-
-    <tbody>
-
-        {% if prestamos %}
-
-            {% for p in prestamos %}
+        <thead>
 
             <tr>
 
-                <td>{{ p.id }}</td>
-
-                <td>{{ p.cliente }}</td>
-
-                <td>
-                    ${{ p.capital }}
-                </td>
-
-                <td>
-                    {{ p.interes }}
-                </td>
-
-                <td>
-                    ${{ p.cuota_mensual }}
-                </td>
-
-                <td>
-                    {{ p.meses_deuda }}
-                </td>
-
-                <td>
-                    <strong>
-                        ${{ p.total_deuda }}
-                    </strong>
-                </td>
-
-                <td>
-
-                    {% if p.estado_pago == "Debe" %}
-
-                        <span class="badge red">
-                            Debe
-                        </span>
-
-                    {% else %}
-
-                        <span class="badge green">
-                            No debe
-                        </span>
-
-                    {% endif %}
-
-                </td>
-
-                <td>
-                    {{ p.proximo_pago }}
-                </td>
+                <th>ID</th>
+                <th>Cliente</th>
+                <th>Crédito</th>
+                <th>Interés</th>
+                <th>Cuota Mensual</th>
+                <th>Meses Debidos</th>
+                <th>Interés Pendiente</th>
+                <th>Total Deuda</th>
+                <th>Estado</th>
+                <th>Mes Inicio</th>
+                <th>Mes Pago</th>
 
             </tr>
 
-            {% endfor %}
+        </thead>
 
-        {% else %}
+        <tbody>
 
-            <tr>
+            {% if prestamos %}
 
-                <td colspan="9">
+                {% for p in prestamos %}
 
-                    <div class="sin-registros">
-                        No hay préstamos activos
-                    </div>
+                <tr>
 
-                </td>
+                    <td>{{ p.id }}</td>
 
-            </tr>
+                    <td>{{ p.cliente }}</td>
 
-        {% endif %}
+                    <td>
+                        ${{ p.capital }}
+                    </td>
 
-    </tbody>
+                    <td>
+                        {{ p.interes }}
+                    </td>
 
-</table>
-```
+                    <td>
+                        ${{ p.cuota_mensual }}
+                    </td>
+
+                    <td>
+                        {{ p.meses_deuda }}
+                    </td>
+
+                    <td>
+                        ${{ p.interes_pendiente }}
+                    </td>
+
+                    <td>
+                        <strong>
+                            ${{ p.total_deuda }}
+                        </strong>
+                    </td>
+
+                    <td>
+
+                        {% if p.estado_pago == "Debe" %}
+
+                            <span class="badge red">
+                                Debe
+                            </span>
+
+                        {% else %}
+
+                            <span class="badge green">
+                                No debe
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+                        {{ p.mes_inicio }}
+                    </td>
+
+                    <td>
+                        {{ p.mes_pago }}
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            {% else %}
+
+                <tr>
+
+                    <td colspan="11">
+
+                        <div class="sin-registros">
+                            No hay préstamos activos
+                        </div>
+
+                    </td>
+
+                </tr>
+
+            {% endif %}
+
+        </tbody>
+
+    </table>
 
 </div>
 
 <br>
 
-<div class="table-header">
-    <h3>📅 Buscar préstamos por fecha</h3>
+<div class="card">
+
+    <div class="table-header">
+        <h3>📅 Buscar préstamos por fecha</h3>
+    </div>
+
+    <form method="GET">
+
+        <input
+            type="date"
+            name="fecha"
+            value="{{ fecha }}"
+        >
+
+        <br><br>
+
+        <button type="submit">
+            🔍 Buscar
+        </button>
+
+    </form>
+
 </div>
-
-<form method="GET">
-
-```
-<input
-    type="date"
-    name="fecha"
-    value="{{ fecha }}"
->
-
-<br><br>
-
-<button type="submit">
-    🔍 Buscar
-</button>
-```
-
-</form>
 
 <br>
 
-<div class="table-header">
-    <h3>📊 Préstamos del día</h3>
-</div>
+<div class="card">
 
-<p>
-    <b>Total registrados:</b>
-    {{ cantidad_dia }}
-</p>
+    <div class="table-header">
+        <h3>📊 Préstamos del día</h3>
+    </div>
 
-<br>
+    <p>
+        <b>Total registrados:</b>
+        {{ cantidad_dia }}
+    </p>
 
-<div class="table-responsive">
+    <br>
 
-```
-<table>
+    <div class="table-responsive">
 
-    <thead>
+        <table>
 
-        <tr>
+            <thead>
 
-            <th>ID</th>
-            <th>Cliente</th>
-            <th>Capital</th>
-            <th>Total</th>
-            <th>Fecha</th>
+                <tr>
 
-        </tr>
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Capital</th>
+                    <th>Total</th>
+                    <th>Fecha</th>
 
-    </thead>
+                </tr>
 
-    <tbody>
+            </thead>
 
-        {% if prestamos_dia %}
+            <tbody>
 
-            {% for p in prestamos_dia %}
+                {% if prestamos_dia %}
 
-            <tr>
+                    {% for p in prestamos_dia %}
 
-                <td>{{ p[0] }}</td>
+                    <tr>
 
-                <td>{{ p[1] }}</td>
+                        <td>{{ p[0] }}</td>
 
-                <td>${{ p[2] }}</td>
+                        <td>{{ p[1] }}</td>
 
-                <td>${{ p[3] }}</td>
+                        <td>${{ p[2] }}</td>
 
-                <td>{{ p[4] }}</td>
+                        <td>${{ p[3] }}</td>
 
-            </tr>
+                        <td>{{ p[4] }}</td>
 
-            {% endfor %}
+                    </tr>
 
-        {% else %}
+                    {% endfor %}
 
-            <tr>
+                {% else %}
 
-                <td colspan="5">
+                    <tr>
 
-                    <div class="sin-registros">
-                        No hay préstamos registrados este día
-                    </div>
+                        <td colspan="5">
 
-                </td>
+                            <div class="sin-registros">
+                                No hay préstamos registrados este día
+                            </div>
 
-            </tr>
+                        </td>
 
-        {% endif %}
+                    </tr>
 
-    </tbody>
+                {% endif %}
 
-</table>
-```
+            </tbody>
+
+        </table>
+
+    </div>
 
 </div>
 
