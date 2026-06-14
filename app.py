@@ -2234,40 +2234,29 @@ def prestamos():
                 meses_deuda = round(
                     interes_restante / cuota_mensual
                 )
-
             prestamos_lista.append({
 
                 "id": pid,
-
                 "cliente": nombre,
-
                 "capital": formato(p[2]),
+                "interes": f"{p[3]}%",
 
-                "interes": f"{p[3]:.2f}%",
-
-                "cuota_mensual": formato(
-                    cuota_mensual
-                ),
-
-                "interes_pendiente": formato(
-                    interes_restante
-                ),
+                "cuota_mensual": formato(cuota_mensual),
 
                 "meses_deuda": meses_deuda,
 
-                "total_deuda": formato(
-                    saldo_total
-                ),
+                "mes_inicio": mes_inicio,
+
+                "mes_pago": mes_fin,
+
+                "total_deuda": formato(saldo_total),
 
                 "estado_pago":
                     "Debe" if saldo_total > 0
                     else "No debe",
 
-                "mes_inicio":
-                    mes_inicio,
-
-                "mes_pago":
-                    mes_fin
+                "proximo_pago":
+                    fecha_fin.strftime("%d/%m/%Y")
 
             })
 
