@@ -2370,7 +2370,6 @@ def abonos():
                 if meses_transcurridos < 1:
                     meses_transcurridos = 1
 
-                # 🔥 PERMITIR ADELANTAR
                 meses_totales = (
                     meses_transcurridos + 24
                 )
@@ -2397,113 +2396,104 @@ def abonos():
 
                 ]
 
-            # =============================
-            # 📌 ÚLTIMO MES PAGADO
-            # =============================
-            ultimo_mes_pagado = "Sin pagos"
+                # =============================
+                # 📌 ÚLTIMO MES PAGADO
+                # =============================
+                ultimo_mes_pagado = "Sin pagos"
 
-            if meses_pagados_db:
+                if meses_pagados_db:
 
-                ultimo_num = max(
+                    ultimo_num = max(
+                        meses_pagados_db
+                    )
+
+                    fecha_ultimo = (
+                        fecha_prestamo +
+                        relativedelta(
+                            months=ultimo_num - 1
+                        )
+                    )
+
+                    ultimo_mes_pagado = (
+                        fecha_ultimo.strftime(
+                            "%B %Y"
+                        ).capitalize()
+                    )
+
+                # =============================
+                # 📋 GENERAR MESES
+                # =============================
+                meses = []
+
+                for i in range(
+                    1,
+                    meses_totales + 1
+                ):
+
+                    fecha_mes = (
+                        fecha_prestamo +
+                        relativedelta(
+                            months=i - 1
+                        )
+                    )
+
+                    texto_mes = (
+                        fecha_mes.strftime(
+                            "%B %Y"
+                        ).capitalize()
+                    )
+
+                    meses.append({
+
+                        "codigo": i,
+                        "texto": texto_mes,
+                        "pagado": i in meses_pagados_db
+
+                    })
+
+                cantidad_meses = len(
                     meses_pagados_db
                 )
 
-                fecha_ultimo = (
-                    fecha_prestamo +
-                    relativedelta(
-                        months=ultimo_num - 1
-                    )
-                )
+                prestamos.append({
 
-                ultimo_mes_pagado = (
-                    fecha_ultimo.strftime(
-                        "%B %Y"
-                    ).capitalize()
-                )
+                    "id": pid,
+                    "nombre": nombre,
 
-            # =============================
-            # 📋 GENERAR MESES
-            # =============================
-            meses = []
+                    "capital":
+                        formato(cap_rest),
 
-            for i in range(
-                1,
-                meses_totales + 1
-            ):
+                    "interes":
+                        formato(int_rest),
 
-                fecha_mes = (
-                    fecha_prestamo +
-                    relativedelta(
-                        months=i - 1
-                    )
-                )
+                    "total":
+                        formato(total),
 
-                texto_mes = (
-                    fecha_mes.strftime(
-                        "%B %Y"
-                    ).capitalize()
-                )
+                    "capital_num":
+                        cap_rest,
 
-                meses.append({
+                    "interes_num":
+                        interes_mensual,
 
-                    "codigo": i,
+                    "total_num":
+                        total,
 
-                    "texto": texto_mes,
+                    "meses":
+                        meses,
 
-                    "pagado":
-                        i in meses_pagados_db
+                    "interes_mensual":
+                        formato(interes_mensual),
+
+                    "interes_mensual_raw":
+                        interes_mensual,
+
+                    "ultimo_mes_pagado":
+                        ultimo_mes_pagado,
+
+                    "cantidad_meses":
+                        cantidad_meses
 
                 })
-
-            # =============================
-            # 📆 CANTIDAD MESES PAGADOS
-            # =============================
-            cantidad_meses = len(
-                meses_pagados_db
-            )
-
-            # =============================
-            # ➕ AGREGAR
-            # =============================
-            prestamos.append({
-
-                "id": pid,
-                "nombre": nombre,
-
-                "capital":
-                    formato(cap_rest),
-
-                "interes":
-                    formato(int_rest),
-
-                "total":
-                    formato(total),
-
-                "capital_num":
-                    cap_rest,
-
-                "interes_num":
-                    interes_mensual,
-
-                "total_num":
-                    total,
-
-                "meses":
-                    meses,
-
-                "interes_mensual":
-                    formato(interes_mensual),
-
-                "interes_mensual_raw":
-                    interes_mensual,
-
-                "ultimo_mes_pagado":
-                    ultimo_mes_pagado,
-
-                "cantidad_meses":
-                    cantidad_meses
-
-            })
 
         except Exception as e:
 
@@ -2561,9 +2551,28 @@ def abonos():
 
             else:
 
-                meses_seleccionados = request.form.getlist(
-                    "meses"
-                )
+                meses_seleccionados = [
+                    int(x)
+                    for x in request.form.getlist("meses")
+                ]
+
+                # 🔥 Debe seleccionar al menos un mes
+                if not meses_seleccionados:
+
+                    mensaje = "❌ Debe seleccionar al menos un mes"
+
+                    conn.close()
+
+                    return render_template(
+
+                        "abonos.html",
+
+                        clientes=clientes,
+                        prestamos=prestamos,
+                        mensaje=mensaje,
+                        cliente_id=cliente_id
+
+                    )
 
             # =============================
             # 💰 VALIDACIONES
