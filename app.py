@@ -2397,113 +2397,113 @@ def abonos():
 
                 ]
 
-                # =============================
-                # 📌 ÚLTIMO MES PAGADO
-                # =============================
-                ultimo_mes_pagado = "Sin pagos"
+            # =============================
+            # 📌 ÚLTIMO MES PAGADO
+            # =============================
+            ultimo_mes_pagado = "Sin pagos"
 
-                if meses_pagados_db:
+            if meses_pagados_db:
 
-                    ultimo_num = max(
-                        meses_pagados_db
-                    )
-
-                    fecha_ultimo = (
-                        fecha_prestamo +
-                        relativedelta(
-                            months=ultimo_num - 1
-                        )
-                    )
-
-                    ultimo_mes_pagado = (
-                        fecha_ultimo.strftime(
-                            "%B %Y"
-                        ).capitalize()
-                    )
-
-                # =============================
-                # 📋 GENERAR MESES
-                # 🔥 OCULTAR PAGADOS
-                # =============================
-                meses = []
-
-                for i in range(
-                    1,
-                    meses_totales + 1
-                ):
-
-                    # 🔥 SI YA ESTÁ PAGADO
-                    if i in meses_pagados_db:
-                        continue
-
-                    fecha_mes = (
-                        fecha_prestamo +
-                        relativedelta(
-                            months=i - 1
-                        )
-                    )
-
-                    texto_mes = (
-                        fecha_mes.strftime(
-                            "%B %Y"
-                        ).capitalize()
-                    )
-
-                meses.append({
-                    "codigo": "2026-04",
-                    "texto": "Abril 2026",
-                    "pagado": False
-                })
-
-                # =============================
-                # 📆 CANTIDAD MESES PAGADOS
-                # =============================
-                cantidad_meses = len(
+                ultimo_num = max(
                     meses_pagados_db
                 )
 
-                # =============================
-                # ➕ AGREGAR
-                # =============================
-                prestamos.append({
+                fecha_ultimo = (
+                    fecha_prestamo +
+                    relativedelta(
+                        months=ultimo_num - 1
+                    )
+                )
 
-                    "id": pid,
-                    "nombre": nombre,
+                ultimo_mes_pagado = (
+                    fecha_ultimo.strftime(
+                        "%B %Y"
+                    ).capitalize()
+                )
 
-                    "capital":
-                        formato(cap_rest),
+            # =============================
+            # 📋 GENERAR MESES
+            # =============================
+            meses = []
 
-                    "interes":
-                        formato(int_rest),
+            for i in range(
+                1,
+                meses_totales + 1
+            ):
 
-                    "total":
-                        formato(total),
+                fecha_mes = (
+                    fecha_prestamo +
+                    relativedelta(
+                        months=i - 1
+                    )
+                )
 
-                    "capital_num":
-                        cap_rest,
+                texto_mes = (
+                    fecha_mes.strftime(
+                        "%B %Y"
+                    ).capitalize()
+                )
 
-                    "interes_num":
-                        interes_mensual,
+                meses.append({
 
-                    "total_num":
-                        total,
+                    "codigo": i,
 
-                    "meses":
-                        meses,
+                    "texto": texto_mes,
 
-                    "interes_mensual":
-                        formato(interes_mensual),
-
-                    "interes_mensual_raw":
-                        interes_mensual,
-
-                    "ultimo_mes_pagado":
-                        ultimo_mes_pagado,
-
-                    "cantidad_meses":
-                        cantidad_meses
+                    "pagado":
+                        i in meses_pagados_db
 
                 })
+
+            # =============================
+            # 📆 CANTIDAD MESES PAGADOS
+            # =============================
+            cantidad_meses = len(
+                meses_pagados_db
+            )
+
+            # =============================
+            # ➕ AGREGAR
+            # =============================
+            prestamos.append({
+
+                "id": pid,
+                "nombre": nombre,
+
+                "capital":
+                    formato(cap_rest),
+
+                "interes":
+                    formato(int_rest),
+
+                "total":
+                    formato(total),
+
+                "capital_num":
+                    cap_rest,
+
+                "interes_num":
+                    interes_mensual,
+
+                "total_num":
+                    total,
+
+                "meses":
+                    meses,
+
+                "interes_mensual":
+                    formato(interes_mensual),
+
+                "interes_mensual_raw":
+                    interes_mensual,
+
+                "ultimo_mes_pagado":
+                    ultimo_mes_pagado,
+
+                "cantidad_meses":
+                    cantidad_meses
+
+            })
 
         except Exception as e:
 
@@ -2561,10 +2561,8 @@ def abonos():
 
             else:
 
-                mes_pagado = int(
-                    request.form.get(
-                        "mes"
-                    ) or 0
+                meses_seleccionados = request.form.getlist(
+                    "meses"
                 )
 
             # =============================
@@ -2620,10 +2618,10 @@ def abonos():
                     total_ingreso = 0
 
                     # 🔥 GUARDAR TODOS LOS MESES
-                    for mes_actual in range(
-                        1,
-                        mes_pagado + 1
-                    ):
+                    for mes_actual in meses_seleccionados:
+
+                        mes_actual = int(mes_actual)
+                    
 
                         # 🔥 VALIDAR DUPLICADO
                         cur.execute("""

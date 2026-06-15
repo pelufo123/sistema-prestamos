@@ -249,64 +249,66 @@
             <!-- ===================================== -->
 
 <div class="div_mes">
+<!-- ===================================== -->
+<!-- MESES -->
+<!-- ===================================== -->
 
-    <label>
-        Meses a pagar
-    </label>
+<label>
+    Meses a pagar
+</label>
 
-    <div style="
-        margin-top:10px;
-        border:1px solid #ddd;
-        padding:15px;
-        border-radius:10px;
-        max-height:250px;
-        overflow-y:auto;
-    ">
+<div style="
+    margin-top:10px;
+    border:1px solid #ddd;
+    padding:15px;
+    border-radius:10px;
+">
 
-        {% if p.meses %}
+    {% if p.meses %}
 
-            {% for m in p.meses %}
+        {% for m in p.meses %}
 
-            <div style="
-                margin-bottom:10px;
-                display:flex;
-                align-items:center;
-                gap:10px;
-            ">
+        <label style="
+            display:block;
+            margin-bottom:10px;
+            cursor:pointer;
+            font-size:15px;
+        ">
+
+            {% if m.pagado %}
+
+                <span style="
+                    color:green;
+                    font-weight:bold;
+                ">
+                    ✅ {{ m.texto }}
+                </span>
+
+            {% else %}
 
                 <input
                     type="checkbox"
                     name="meses"
-                    value="{{ m.codigo }}"
+                    value="{{ m.numero }}"
                 >
 
-                <span>
+                {{ m.texto }}
 
-                    {% if m.pagado %}
+            {% endif %}
 
-                        🟩 {{ m.texto }}
+        </label>
 
-                    {% else %}
+        {% endfor %}
 
-                        ⬜ {{ m.texto }}
+    {% else %}
 
-                    {% endif %}
+        <div style="
+            color:#666;
+        ">
+            No hay meses disponibles
+        </div>
 
-                </span>
-
-            </div>
-
-            {% endfor %}
-
-        {% else %}
-
-            <div>
-                No hay meses disponibles
-            </div>
-
-        {% endif %}
-
-    </div>
+    {% endif %}
 
 </div>
 
