@@ -352,11 +352,8 @@ def calcular(pid, conn):
 
     cur = conn.cursor()
 
-    # =====================================
-    # DATOS PRÉSTAMO
-    # =====================================
     cur.execute("""
-        SELECT capital, interes, fecha
+        SELECT capital, interes
         FROM prestamos
         WHERE id=%s
     """, (pid,))
@@ -368,11 +365,8 @@ def calcular(pid, conn):
 
     capital_original = float(data[0])
     interes = float(data[1])
-    fecha = data[2]
 
-    # =====================================
-    # CAPITAL ABONADO
-    # =====================================
+    # CAPITAL PAGADO
     cur.execute("""
         SELECT COALESCE(SUM(monto),0)
         FROM abonos
@@ -385,38 +379,20 @@ def calcular(pid, conn):
     )
 
     capital_restante = (
-        capital_original - abonado_capital
+        capital_original -
+        abonado_capital
     )
 
     if capital_restante < 0:
         capital_restante = 0
 
-    # =====================================
-    # MESES TRANSCURRIDOS
-    # =====================================
-    meses = meses_atraso(fecha)
-
-    if meses < 1:
-        meses = 1
-
-    # =====================================
-    # INTERÉS MENSUAL
-    # =====================================
+    # INTERÉS MENSUAL ACTUAL
     interes_mensual = (
         capital_restante *
         (interes / 100)
     )
 
-    # =====================================
-    # INTERÉS GENERADO
-    # =====================================
-    interes_generado = (
-        interes_mensual * meses
-    )
-
-    # =====================================
     # INTERÉS PAGADO
-    # =====================================
     cur.execute("""
         SELECT COALESCE(SUM(monto),0)
         FROM abonos
@@ -428,32 +404,21 @@ def calcular(pid, conn):
         cur.fetchone()[0] or 0
     )
 
-    interes_restante = (
-        interes_generado -
-        abonado_interes
-    )
-
-    if interes_restante < 0:
-        interes_restante = 0
-
-    # =====================================
-    # TOTAL
-    # =====================================
-    saldo_total = (
+    # TOTAL DEUDA DEL MES
+    total_deuda = (
         capital_restante +
-        interes_restante
+        interes_mensual
     )
 
     return (
 
         round(capital_restante),
-        round(interes_restante),
-        round(saldo_total),
+        round(interes_mensual),
+        round(total_deuda),
         round(abonado_capital),
         round(abonado_interes)
 
     )
-# ------------------------------
 # 🏠 INICIO
 # ------------------------------
 @app.route("/")
@@ -2016,7 +1981,7 @@ def prestamos():
 
             else:
 
-
+                total = capital + (capital * interes / 100)
                 cur.execute("""
                     SELECT
 
@@ -2054,10 +2019,6 @@ def prestamos():
                     )
 
                 else:
-
-                    total = capital + (
-                        capital * interes / 100
-                    )
 
 
                     cur.execute("""
@@ -2206,7 +2167,7 @@ def prestamos():
             fecha_inicio = p[4]
             fecha_fin = p[5]
 
-            capital_restante, interes_restante, saldo_total, _, _ = calcular(
+            capital_restante, interes_mensual, saldo_total, _, _ = calcular(
                 pid,
                 conn
             )
@@ -2224,39 +2185,36 @@ def prestamos():
                 f"{fecha_fin.year}"
             )
 
-            cuota_mensual = (
-                p[2] * (p[3] / 100)
-            )
+            cuota_mensual = interes_mensual
 
-            meses_deuda = 0
-
-            if cuota_mensual > 0:
-                meses_deuda = round(
-                    interes_restante / cuota_mensual
-                )
             prestamos_lista.append({
 
                 "id": pid,
+
                 "cliente": nombre,
-                "capital": formato(p[2]),
+
+                "capital": formato(capital_restante),
+
                 "interes": f"{p[3]}%",
 
+                # Cuota mensual actual
                 "cuota_mensual": formato(cuota_mensual),
 
-                "meses_deuda": meses_deuda,
-
-                "mes_inicio": mes_inicio,
-
-                "mes_pago": mes_fin,
-
+                # Capital + interés del mes actual
                 "total_deuda": formato(saldo_total),
 
+                # Estado
                 "estado_pago":
                     "Debe" if saldo_total > 0
                     else "No debe",
 
-                "proximo_pago":
-                    fecha_fin.strftime("%d/%m/%Y")
+                # Mes de inicio
+                "mes_inicio":
+                    mes_inicio,
+
+                # Mes que corresponde al próximo pago
+                "mes_pago":
+                    mes_fin
 
             })
 
