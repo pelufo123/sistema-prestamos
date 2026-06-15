@@ -2449,12 +2449,11 @@ def abonos():
                         ).capitalize()
                     )
 
-                    meses.append({
-
-                        "numero": i,
-                        "texto": texto_mes
-
-                    })
+                meses.append({
+                    "codigo": "2026-04",
+                    "texto": "Abril 2026",
+                    "pagado": False
+                })
 
                 # =============================
                 # 📆 CANTIDAD MESES PAGADOS

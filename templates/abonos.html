@@ -248,69 +248,67 @@
             <!-- MESES -->
             <!-- ===================================== -->
 
-            <div class="div_mes">
+<div class="div_mes">
 
-                <label>
-                    Mes a pagar
-                </label>
+    <label>
+        Meses a pagar
+    </label>
 
-                <select
-                    name="mes"
-                    class="mes"
-                    onchange="
-                        mostrarAlerta(this);
-                        actualizarResumen(this);
-                        cargarInteres(this);
-                    "
-                    style="
-                        width:100%;
-                        padding:12px;
-                        border-radius:10px;
-                        margin-top:5px;
-                    "
+    <div style="
+        margin-top:10px;
+        border:1px solid #ddd;
+        padding:15px;
+        border-radius:10px;
+        max-height:250px;
+        overflow-y:auto;
+    ">
+
+        {% if p.meses %}
+
+            {% for m in p.meses %}
+
+            <div style="
+                margin-bottom:10px;
+                display:flex;
+                align-items:center;
+                gap:10px;
+            ">
+
+                <input
+                    type="checkbox"
+                    name="meses"
+                    value="{{ m.codigo }}"
                 >
 
-                    {% if p.meses %}
+                <span>
 
-                        {% for m in p.meses %}
+                    {% if m.pagado %}
 
-                        <option
-                            value="{{ m.numero }}"
-                        >
-
-                            {{ m.texto }}
-
-                        </option>
-
-                        {% endfor %}
+                        🟩 {{ m.texto }}
 
                     {% else %}
 
-                        <option value="">
-                            Sin meses disponibles
-                        </option>
+                        ⬜ {{ m.texto }}
 
                     {% endif %}
 
-                </select>
-
-                <!-- ALERTA -->
-
-                <div
-                    class="alerta_mes"
-                    style="
-                        display:none;
-                        margin-top:12px;
-                        background:#fff3cd;
-                        color:#856404;
-                        padding:12px;
-                        border-radius:10px;
-                        font-weight:bold;
-                    "
-                >
-                </div>
+                </span>
 
             </div>
+
+            {% endfor %}
+
+        {% else %}
+
+            <div>
+                No hay meses disponibles
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
 
             <br>
 
