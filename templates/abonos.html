@@ -354,7 +354,9 @@
     type="text"
     name="monto"
     class="monto money"
-    readonly
+    placeholder="50.000"
+    required
+
                 placeholder="50.000"
                 required
                 style="
@@ -489,34 +491,41 @@ function cambiarTipo(select){
     let form =
     select.closest("form");
 
-    let tipo =
-    select.value;
+    let monto =
+    form.querySelector(".monto");
 
     let divMes =
     form.querySelector(".div_mes");
 
-    let monto =
-    form.querySelector(".monto");
+    if(select.value === "capital"){
 
-    if(tipo === "capital"){
+        // Mostrar caja para escribir
+        monto.readOnly = false;
 
-        divMes.style.display =
-        "none";
-
-        monto.readOnly =
-        false;
+        monto.removeAttribute("readonly");
 
         monto.value = "";
 
-    }
+        if(divMes){
+            divMes.style.display = "none";
+        }
 
+        monto.focus();
+
+    }
     else{
 
-        divMes.style.display =
-        "block";
+        // Bloquear monto
+        monto.readOnly = true;
 
-        monto.readOnly =
-        true;
+        monto.setAttribute(
+            "readonly",
+            "readonly"
+        );
+
+        if(divMes){
+            divMes.style.display = "block";
+        }
 
         actualizarMonto(form);
 
