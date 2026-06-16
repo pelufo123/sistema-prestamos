@@ -443,8 +443,15 @@ function actualizarMonto(form){
     let tipo =
     form.querySelector(".tipo").value;
 
-    if(tipo !== "interes"){
+    let monto =
+    form.querySelector(".monto");
+
+    // SI ES CAPITAL NO HACER NADA
+    if(tipo === "capital"){
+
+        monto.value = "";
         return;
+
     }
 
     let interesMensual =
@@ -452,7 +459,7 @@ function actualizarMonto(form){
         form.querySelector(
             ".interes_mensual"
         ).value
-    );
+    ) || 0;
 
     let checks =
     form.querySelectorAll(
@@ -463,19 +470,15 @@ function actualizarMonto(form){
     interesMensual *
     checks.length;
 
-    let monto =
-    form.querySelector(".monto");
-
     if(checks.length > 0){
 
         monto.value =
         formatoPesos(total);
 
-    }
+    }else{
 
-    else{
-
-        monto.value = "";
+        monto.value =
+        formatoPesos(interesMensual);
 
     }
 
@@ -716,6 +719,8 @@ function(){
         });
 
     });
+
+});
 
     document
     .querySelectorAll(".money")
