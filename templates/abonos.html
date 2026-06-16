@@ -350,10 +350,11 @@
                 Monto
             </label>
 
-            <input
-                type="text"
-                name="monto"
-                class="monto money"
+<input
+    type="text"
+    name="monto"
+    class="monto money"
+    readonly
                 placeholder="50.000"
                 required
                 style="
@@ -437,6 +438,48 @@ function formatoPesos(numero){
 /* ===================================== */
 /* CAMBIAR TIPO */
 /* ===================================== */
+function actualizarMonto(form){
+
+    let tipo =
+    form.querySelector(".tipo").value;
+
+    if(tipo !== "interes"){
+        return;
+    }
+
+    let interesMensual =
+    parseFloat(
+        form.querySelector(
+            ".interes_mensual"
+        ).value
+    );
+
+    let checks =
+    form.querySelectorAll(
+        ".mes-check:checked"
+    );
+
+    let total =
+    interesMensual *
+    checks.length;
+
+    let monto =
+    form.querySelector(".monto");
+
+    if(checks.length > 0){
+
+        monto.value =
+        formatoPesos(total);
+
+    }
+
+    else{
+
+        monto.value = "";
+
+    }
+
+}
 
 function cambiarTipo(select){
 
@@ -449,9 +492,6 @@ function cambiarTipo(select){
     let divMes =
     form.querySelector(".div_mes");
 
-    let alerta =
-    form.querySelector(".alerta_mes");
-
     let monto =
     form.querySelector(".monto");
 
@@ -460,8 +500,8 @@ function cambiarTipo(select){
         divMes.style.display =
         "none";
 
-        alerta.style.display =
-        "none";
+        monto.readOnly =
+        false;
 
         monto.value = "";
 
@@ -472,14 +512,10 @@ function cambiarTipo(select){
         divMes.style.display =
         "block";
 
-        let selectMes =
-        form.querySelector(".mes");
+        monto.readOnly =
+        true;
 
-        mostrarAlerta(selectMes);
-
-        actualizarResumen(selectMes);
-
-        cargarInteres(selectMes);
+        actualizarMonto(form);
 
     }
 
@@ -656,16 +692,44 @@ document.addEventListener(
 "DOMContentLoaded",
 function(){
 
-    const inputs =
-    document.querySelectorAll(".money");
+    document
+    .querySelectorAll(".tipo")
+    .forEach(select=>{
 
-    inputs.forEach(input => {
+        cambiarTipo(select);
+
+    });
+
+    document
+    .querySelectorAll(".mes-check")
+    .forEach(check=>{
+
+        check.addEventListener(
+        "change",
+        function(){
+
+            let form =
+            this.closest("form");
+
+            actualizarMonto(form);
+
+        });
+
+    });
+
+    document
+    .querySelectorAll(".money")
+    .forEach(input=>{
 
         input.addEventListener(
         "input",
         function(){
 
-            formatearMiles(this);
+            if(!this.readOnly){
+
+                formatearMiles(this);
+
+            }
 
         });
 
@@ -675,23 +739,14 @@ function(){
             "submit",
             function(){
 
-                inputs.forEach(i => {
-
-                    i.value =
-                    limpiarNumero(i.value);
-
-                });
+                input.value =
+                limpiarNumero(
+                    input.value
+                );
 
             });
 
         }
-
-    });
-
-    document.querySelectorAll(".tipo")
-    .forEach(select => {
-
-        cambiarTipo(select);
 
     });
 
