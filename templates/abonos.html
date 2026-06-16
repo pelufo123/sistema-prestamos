@@ -269,74 +269,74 @@
     margin-bottom:10px;
     font-weight:600;
 ">
-    Meses de interés
-</label>
+<!-- ===================================== -->
+<!-- MESES -->
+<!-- ===================================== -->
 
-<div style="
-    max-height:250px;
-    overflow-y:auto;
-">
+<div class="div_mes">
 
-{% if p.meses %}
+    <h4>Meses de interés</h4>
 
-    {% for m in p.meses %}
+    {% if p.meses %}
 
-    <label class="mes-card">
+        {% for m in p.meses %}
 
-        {% if not m.pagado %}
+        <label class="mes-card">
 
-            <input
-                type="checkbox"
-                name="meses"
-                value="{{ m.codigo }}"
-                class="mes-check"
-            >
+            {% if not m.pagado %}
 
-        {% endif %}
+                <input
+                    type="checkbox"
+                    name="meses"
+                    value="{{ m.codigo }}"
+                    class="mes-check"
+                >
 
-        <div class="mes-contenido">
+            {% endif %}
 
-            <div class="mes-icono">
+            <div class="mes-contenido">
 
-                {% if m.pagado %}
-                    ✅
-                {% else %}
-                    📅
-                {% endif %}
-
-            </div>
-
-            <div>
-
-                <div class="mes-titulo">
-                    {{ m.texto }}
-                </div>
-
-                <div class="mes-estado">
+                <div class="mes-icono">
 
                     {% if m.pagado %}
-                        Pagado
+                        ✅
                     {% else %}
-                        Pendiente
+                        📅
                     {% endif %}
 
                 </div>
 
+                <div>
+
+                    <div class="mes-titulo">
+                        {{ m.texto }}
+                    </div>
+
+                    <div class="mes-estado">
+
+                        {% if m.pagado %}
+                            Pagado
+                        {% else %}
+                            Pendiente
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
             </div>
 
+        </label>
+
+        {% endfor %}
+
+    {% else %}
+
+        <div style="color:#666;">
+            No hay meses disponibles
         </div>
 
-    </label>
-
-    {% endfor %}
-
-{% else %}
-
-    <div style="color:#666;">
-        No hay meses disponibles
-    </div>
-
-{% endif %}
+    {% endif %}
 
 </div>
 
@@ -488,44 +488,32 @@ function actualizarMonto(form){
 
 function cambiarTipo(select){
 
-    let form =
-    select.closest("form");
-
-    let monto =
-    form.querySelector(".monto");
+    let form = select.closest("form");
 
     let divMes =
     form.querySelector(".div_mes");
 
-    if(select.value === "capital"){
+    let monto =
+    form.querySelector(".monto");
 
-        // Mostrar caja para escribir
+    if(select.value == "capital"){
+
+        divMes.style.display = "none";
+
         monto.readOnly = false;
-
-        monto.removeAttribute("readonly");
 
         monto.value = "";
 
-        if(divMes){
-            divMes.style.display = "none";
-        }
-
-        monto.focus();
+        monto.placeholder =
+        "Ingrese valor a capital";
 
     }
+
     else{
 
-        // Bloquear monto
+        divMes.style.display = "block";
+
         monto.readOnly = true;
-
-        monto.setAttribute(
-            "readonly",
-            "readonly"
-        );
-
-        if(divMes){
-            divMes.style.display = "block";
-        }
 
         actualizarMonto(form);
 
@@ -706,11 +694,13 @@ function(){
 
     document
     .querySelectorAll(".tipo")
-    .forEach(select=>{
+    .forEach(select => {
 
         cambiarTipo(select);
 
     });
+
+});
 
     document
     .querySelectorAll(".mes-check")
