@@ -266,13 +266,6 @@
 ">
 
 
-<div class="div_mes">
-
-<!-- ===================================== -->
-<!-- MESES -->
-<!-- ===================================== -->
-<h4>Meses de interés</h4>
-
 <button
     type="button"
     class="btn-meses"
@@ -360,8 +353,6 @@
     </div>
 
 {% endif %}
-
-</div>
 
 </div>
 
@@ -513,8 +504,7 @@ function actualizarMonto(form){
 
 function cambiarTipo(select){
 
-    let form =
-    select.closest("form");
+    let form = select.closest("form");
 
     let divMes =
     form.querySelector(".div_mes");
@@ -527,24 +517,26 @@ function cambiarTipo(select){
 
     if(select.value == "capital"){
 
-        btnMeses.style.display = "none";
         divMes.style.display = "none";
 
+        monto.style.display = "block";
+
         monto.readOnly = false;
+
         monto.value = "";
+
         monto.placeholder =
         "Ingrese valor a capital";
 
-    }else{
+    }
 
-        btnMeses.style.display = "block";
+    else{
 
-        monto.readOnly = true;
+        divMes.style.display = "block";
+
+        monto.style.display = "none";
+
         monto.value = "";
-        monto.placeholder =
-        "Se calcula automáticamente";
-
-        actualizarMonto(form);
 
     }
 
@@ -715,21 +707,23 @@ function limpiarNumero(valor){
 
 function toggleMeses(btn){
 
-    let form = btn.closest("form");
+    let contenedor =
+    btn.parentElement.querySelector(
+        ".contenedor_meses"
+    );
 
-    let divMes =
-    form.querySelector(".div_mes");
+    if(contenedor.style.display == "none"){
 
-    if(divMes.style.display == "none"){
-
-        divMes.style.display = "block";
+        contenedor.style.display =
+        "block";
 
         btn.innerHTML =
         "📂 Ocultar meses";
 
     }else{
 
-        divMes.style.display = "none";
+        contenedor.style.display =
+        "none";
 
         btn.innerHTML =
         "📅 Seleccionar meses de interés";
