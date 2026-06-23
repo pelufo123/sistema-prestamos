@@ -289,134 +289,86 @@
 
 {% if p.meses %}
 
-    {% for m in p.meses %}
+{% for m in p.meses %}
 
-    <label class="mes-card">
+<label class="mes-card">
 
-        {% if not m.pagado %}
-        <input
-            type="checkbox"
-            name="meses"
-            value="{{ m.codigo }}"
-            class="mes-check"
-        >
-        {% endif %}
+    {% if not m.pagado %}
+    <input
+        type="checkbox"
+        name="meses"
+        value="{{ m.codigo }}"
+        class="mes-check"
+    >
+    {% endif %}
 
-        <div class="mes-contenido">
+    <div class="mes-contenido">
 
-            <div class="mes-icono">
+        <div class="mes-icono">
 
-                {% if m.pagado %}
-                    ✅
-                {% else %}
-                    📅
-                {% endif %}
+            {% if m.pagado %}
+                ✅
+            {% else %}
+                📅
+            {% endif %}
 
+        </div>
+
+        <div>
+
+            <div class="mes-titulo">
+                {{ m.texto }}
             </div>
 
-            <div>
+            <div class="mes-estado">
 
-                <div class="mes-titulo">
-                    {{ m.texto }}
-                </div>
-
-                <div class="mes-estado">
-
-                    {% if m.pagado %}
-                        Pagado
-                    {% else %}
-                        Pendiente
-                    {% endif %}
-
-                </div>
+                {% if m.pagado %}
+                    Pagado
+                {% else %}
+                    Pendiente
+                {% endif %}
 
             </div>
 
         </div>
 
-    </label>
+    </div>
 
-    {% endfor %}
+</label>
+
+{% endfor %}
 
 {% else %}
 
-    <div style="color:#666;">
-        No hay meses disponibles
-    </div>
+<div style="color:#666;">
+    No hay meses disponibles
+</div>
 
 {% endif %}
-
-</div>
 
 <br>
-        <div class="mes-contenido">
 
-            <div class="mes-icono">
+<!-- ===================================== -->
+<!-- MONTO -->
+<!-- ===================================== -->
 
-                {% if m.pagado %}
-                    ✅
-                {% else %}
-                    📅
-                {% endif %}
-
-            </div>
-
-            <div>
-
-                <div class="mes-titulo">
-                    {{ m.texto }}
-                </div>
-
-                <div class="mes-estado">
-
-                    {% if m.pagado %}
-                        Pagado
-                    {% else %}
-                        Pendiente
-                    {% endif %}
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </label>
-
-    {% endfor %}
-
-{% else %}
-
-    <div style="color:#666;">
-        No hay meses disponibles
-    </div>
-
-{% endif %}
-
-</div>
-
-            <br>
-
-            <!-- ===================================== -->
-            <!-- MONTO -->
-            <!-- ===================================== -->
-
-            <label>
-                Monto
-            </label>
+<label>
+    Monto
+</label>
 
 <input
     type="text"
     name="monto"
     class="monto money"
-    placeholder="Ingrese valor"
+    placeholder="50.000"
     required
-                style="
-                    width:100%;
-                    padding:14px;
-                    border-radius:10px;
-                    margin-top:5px;
-                "
+    style="
+        width:100%;
+        padding:14px;
+        border-radius:10px;
+        margin-top:5px;
+    "
+>
             >
 
             <br><br>
