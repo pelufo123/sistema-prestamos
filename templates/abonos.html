@@ -294,14 +294,12 @@
     <label class="mes-card">
 
         {% if not m.pagado %}
-
         <input
             type="checkbox"
             name="meses"
             value="{{ m.codigo }}"
             class="mes-check"
         >
-
         {% endif %}
 
         <div class="mes-contenido">
@@ -349,52 +347,11 @@
 {% endif %}
 
 </div>
+
+<br>
         <div class="mes-contenido">
 
-            <div class="mes-icono">
-
-                {% if m.pagado %}
-                    ✅
-                {% else %}
-                    📅
-                {% endif %}
-
-            </div>
-
-            <div>
-
-                <div class="mes-titulo">
-                    {{ m.texto }}
-                </div>
-
-                <div class="mes-estado">
-
-                    {% if m.pagado %}
-                        Pagado
-                    {% else %}
-                        Pendiente
-                    {% endif %}
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </label>
-
-    {% endfor %}
-
-{% else %}
-
-    <div style="color:#666;">
-        No hay meses disponibles
-    </div>
-
-{% endif %}
-
-</div>
-
+     
             <br>
 
             <!-- ===================================== -->
