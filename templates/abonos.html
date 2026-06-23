@@ -266,6 +266,12 @@
 ">
 
 
+<!-- ===================================== -->
+<!-- MESES DE INTERÉS -->
+<!-- ===================================== -->
+
+<h4>Meses a pagar</h4>
+
 <button
     type="button"
     class="btn-meses"
@@ -287,64 +293,66 @@
 
 <div class="div_mes" style="display:none;">
 
-{% if p.meses %}
+    {% if p.meses %}
 
-{% for m in p.meses %}
+        {% for m in p.meses %}
 
-<label class="mes-card">
+        <label class="mes-card">
 
-    {% if not m.pagado %}
-    <input
-        type="checkbox"
-        name="meses"
-        value="{{ m.codigo }}"
-        class="mes-check"
-    >
-    {% endif %}
-
-    <div class="mes-contenido">
-
-        <div class="mes-icono">
-
-            {% if m.pagado %}
-                ✅
-            {% else %}
-                📅
+            {% if not m.pagado %}
+            <input
+                type="checkbox"
+                name="meses"
+                value="{{ m.codigo }}"
+                class="mes-check"
+            >
             {% endif %}
 
-        </div>
+            <div class="mes-contenido">
 
-        <div>
+                <div class="mes-icono">
 
-            <div class="mes-titulo">
-                {{ m.texto }}
+                    {% if m.pagado %}
+                        ✅
+                    {% else %}
+                        📅
+                    {% endif %}
+
+                </div>
+
+                <div>
+
+                    <div class="mes-titulo">
+                        {{ m.texto }}
+                    </div>
+
+                    <div class="mes-estado">
+
+                        {% if m.pagado %}
+                            Pagado
+                        {% else %}
+                            Pendiente
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
             </div>
 
-            <div class="mes-estado">
+        </label>
 
-                {% if m.pagado %}
-                    Pagado
-                {% else %}
-                    Pendiente
-                {% endif %}
+        {% endfor %}
 
-            </div>
+    {% else %}
 
+        <div style="color:#666;">
+            No hay meses disponibles
         </div>
 
-    </div>
+    {% endif %}
 
-</label>
-
-{% endfor %}
-
-{% else %}
-
-<div style="color:#666;">
-    No hay meses disponibles
 </div>
-
-{% endif %}
 
 <br>
 
@@ -369,27 +377,25 @@
         margin-top:5px;
     "
 >
-            >
 
-            <br><br>
+<br><br>
 
-            <button
-                type="submit"
-                style="
-                    width:100%;
-                    padding:14px;
-                    border:none;
-                    border-radius:12px;
-                    background:#ff7b00;
-                    color:white;
-                    font-size:16px;
-                    font-weight:bold;
-                    cursor:pointer;
-                "
-            >
-                💾 Guardar abono
-            </button>
-
+<button
+    type="submit"
+    style="
+        width:100%;
+        padding:14px;
+        border:none;
+        border-radius:12px;
+        background:#ff7b00;
+        color:white;
+        font-size:16px;
+        font-weight:bold;
+        cursor:pointer;
+    "
+>
+    💾 Guardar abono
+</button>
         </form>
 
     </div>
