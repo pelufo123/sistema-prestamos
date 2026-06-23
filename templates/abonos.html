@@ -285,13 +285,7 @@
     📅 Seleccionar meses de interés
 </button>
 
-<div
-    class="contenedor_meses"
-    style="
-        display:none;
-        margin-top:10px;
-    "
->
+<div class="div_mes" style="display:none;">
 
 {% if p.meses %}
 
@@ -310,6 +304,51 @@
 
         {% endif %}
 
+        <div class="mes-contenido">
+
+            <div class="mes-icono">
+
+                {% if m.pagado %}
+                    ✅
+                {% else %}
+                    📅
+                {% endif %}
+
+            </div>
+
+            <div>
+
+                <div class="mes-titulo">
+                    {{ m.texto }}
+                </div>
+
+                <div class="mes-estado">
+
+                    {% if m.pagado %}
+                        Pagado
+                    {% else %}
+                        Pendiente
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </label>
+
+    {% endfor %}
+
+{% else %}
+
+    <div style="color:#666;">
+        No hay meses disponibles
+    </div>
+
+{% endif %}
+
+</div>
         <div class="mes-contenido">
 
             <div class="mes-icono">
