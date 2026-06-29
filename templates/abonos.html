@@ -246,26 +246,6 @@
 
     
 
-<div class="div_mes">
-
-<label>
-    Meses a pagar
-</label>
-
-<div style="
-    margin-top:10px;
-    border:1px solid #ddd;
-    padding:15px;
-    border-radius:10px;
-">
-
-<label style="
-    display:block;
-    margin-bottom:10px;
-    font-weight:600;
-">
-
-
 <!-- ===================================== -->
 <!-- MESES -->
 <!-- ===================================== -->
@@ -273,100 +253,97 @@
 <div class="div_mes">
 
     <button
-        type="button"
-        class="btn-meses"
-        onclick="toggleMeses(this)"
-        style="
-            width:100%;
-            padding:12px;
-            border:none;
-            border-radius:10px;
-            background:#3498db;
-            color:white;
-            font-weight:bold;
-            cursor:pointer;
-            margin-bottom:15px;
-        "
-    >
-        📅 Seleccionar meses de interés
-    </button>
+    type="button"
+    class="btn-meses"
+    onclick="toggleMeses(this)"
+    style="
+        width:100%;
+        padding:12px;
+        border:none;
+        border-radius:10px;
+        background:#3498db;
+        color:white;
+        font-weight:bold;
+        cursor:pointer;
+        margin-bottom:15px;
+    "
+>
+    📅 Seleccionar meses de interés
+</button>
 
-    <div
-        class="contenedor_meses"
-        style="display:none;"
-    >
+<div
+    class="contenedor_meses"
+    style="display:none;"
+>
 
-        {% if p.meses %}
+    {% if p.meses %}
 
-            {% for m in p.meses %}
+        {% for m in p.meses %}
 
-            <label class="mes-card">
+        <label class="mes-card">
 
-                {% if not m.pagado %}
+            {% if not m.pagado %}
+            <input
+                type="checkbox"
+                name="meses"
+                value="{{ m.codigo }}"
+                class="mes-check"
+            >
+            {% endif %}
 
-                <input
-                    type="checkbox"
-                    name="meses"
-                    value="{{ m.codigo }}"
-                    class="mes-check"
-                >
+            <div class="mes-contenido">
 
-                {% endif %}
+                <div class="mes-icono">
+                    {% if m.pagado %}
+                        ✅
+                    {% else %}
+                        📅
+                    {% endif %}
+                </div>
 
-                <div class="mes-contenido">
+                <div>
 
-                    <div class="mes-icono">
-
-                        {% if m.pagado %}
-                            ✅
-                        {% else %}
-                            📅
-                        {% endif %}
-
+                    <div class="mes-titulo">
+                        {{ m.texto }}
                     </div>
 
-                    <div>
-
-                        <div class="mes-titulo">
-                            {{ m.texto }}
-                        </div>
-
-                        <div class="mes-estado">
-
-                            {% if m.pagado %}
-                                Pagado
-                            {% else %}
-                                Pendiente
-                            {% endif %}
-
-                        </div>
-
+                    <div class="mes-estado">
+                        {% if m.pagado %}
+                            Pagado
+                        {% else %}
+                            Pendiente
+                        {% endif %}
                     </div>
 
                 </div>
 
-            </label>
+            </div>
 
-            {% endfor %}
+        </label>
 
-        {% else %}
+        {% endfor %}
 
-        <div style="color:#666;">
-            No hay meses disponibles
-        </div>
+    {% else %}
 
-        {% endif %}
-
+    <div style="color:#666;">
+        No hay meses disponibles
     </div>
+
+    {% endif %}
 
 </div>
 
-<!-- ===================================== -->
-<!-- MONTO -->
-<!-- ===================================== -->
+</div>
 
-<label>
-    Monto
+<label
+    class="lblMonto"
+    style="
+        display:none;
+        margin-top:15px;
+        font-weight:600;
+    "
+>
+    Valor a abonar al capital
 </label>
 
 <input
@@ -374,17 +351,15 @@
     name="monto"
     class="monto money"
     placeholder="50.000"
-    required
     style="
         display:none;
         width:100%;
         padding:14px;
+        border:1px solid #ccc;
         border-radius:10px;
         margin-top:5px;
     "
 >
-
-<br><br>
 
 <button
     type="submit"
@@ -494,47 +469,51 @@ function actualizarMonto(form){
 
 function cambiarTipo(select){
 
-    let form = select.closest("form");
+    const form = select.closest("form");
 
-    let divMes =
-    form.querySelector(".div_mes");
+    const divMes = form.querySelector(".div_mes");
+    const contenedor = form.querySelector(".contenedor_meses");
+    const btnMeses = form.querySelector(".btn-meses");
 
-    let contenedor =
-    form.querySelector(".contenedor_meses");
+    const monto = form.querySelector(".monto");
+    const lblMonto = form.querySelector(".lblMonto");
 
-    let btnMeses =
-    form.querySelector(".btn-meses");
+    if(select.value === "capital"){
 
-    let monto =
-    form.querySelector(".monto");
-
-    if(select.value == "capital"){
-
-        // Oculta todo lo relacionado con intereses
+        // Ocultar meses
         divMes.style.display = "none";
+        contenedor.style.display = "none";
 
-        // Muestra el input para escribir
+        // Mostrar campo de capital
+        lblMonto.style.display = "block";
         monto.style.display = "block";
+
         monto.readOnly = false;
+        monto.required = true;
         monto.value = "";
-        monto.placeholder = "Ingrese valor del abono a capital";
+        monto.placeholder = "Ingrese el valor a abonar al capital";
 
     }else{
 
-        // Muestra botón de meses
+        // Mostrar meses
         divMes.style.display = "block";
 
-        // Oculta el input
+        // Ocultar campo capital
+        lblMonto.style.display = "none";
         monto.style.display = "none";
+
         monto.readOnly = true;
+        monto.required = false;
         monto.value = "";
 
-        // Siempre inicia cerrado
+        // Reiniciar botón
         contenedor.style.display = "none";
+        btnMeses.innerHTML = "📅 Seleccionar meses de interés";
 
-        btnMeses.innerHTML =
-        "📅 Seleccionar meses de interés";
-
+        // Si tienes esta función, recalcula el total
+        if(typeof actualizarMonto === "function"){
+            actualizarMonto(form);
+        }
     }
 
 }
