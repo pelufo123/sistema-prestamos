@@ -267,94 +267,99 @@
 
 
 <!-- ===================================== -->
-<!-- MESES DE INTERÉS -->
+<!-- MESES -->
 <!-- ===================================== -->
 
-<h4>Meses a pagar</h4>
+<div class="div_mes">
 
-<button
-    type="button"
-    class="btn-meses"
-    onclick="toggleMeses(this)"
-    style="
-        width:100%;
-        padding:12px;
-        border:none;
-        border-radius:10px;
-        background:#3498db;
-        color:white;
-        font-weight:bold;
-        cursor:pointer;
-        margin-bottom:15px;
-    "
->
-    📅 Seleccionar meses de interés
-</button>
+    <button
+        type="button"
+        class="btn-meses"
+        onclick="toggleMeses(this)"
+        style="
+            width:100%;
+            padding:12px;
+            border:none;
+            border-radius:10px;
+            background:#3498db;
+            color:white;
+            font-weight:bold;
+            cursor:pointer;
+            margin-bottom:15px;
+        "
+    >
+        📅 Seleccionar meses de interés
+    </button>
 
-<div class="div_mes" style="display:none;">
+    <div
+        class="contenedor_meses"
+        style="display:none;"
+    >
 
-    {% if p.meses %}
+        {% if p.meses %}
 
-        {% for m in p.meses %}
+            {% for m in p.meses %}
 
-        <label class="mes-card">
+            <label class="mes-card">
 
-            {% if not m.pagado %}
-            <input
-                type="checkbox"
-                name="meses"
-                value="{{ m.codigo }}"
-                class="mes-check"
-            >
-            {% endif %}
+                {% if not m.pagado %}
 
-            <div class="mes-contenido">
+                <input
+                    type="checkbox"
+                    name="meses"
+                    value="{{ m.codigo }}"
+                    class="mes-check"
+                >
 
-                <div class="mes-icono">
+                {% endif %}
 
-                    {% if m.pagado %}
-                        ✅
-                    {% else %}
-                        📅
-                    {% endif %}
+                <div class="mes-contenido">
 
-                </div>
-
-                <div>
-
-                    <div class="mes-titulo">
-                        {{ m.texto }}
-                    </div>
-
-                    <div class="mes-estado">
+                    <div class="mes-icono">
 
                         {% if m.pagado %}
-                            Pagado
+                            ✅
                         {% else %}
-                            Pendiente
+                            📅
                         {% endif %}
 
                     </div>
 
+                    <div>
+
+                        <div class="mes-titulo">
+                            {{ m.texto }}
+                        </div>
+
+                        <div class="mes-estado">
+
+                            {% if m.pagado %}
+                                Pagado
+                            {% else %}
+                                Pendiente
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
                 </div>
 
-            </div>
+            </label>
 
-        </label>
+            {% endfor %}
 
-        {% endfor %}
-
-    {% else %}
+        {% else %}
 
         <div style="color:#666;">
             No hay meses disponibles
         </div>
 
-    {% endif %}
+        {% endif %}
+
+    </div>
 
 </div>
-
-<br>
 
 <!-- ===================================== -->
 <!-- MONTO -->
@@ -371,6 +376,7 @@
     placeholder="50.000"
     required
     style="
+        display:none;
         width:100%;
         padding:14px;
         border-radius:10px;
@@ -455,32 +461,23 @@ function actualizarMonto(form){
     let tipo =
     form.querySelector(".tipo").value;
 
-    let monto =
-    form.querySelector(".monto");
-
-    // SI ES CAPITAL NO HACER NADA
-    if(tipo === "capital"){
-
-        monto.value = "";
+    if(tipo != "interes"){
         return;
-
     }
 
     let interesMensual =
     parseFloat(
-        form.querySelector(
-            ".interes_mensual"
-        ).value
+        form.querySelector(".interes_mensual").value
     ) || 0;
 
     let checks =
-    form.querySelectorAll(
-        ".mes-check:checked"
-    );
+    form.querySelectorAll(".mes-check:checked");
 
     let total =
-    interesMensual *
-    checks.length;
+    interesMensual * checks.length;
+
+    let monto =
+    form.querySelector(".monto");
 
     if(checks.length > 0){
 
@@ -489,8 +486,7 @@ function actualizarMonto(form){
 
     }else{
 
-        monto.value =
-        formatoPesos(interesMensual);
+        monto.value = "";
 
     }
 
@@ -503,6 +499,9 @@ function cambiarTipo(select){
     let divMes =
     form.querySelector(".div_mes");
 
+    let contenedor =
+    form.querySelector(".contenedor_meses");
+
     let btnMeses =
     form.querySelector(".btn-meses");
 
@@ -511,26 +510,30 @@ function cambiarTipo(select){
 
     if(select.value == "capital"){
 
+        // Oculta todo lo relacionado con intereses
         divMes.style.display = "none";
 
+        // Muestra el input para escribir
         monto.style.display = "block";
-
         monto.readOnly = false;
-
         monto.value = "";
+        monto.placeholder = "Ingrese valor del abono a capital";
 
-        monto.placeholder =
-        "Ingrese valor a capital";
+    }else{
 
-    }
-
-    else{
-
+        // Muestra botón de meses
         divMes.style.display = "block";
 
+        // Oculta el input
         monto.style.display = "none";
-
+        monto.readOnly = true;
         monto.value = "";
+
+        // Siempre inicia cerrado
+        contenedor.style.display = "none";
+
+        btnMeses.innerHTML =
+        "📅 Seleccionar meses de interés";
 
     }
 
@@ -701,23 +704,21 @@ function limpiarNumero(valor){
 
 function toggleMeses(btn){
 
+    let form = btn.closest("form");
+
     let contenedor =
-    btn.parentElement.querySelector(
-        ".contenedor_meses"
-    );
+    form.querySelector(".contenedor_meses");
 
-    if(contenedor.style.display == "none"){
+    if(contenedor.style.display == "none" || contenedor.style.display == ""){
 
-        contenedor.style.display =
-        "block";
+        contenedor.style.display = "block";
 
         btn.innerHTML =
         "📂 Ocultar meses";
 
     }else{
 
-        contenedor.style.display =
-        "none";
+        contenedor.style.display = "none";
 
         btn.innerHTML =
         "📅 Seleccionar meses de interés";
@@ -756,7 +757,8 @@ function(){
 
             actualizarMonto(form);
 
-        });
+    }
+  );
 
     });
 
