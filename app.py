@@ -2700,7 +2700,7 @@ def abonos():
 
                             "ingreso",
                             total_ingreso,
-                            "Abono interes"
+                            "Abono de interes"
 
                         ))
 
@@ -2738,9 +2738,12 @@ def abonos():
 
                     ))
 
-                # =====================================
-                # 🏦 RECUPERACIÓN DE CRÉDITO
-                # =====================================
+# =====================================
+# 🏦 MOVIMIENTO EN CAJA
+# =====================================
+
+            if tipo == "capital":
+
                 cur.execute("""
                     INSERT INTO caja (
 
@@ -2758,16 +2761,16 @@ def abonos():
 
                 ))
 
-                conn.commit()
+            conn.commit()
 
-                conn.close()
+            conn.close()
 
-                return redirect(
-                    url_for(
-                        "abonos",
-                        cliente=cliente_id
-                    )
+            return redirect(
+                url_for(
+                    "abonos",
+                    cliente=cliente_id
                 )
+            )
 
         except Exception as e:
 
